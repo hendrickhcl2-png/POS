@@ -144,6 +144,72 @@ const VentasModule = {
 .join("");
   },
 
+  // ==================== ESCANEAR Y AGREGAR DIRECTO ====================
+
+  escanearYAgregarProducto() {
+  const field = document.getElementById("buscarProductoVenta");
+  if (!field) return;
+
+  const prev = field.placeholder;
+  field.value = "";
+  field.focus();
+  field.classList.add("scanning-mode");
+  field.placeholder = "Listo — escanee el código...";
+
+  const onEnter = async (e) => {
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+  field.classList.remove("scanning-mode");
+  field.placeholder = prev;
+  field.removeEventListener("keydown", onEnter);
+  field.removeEventListener("blur", onBlur);
+
+  const query = field.value.trim();
+  if (!query) return;
+
+  try {
+  const productos = await API.Productos.search(query);
+
+  if (productos.length === 0) {
+  this.mostrarAlerta("Producto no encontrado", "warning");
+  field.value = "";
+  return;
+  }
+
+  if (productos.length === 1) {
+  // Coincidencia exacta — agregar directo al carrito
+  const p = productos[0];
+  this.agregarProductoAlCarrito({
+  id: p.id,
+  codigo_barras: p.codigo_barras || "",
+  nombre: p.nombre,
+  precio_venta: p.precio_venta,
+  stock_actual: p.stock_actual,
+  disponible: p.disponible,
+  descuento_porcentaje: p.descuento_porcentaje || 0,
+  });
+  field.value = "";
+  field.focus();
+  } else {
+  // Múltiples resultados — mostrar lista
+  this.mostrarListaProductos(productos);
+  }
+  } catch (error) {
+  console.error("Error al escanear producto:", error);
+  this.mostrarAlerta("Error al buscar producto", "danger");
+  }
+  };
+
+  const onBlur = () => {
+  field.classList.remove("scanning-mode");
+  field.placeholder = prev;
+  field.removeEventListener("keydown", onEnter);
+  };
+
+  field.addEventListener("keydown", onEnter);
+  field.addEventListener("blur", onBlur, { once: true });
+  },
+
   // ==================== BÚSQUEDA CON LISTA ====================
 
   async buscarProducto() {
@@ -1041,6 +1107,7 @@ const VentasModule = {
 
 window.VentasModule = VentasModule;
 window.buscarProductoVenta = () => VentasModule.buscarProducto();
+window.escanearProductoVenta = () => VentasModule.escanearYAgregarProducto();
 window.selectPaymentMethod = (metodo) =>
   VentasModule.seleccionarMetodoPago(metodo);
 window.cancelarVenta = () => VentasModule.limpiarVenta();
