@@ -4,33 +4,33 @@ const FacturaImpresion = {
   // ==================== MOSTRAR MODAL DE FACTURA ====================
 
   mostrarFactura(data) {
-  // Cerrar cualquier modal anterior
-  const modalExistente = document.getElementById("modalFacturaImpresion");
-  if (modalExistente) modalExistente.remove();
+    // Cerrar cualquier modal anterior
+    const modalExistente = document.getElementById("modalFacturaImpresion");
+    if (modalExistente) modalExistente.remove();
 
-  // Detectar si es venta o factura y normalizar datos
-  const factura = this.normalizarDatos(data);
+    // Detectar si es venta o factura y normalizar datos
+    const factura = this.normalizarDatos(data);
 
-  // Obtener configuración del negocio
-  const config = {
-  nombre: "Fifty Tech",
-  rnc: "133-57701-1",
-  direccion: "Santiago de los Caballeros, RD",
-  telefono: "849-878-1113",
-  email: "info@fiftytech.com",
-  };
+    // Obtener configuración del negocio
+    const config = {
+      nombre: "FIFTY TECH SRL",
+      rnc: "133-57701-1",
+      direccion: "Santiago de los Caballeros, RD",
+      telefono: "849-878-1113",
+      email: "info@fiftytech.com",
+    };
 
-  // Guardar datos actuales para impresión térmica
-  this._factura = factura;
-  this._config = config;
+    // Guardar datos actuales para impresión térmica
+    this._factura = factura;
+    this._config = config;
 
-  // Construir HTML de la factura
-  const modal = document.createElement("div");
-  modal.id = "modalFacturaImpresion";
-  modal.style.cssText =
-  "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;";
+    // Construir HTML de la factura
+    const modal = document.createElement("div");
+    modal.id = "modalFacturaImpresion";
+    modal.style.cssText =
+      "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;";
 
-  modal.innerHTML = `
+    modal.innerHTML = `
   <div style="background:white;width:90%;max-width:700px;max-height:90vh;overflow-y:auto;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
 
   <!-- BOTONES DE ACCIÓN (fuera de print) -->
@@ -52,12 +52,12 @@ const FacturaImpresion = {
   <div>
   <h1 style="margin:0;font-size:28px;color:#2c3e50;">${config.nombre}</h1>
   <p style="margin:3px 0;color:#7f8c8d;font-size:13px;">${config.direccion}</p>
-  <p style="margin:3px 0;color:#7f8c8d;font-size:13px;"> ${config.telefono} | ${config.email}</p>
+  <p style="margin:3px 0;color:#7f8c8d;font-size:13px;"> ${config.telefono}</p>
   <p style="margin:3px 0;color:#7f8c8d;font-size:13px;">RNC: ${config.rnc}</p>
   </div>
   <div style="text-align:right;">
-  <div style="background:${factura.esFacturaElectronica ? "#27ae60": "#3498db"};color:white;padding:5px 15px;border-radius:20px;font-size:13px;font-weight:bold;display:inline-block;">
-  ${factura.esFacturaElectronica ? " FACTURA ELECTRÓNICA": " RECIBO"}
+  <div style="background:${factura.esFacturaElectronica ? "#27ae60" : "#3498db"};color:white;padding:5px 15px;border-radius:20px;font-size:13px;font-weight:bold;display:inline-block;">
+  ${factura.esFacturaElectronica ? " FACTURA ELECTRÓNICA" : " RECIBO"}
   </div>
   <p style="margin:8px 0 3px 0;font-size:22px;font-weight:bold;color:#2c3e50;">${factura.numeroDocumento}</p>
   <p style="margin:3px 0;color:#7f8c8d;font-size:13px;">Fecha: ${this.formatFecha(factura.fecha)}</p>
@@ -67,27 +67,22 @@ const FacturaImpresion = {
 
   <!-- NCF (si es factura electrónica) -->
   ${factura.ncf
-  ? `
-  <div style="background:#f0f7ff;border:2px dashed #3498db;border-radius:8px;padding:12px 18px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;">
-  <div>
-  <strong style="color:#2980b9;font-size:13px;">NCF (Número de Comprobante Fiscal)</strong><br>
-  <span style="color:#2c3e50;font-size:16px;font-weight:bold;letter-spacing:2px;">${factura.ncf}</span>
-  </div>
-  <div style="text-align:right;">
-  <strong style="color:#2980b9;font-size:13px;">Tipo de Comprobante</strong><br>
-  <span style="color:#2c3e50;font-size:15px;font-weight:bold;">${factura.tipo_comprobante || "B02"} - Consumidor Final</span>
-  </div>
+        ? `
+  <div style="margin-bottom:12px;padding:8px 14px;border-left:4px solid #2c3e50;">
+  <span style="color:#7f8c8d;font-size:12px;">NCF:</span>
+  <strong style="color:#2c3e50;font-size:14px;letter-spacing:1px;margin-left:8px;">${factura.ncf}</strong>
+  <span style="color:#7f8c8d;font-size:12px;margin-left:12px;">${factura.tipo_comprobante || "B02"} - Consumidor Final</span>
   </div>
   `
-: ""
-  }
+        : ""
+      }
 
   <!-- DATOS DEL CLIENTE -->
   <div style="background:#f8f9fa;border-radius:8px;padding:12px 18px;margin-bottom:18px;">
   <strong style="color:#2c3e50;font-size:14px;"> Cliente:</strong>
   <span style="color:#2c3e50;font-size:14px;margin-left:10px;">${factura.cliente_nombre || "Cliente General"}</span>
-  ${factura.cliente_cedula ? `<span style="color:#7f8c8d;font-size:12px;margin-left:15px;">Cédula: ${factura.cliente_cedula}</span>`: ""}
-  ${factura.cliente_rnc ? `<span style="color:#7f8c8d;font-size:12px;margin-left:15px;">RNC: ${factura.cliente_rnc}</span>`: ""}
+  ${factura.cliente_cedula ? `<span style="color:#7f8c8d;font-size:12px;margin-left:15px;">Cédula: ${factura.cliente_cedula}</span>` : ""}
+  ${factura.cliente_rnc ? `<span style="color:#7f8c8d;font-size:12px;margin-left:15px;">RNC: ${factura.cliente_rnc}</span>` : ""}
   </div>
 
   <!-- TABLA DE PRODUCTOS -->
@@ -104,9 +99,9 @@ const FacturaImpresion = {
   </thead>
   <tbody>
   ${(factura.items || [])
-.map(
-  (item, i) => `
-  <tr style="border-bottom:1px solid #ecf0f1;background:${i % 2 === 0 ? "white": "#f8f9fa"};">
+        .map(
+          (item, i) => `
+  <tr style="border-bottom:1px solid #ecf0f1;background:${i % 2 === 0 ? "white" : "#f8f9fa"};">
   <td style="padding:10px;font-size:13px;color:#7f8c8d;">${i + 1}</td>
   <td style="padding:10px;font-size:13px;font-weight:500;">${item.nombre_producto}</td>
   <td style="padding:10px;font-size:12px;color:#7f8c8d;">${item.codigo_producto || ""}</td>
@@ -115,14 +110,14 @@ const FacturaImpresion = {
   <td style="padding:10px;text-align:right;font-size:13px;font-weight:600;color:#27ae60;">${this.formatCurrency(item.subtotal)}</td>
   </tr>
   `,
-  )
-.join("")}
+        )
+        .join("")}
   </tbody>
   </table>
 
   <!-- SERVICIOS (si existen) -->
   ${factura.servicios && factura.servicios.length > 0
-  ? `
+        ? `
   <table style="width:100%;border-collapse:collapse;margin-bottom:10px;margin-top:15px;">
   <thead>
   <tr style="background:#8e44ad;color:white;">
@@ -137,28 +132,28 @@ const FacturaImpresion = {
   </thead>
   <tbody>
   ${factura.servicios
-.map(
-  (s, i) => `
+          .map(
+            (s, i) => `
   <tr style="border-bottom:1px solid #ecf0f1;">
   <td style="padding:8px;font-size:12px;color:#7f8c8d;">${i + 1}</td>
   <td style="padding:8px;font-size:12px;">${s.nombre_servicio}</td>
   <td style="padding:8px;text-align:center;font-size:12px;">
-  <span style="background:${s.es_gratuito ? "#27ae60": "#f39c12"};color:white;padding:2px 10px;border-radius:12px;font-size:11px;">
-  ${s.es_gratuito ? " GRATIS": " Pagado"}
+  <span style="background:${s.es_gratuito ? "#27ae60" : "#f39c12"};color:white;padding:2px 10px;border-radius:12px;font-size:11px;">
+  ${s.es_gratuito ? " GRATIS" : " Pagado"}
   </span>
   </td>
-  <td style="padding:8px;text-align:right;font-size:12px;font-weight:600;color:${s.es_gratuito ? "#27ae60": "#2c3e50"};">
-  ${s.es_gratuito ? "RD$0.00": this.formatCurrency(s.precio)}
+  <td style="padding:8px;text-align:right;font-size:12px;font-weight:600;color:${s.es_gratuito ? "#27ae60" : "#2c3e50"};">
+  ${s.es_gratuito ? "RD$0.00" : this.formatCurrency(s.precio)}
   </td>
   </tr>
   `,
-  )
-.join("")}
+          )
+          .join("")}
   </tbody>
   </table>
   `
-: ""
-  }
+        : ""
+      }
 
   <!-- TOTALES -->
   <div style="margin-top:15px;border-top:2px solid #ecf0f1;padding-top:10px;">
@@ -169,13 +164,13 @@ const FacturaImpresion = {
   <td style="padding:8px 10px;text-align:right;font-size:14px;">${this.formatCurrency(factura.subtotal)}</td>
   </tr>
   ${factura.descuento && parseFloat(factura.descuento) > 0
-  ? `
+        ? `
   <tr style="border-bottom:1px solid #ecf0f1;">
   <td style="padding:8px 10px;color:#e74c3c;font-size:14px;">Descuento:</td>
   <td style="padding:8px 10px;text-align:right;font-size:14px;color:#e74c3c;">-${this.formatCurrency(factura.descuento)}</td>
   </tr>`
-: ""
-  }
+        : ""
+      }
   <tr style="border-bottom:1px solid #ecf0f1;">
   <td style="padding:8px 10px;color:#7f8c8d;font-size:14px;">ITBIS (18%):</td>
   <td style="padding:8px 10px;text-align:right;font-size:14px;">${this.formatCurrency(factura.itbis)}</td>
@@ -248,21 +243,21 @@ const FacturaImpresion = {
   <strong style="color:#27ae60;font-size:14px;"> Método de Pago: ${this.formatMetodoPago(factura.metodo_pago)}</strong>
   <div style="margin-top:8px;display:flex;gap:30px;flex-wrap:wrap;">
   ${factura.metodo_pago === "efectivo" ||
-  factura.metodo_pago === "mixto"
-  ? `
+        factura.metodo_pago === "mixto"
+        ? `
   <div><span style="color:#7f8c8d;font-size:13px;">Monto Recibido:</span> <strong style="font-size:14px;">${this.formatCurrency(factura.monto_recibido || factura.total)}</strong></div>
   <div><span style="color:#7f8c8d;font-size:13px;">Cambio:</span> <strong style="font-size:14px;color:#27ae60;">${this.formatCurrency(factura.cambio || 0)}</strong></div>
   `
-: ""
-  }
+        : ""
+      }
   ${factura.metodo_pago === "tarjeta" ||
-  factura.metodo_pago === "transferencia"
-  ? `
-  ${factura.banco ? `<div><span style="color:#7f8c8d;font-size:13px;">Banco:</span> <strong style="font-size:14px;">${factura.banco}</strong></div>`: ""}
-  ${factura.referencia ? `<div><span style="color:#7f8c8d;font-size:13px;">Referencia:</span> <strong style="font-size:14px;">${factura.referencia}</strong></div>`: ""}
+        factura.metodo_pago === "transferencia"
+        ? `
+  ${factura.banco ? `<div><span style="color:#7f8c8d;font-size:13px;">Banco:</span> <strong style="font-size:14px;">${factura.banco}</strong></div>` : ""}
+  ${factura.referencia ? `<div><span style="color:#7f8c8d;font-size:13px;">Referencia:</span> <strong style="font-size:14px;">${factura.referencia}</strong></div>` : ""}
   `
-: ""
-  }
+        : ""
+      }
   </div>
   </div>
 
@@ -283,91 +278,93 @@ const FacturaImpresion = {
   </div>
   `;
 
-  document.body.appendChild(modal);
+    document.body.appendChild(modal);
   },
 
   // ==================== NORMALIZAR DATOS ====================
   // Detecta si vienen datos de venta o factura y los normaliza
   normalizarDatos(data) {
-  // Si tiene numero_factura es una factura, si tiene numero_ticket es una venta
-  const esFactura = data.numero_factura != null;
+    // Si tiene numero_factura es una factura, si tiene numero_ticket es una venta
+    const esFactura = data.numero_factura != null;
 
-  return {
-  // Número de documento
-  numeroDocumento: esFactura
-  ? `#${data.numero_factura}`
-: `#${data.numero_ticket || "N/A"}`,
+    return {
+      // Número de documento
+      numeroDocumento: esFactura
+        ? `#${data.numero_factura}`
+        : `#${data.numero_ticket || "N/A"}`,
 
-  // NCF
-  ncf: data.ncf || null,
-  tipo_comprobante: data.tipo_comprobante || "B02",
+      // NCF
+      ncf: data.ncf || null,
+      tipo_comprobante: data.tipo_comprobante || "B02",
 
-  // Flags
-  esFacturaElectronica: data.generar_factura_electronica || esFactura,
+      // Flags
+      esFacturaElectronica: data.generar_factura_electronica || esFactura,
 
-  // Fechas
-  fecha: data.fecha,
-  hora: data.hora || new Date().toTimeString().split(" ")[0],
+      // Fechas
+      fecha: data.fecha,
+      hora: data.hora || new Date().toTimeString().split(" ")[0],
 
-  // Cliente
-  cliente_nombre: data.cliente_nombre || "Cliente General",
-  cliente_cedula: data.cliente_cedula || null,
-  cliente_rnc: data.cliente_rnc || null,
+      // Cliente
+      cliente_nombre: data.cliente_nombre || "Cliente General",
+      cliente_cedula: data.cliente_cedula || null,
+      cliente_rnc: data.cliente_rnc || null,
 
-  // Totales - asegurar que sean números
-  subtotal: parseFloat(data.subtotal || 0),
-  descuento: parseFloat(data.descuento || 0),
-  itbis: parseFloat(data.itbis || 0),
-  total: parseFloat(data.total || 0),
+      // Totales - asegurar que sean números
+      subtotal: parseFloat(data.subtotal || 0),
+      descuento: parseFloat(data.descuento || 0),
+      itbis: parseFloat(data.itbis || 0),
+      total: parseFloat(data.total || 0),
 
-  // Pago
-  metodo_pago: data.metodo_pago || "efectivo",
-  monto_recibido: parseFloat(data.monto_recibido || 0),
-  cambio: parseFloat(data.cambio || 0),
-  banco: data.banco || null,
-  referencia: data.referencia || null,
+      // Pago
+      metodo_pago: data.metodo_pago || "efectivo",
+      monto_recibido: parseFloat(data.monto_recibido || 0),
+      cambio: parseFloat(data.cambio || 0),
+      banco: data.banco || null,
+      referencia: data.referencia || null,
 
-  // Items
-  items: data.items || [],
-  servicios: data.servicios || [],
+      // Items
+      items: data.items || [],
+      servicios: data.servicios || [],
 
-  // Devoluciones
-  devoluciones: data.devoluciones || [],
-  total_devuelto: parseFloat(data.total_devuelto || 0),
-  total_neto: parseFloat(data.total || 0) - parseFloat(data.total_devuelto || 0),
+      // Devoluciones
+      devoluciones: data.devoluciones || [],
+      total_devuelto: parseFloat(data.total_devuelto || 0),
+      total_neto: parseFloat(data.total || 0) - parseFloat(data.total_devuelto || 0),
 
-  // Estado
-  estado_texto: esFactura
-  ? data.estado === "pagada"
-  ? "FACTURA PAGADA"
-: "FACTURA PENDIENTE"
-: "VENTA COMPLETADA",
-  };
+      // Estado
+      estado_texto: esFactura
+        ? data.estado === "pagada"
+          ? "FACTURA PAGADA"
+          : "FACTURA PENDIENTE"
+        : "VENTA COMPLETADA",
+    };
   },
 
   // ==================== IMPRIMIR ====================
   imprimir() {
-  // Crear styles de impresión temporalmente
-  const style = document.createElement("style");
-  style.id = "estilos-impresion-factura";
-  style.textContent = `
-  @media print {
-  body * { visibility: hidden; }
-  #contenidoFactura, #contenidoFactura * { visibility: visible; }
-  #contenidoFactura { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; }
-.no-print { display: none !important; }
-  #modalFacturaImpresion { position: static; background: white; box-shadow: none; }
-  }
-  `;
-  document.head.appendChild(style);
+    const contenido = document.getElementById("contenidoFactura");
+    if (!contenido) return;
 
-  window.print();
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Factura</title>
+<style>
+  @page { size: auto; margin: 12mm; }
+  body { font-family: Arial, sans-serif; margin: 0; font-size: 13px; }
+  .no-print { display: none !important; }
+  table { border-collapse: collapse; }
+</style></head>
+<body>${contenido.innerHTML}</body></html>`;
 
-  // Borrar styles después de imprimir
-  setTimeout(() => {
-  const s = document.getElementById("estilos-impresion-factura");
-  if (s) s.remove();
-  }, 1000);
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;top:0;left:0;width:0;height:0;border:0;visibility:hidden;";
+    document.body.appendChild(iframe);
+    iframe.contentDocument.write(html);
+    iframe.contentDocument.close();
+    iframe.contentWindow.focus();
+    setTimeout(() => {
+      iframe.contentWindow.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 300);
   },
 
   // ==================== IMPRIMIR TÉRMICA (80mm) ====================
@@ -548,43 +545,43 @@ ${sep()}
 
   // ==================== DESCARGAR PDF ====================
   async descargarPDF() {
-  // Usar window.print() con CSS para simular PDF
-  // Para un PDF real necesitarías jsPDF, pero esto funciona con "Guardar como PDF" del navegador
-  this.imprimir();
+    // Usar window.print() con CSS para simular PDF
+    // Para un PDF real necesitarías jsPDF, pero esto funciona con "Guardar como PDF" del navegador
+    this.imprimir();
   },
 
   // ==================== CERRAR ====================
   cerrar() {
-  const modal = document.getElementById("modalFacturaImpresion");
-  if (modal) modal.remove();
+    const modal = document.getElementById("modalFacturaImpresion");
+    if (modal) modal.remove();
   },
 
   // ==================== UTILIDADES ====================
   formatCurrency(amount) {
-  return new Intl.NumberFormat("es-DO", {
-  style: "currency",
-  currency: "DOP",
-  }).format(amount);
+    return new Intl.NumberFormat("es-DO", {
+      style: "currency",
+      currency: "DOP",
+    }).format(amount);
   },
 
   formatFecha(fecha) {
-  if (!fecha) return "N/A";
-  const d = new Date(fecha);
-  return d.toLocaleDateString("es-DO", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-  });
+    if (!fecha) return "N/A";
+    const d = new Date(fecha);
+    return d.toLocaleDateString("es-DO", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   },
 
   formatMetodoPago(metodo) {
-  const metodos = {
-  efectivo: " Efectivo",
-  tarjeta: " Tarjeta",
-  transferencia: " Transferencia",
-  mixto: " Mixto",
-  };
-  return metodos[metodo] || metodo;
+    const metodos = {
+      efectivo: " Efectivo",
+      tarjeta: " Tarjeta",
+      transferencia: " Transferencia",
+      mixto: " Mixto",
+    };
+    return metodos[metodo] || metodo;
   },
 };
 
