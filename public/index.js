@@ -131,6 +131,15 @@ window.showSection = function (sectionId) {
   });
 
   switch (sectionId) {
+    case "verificador":
+      if (window.VerificadorModule) {
+        VerificadorModule.init();
+        setTimeout(() => {
+          const input = document.getElementById("verificadorInput");
+          if (input) input.focus();
+        }, 50);
+      }
+      break;
     case "productos":
       actualizarTablaProductos();
       break;
