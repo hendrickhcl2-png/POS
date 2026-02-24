@@ -636,9 +636,7 @@ const VentasModule = {
   class="btn btn-danger btn-small"
   onclick="VentasModule.eliminarItemCarrito(${index})"
   title="Eliminar"
-  >
-
-  </button>
+  >Eliminar</button>
   </div>
   </div>
   </div>
@@ -959,10 +957,11 @@ const VentasModule = {
   }
 
   if (this.metodoPagoActual === "transferencia") {
+  ventaData.monto_recibido = parseFloat(
+    document.getElementById("montoTransferenciaDirecta")?.value || 0,
+  ) || totales.total;
   ventaData.banco = document.getElementById("bancoTransferencia").value;
-  ventaData.referencia = document.getElementById(
-  "referenciaTransferencia",
-  ).value;
+  ventaData.referencia = document.getElementById("referenciaTransferencia").value;
   }
 
   if (this.metodoPagoActual === "mixto") {
