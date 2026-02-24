@@ -14,9 +14,9 @@ const FacturaImpresion = {
   // Obtener configuración del negocio
   const config = {
   nombre: "Fifty Tech",
-  rnc: "701-0123456-7",
+  rnc: "133-57701-1",
   direccion: "Santiago de los Caballeros, RD",
-  telefono: "(809) 000-0000",
+  telefono: "849-878-1113",
   email: "info@fiftytech.com",
   };
 
