@@ -534,13 +534,15 @@ ${sep()}
 <div style="margin-top:12px;"></div>
 </body></html>`;
 
-    const ventana = window.open("", "_blank", "width=320,height=600");
-    ventana.document.write(html);
-    ventana.document.close();
-    ventana.focus();
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;top:0;left:0;width:0;height:0;border:0;visibility:hidden;";
+    document.body.appendChild(iframe);
+    iframe.contentDocument.write(html);
+    iframe.contentDocument.close();
+    iframe.contentWindow.focus();
     setTimeout(() => {
-      ventana.print();
-      ventana.close();
+      iframe.contentWindow.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
     }, 400);
   },
 
