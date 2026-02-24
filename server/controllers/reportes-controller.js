@@ -187,7 +187,7 @@ const ReportesController = {
           SUM(cantidad) AS cantidad_ventas,
           SUM(total_ventas) AS total_ventas
         FROM (
-          SELECT metodo_pago, COUNT(*) AS cantidad, SUM(total) AS total_ventas
+          SELECT v.metodo_pago, COUNT(*) AS cantidad, SUM(v.total) AS total_ventas
           FROM ventas v
           LEFT JOIN facturas f ON v.id = f.venta_id
           WHERE v.fecha >= $1 AND v.fecha <= $2
