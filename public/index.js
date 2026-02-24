@@ -72,11 +72,21 @@ function setupEventListeners() {
   // Atajos de teclado globales
   document.addEventListener("keydown", function (e) {
     const tag = document.activeElement?.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-    const map = { "1": "ventas", "2": "creditos", "3": "clientes", "4": "productos", "5": "reportes", "6": "facturacion" };
-    if (map[e.key]) {
-      e.preventDefault();
-      showSection(map[e.key]);
+    const enCampo = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+
+    // ESC cierra cualquier modal activo (funciona aunque haya un campo enfocado)
+    if (e.key === "Escape") {
+      cerrarModalActivo();
+      return;
+    }
+
+    // Atajos numéricos de navegación (solo si no hay campo enfocado)
+    if (!enCampo) {
+      const map = { "1": "ventas", "2": "creditos", "3": "clientes", "4": "productos", "5": "reportes", "6": "facturacion" };
+      if (map[e.key]) {
+        e.preventDefault();
+        showSection(map[e.key]);
+      }
     }
   });
 
@@ -96,6 +106,42 @@ function setupEventListeners() {
   addInputListener("descuentoMonto", function () {
     limpiarDescuentoOpuesto("monto");
   });
+}
+
+function cerrarModalActivo() {
+  // 1. Modales dinámicos conocidos (creados con JS, se cierran con .remove() o su propio método)
+  const dinamicos = [
+    ["modalFacturaImpresion", () => window.FacturaImpresion?.cerrar()],
+    ["modalAgregarManual",    () => window.VentasModule?.cerrarModalManual()],
+    ["modalDevolucion",       () => document.getElementById("modalDevolucion")?.remove()],
+  ];
+  for (const [id, fn] of dinamicos) {
+    if (document.getElementById(id)) { fn(); return; }
+  }
+
+  // 2. modalRegistrarPago — puede ser dinámico (pagos-module) o HTML (.modal)
+  const modalPago = document.getElementById("modalRegistrarPago");
+  if (modalPago) {
+    if (modalPago.classList.contains("modal")) {
+      modalPago.classList.remove("active");
+    } else {
+      modalPago.remove();
+    }
+    return;
+  }
+
+  // 3. Modales HTML con clase .modal.active
+  const activo = document.querySelector(".modal.active");
+  if (activo) { activo.classList.remove("active"); return; }
+
+  // 4. Cualquier modal dinámico restante (ej: creditos-module) con display flex/block
+  const bodyDivs = document.querySelectorAll("body > div[id]");
+  for (const el of bodyDivs) {
+    if (el.style.display === "flex" || el.style.display === "block") {
+      el.style.display = "none";
+      return;
+    }
+  }
 }
 
 function addSubmitListener(formId, handler) {
