@@ -175,7 +175,6 @@
   <input
   type="checkbox"
   id="incluirITBIS"
-  checked
   class="opcion-facturacion-checkbox"
   />
   <div>
@@ -608,7 +607,7 @@
   </div>
   <div class="form-group">
   <label>Categoría:</label>
-  <select id="productoCategoria">
+  <select id="productoCategoria" onchange="toggleStockPorCategoria()">
   <option value="">Seleccione una categoría</option>
   </select>
   </div>
@@ -739,7 +738,7 @@
   <!-- ==================== DISPONIBILIDAD ==================== -->
   <h4 class="seccion-titulo-simple">Disponibilidad y Stock</h4>
 
-  <div class="form-row-3">
+  <div id="seccionStock" class="form-row-3">
   <div class="form-group">
   <label>Stock Inicial:</label>
   <input type="number" id="productoStock" value="0" />

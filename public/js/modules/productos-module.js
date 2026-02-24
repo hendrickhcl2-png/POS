@@ -247,6 +247,7 @@ window.editarProducto = async function (productoId) {
     setValueIfExists("productoNombre", producto.nombre || "");
     setValueIfExists("productoDescripcion", producto.descripcion || "");
     setValueIfExists("productoCategoria", producto.categoria_id || "");
+    toggleStockPorCategoria();
     setValueIfExists("productoProveedor", producto.proveedor_id || "");
     setValueIfExists("productoPrecio", producto.precio_venta || "");
     setValueIfExists("productoMayoreo", producto.precio_mayoreo || "");
@@ -314,6 +315,7 @@ function cancelarEdicion() {
   productoEnEdicion = null;
 
   document.getElementById("formProducto").reset();
+  toggleStockPorCategoria();
   limpiarCostos();
   limpiarCaracteristicas();
   agregarLineaCosto();
@@ -707,7 +709,33 @@ function actualizarSelectCategorias() {
     option.textContent = cat.nombre;
     select.appendChild(option);
   });
+
+  toggleStockPorCategoria();
 }
+
+// ==================== TOGGLE STOCK POR CATEGORÍA ====================
+
+window.toggleStockPorCategoria = function () {
+  const select = document.getElementById("productoCategoria");
+  const seccionStock = document.getElementById("seccionStock");
+  if (!select || !seccionStock) return;
+
+  const nombre = (select.options[select.selectedIndex]?.text || "").toLowerCase();
+  const esTelefono = /tel[eé]fono|celular/i.test(nombre);
+
+  if (esTelefono) {
+    seccionStock.style.display = "none";
+    // Fijar stock a 1 para que el trigger de venta funcione correctamente
+    const stock = document.getElementById("productoStock");
+    const stockMin = document.getElementById("productoStockMin");
+    const stockMax = document.getElementById("productoStockMax");
+    if (stock) stock.value = "1";
+    if (stockMin) stockMin.value = "0";
+    if (stockMax) stockMax.value = "1";
+  } else {
+    seccionStock.style.display = "";
+  }
+};
 
 window.eliminarProducto = async function (id) {
   if (!confirm("¿Está seguro de eliminar este producto?")) return;
