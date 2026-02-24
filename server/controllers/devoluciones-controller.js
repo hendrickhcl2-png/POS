@@ -221,18 +221,30 @@ const DevolucionesController = {
         );
       }
 
-      // Si es devolución total, actualizar saldo del cliente si es a crédito
-      if (
-        tipoDevolucion === "total" &&
-        factura.tipo_factura === "credito" &&
-        factura.cliente_id
-      ) {
-        await client.query(
-          `UPDATE clientes 
-           SET saldo_pendiente = saldo_pendiente - $1
-           WHERE id = $2`,
-          [totalDevolucion, factura.cliente_id],
+      // Si la factura tiene saldo pendiente, reducirlo por el monto devuelto
+      if (parseFloat(factura.saldo_pendiente) > 0) {
+        const nuevoSaldo = Math.max(
+          0,
+          parseFloat(factura.saldo_pendiente) - totalDevolucion,
         );
+        const nuevoEstado = nuevoSaldo === 0 ? "pagada" : factura.estado;
+
+        await client.query(
+          `UPDATE facturas
+           SET saldo_pendiente = $1, estado = $2
+           WHERE id = $3`,
+          [nuevoSaldo, nuevoEstado, factura_id],
+        );
+
+        // Si es factura de crédito, reducir también el saldo del cliente
+        if (factura.tipo_factura === "credito" && factura.cliente_id) {
+          await client.query(
+            `UPDATE clientes
+             SET saldo_pendiente = GREATEST(0, saldo_pendiente - $1)
+             WHERE id = $2`,
+            [totalDevolucion, factura.cliente_id],
+          );
+        }
       }
 
       await client.query("COMMIT");

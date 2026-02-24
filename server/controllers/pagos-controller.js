@@ -57,10 +57,10 @@ const PagosController = {
         throw new Error("Esta factura ya está completamente pagada");
       }
 
-      // Calcular saldo pendiente
+      // Calcular saldo pendiente (usa el valor almacenado, que ya refleja devoluciones)
       const montoPagado = parseFloat(factura.monto_pagado || 0);
       const total = parseFloat(factura.total);
-      const saldoPendiente = total - montoPagado;
+      const saldoPendiente = parseFloat(factura.saldo_pendiente);
 
       if (parseFloat(monto) > saldoPendiente) {
         throw new Error(
@@ -117,10 +117,10 @@ const PagosController = {
 
       // Actualizar factura
       const nuevoMontoPagado = montoPagado + parseFloat(monto);
-      const nuevoSaldo = total - nuevoMontoPagado;
+      const nuevoSaldo = Math.max(0, saldoPendiente - parseFloat(monto));
 
       let nuevoEstado = "pendiente";
-      if (nuevoMontoPagado >= total) {
+      if (nuevoSaldo <= 0) {
         nuevoEstado = "pagada";
       } else if (nuevoMontoPagado > 0) {
         nuevoEstado = "parcial";
@@ -273,10 +273,12 @@ const PagosController = {
       // Eliminar pago
       await client.query("DELETE FROM pagos_factura WHERE id = $1", [id]);
 
-      // Recalcular totales de la factura
-      const nuevoPagado =
-        parseFloat(factura.monto_pagado) - parseFloat(pago.monto);
-      const nuevoSaldo = parseFloat(factura.total) - nuevoPagado;
+      // Recalcular totales de la factura (saldo sube por el monto anulado)
+      const nuevoPagado = Math.max(
+        0,
+        parseFloat(factura.monto_pagado) - parseFloat(pago.monto),
+      );
+      const nuevoSaldo = parseFloat(factura.saldo_pendiente) + parseFloat(pago.monto);
 
       let nuevoEstado = "pendiente";
       if (nuevoPagado >= parseFloat(factura.total)) {
