@@ -96,9 +96,9 @@ router.get(
     try {
       // Obtener facturas del cliente
       const facturasResult = await pool.query(
-        `SELECT * FROM facturas 
-         WHERE cliente_id = $1 
-         ORDER BY fecha_emision DESC`,
+        `SELECT * FROM facturas
+         WHERE cliente_id = $1
+         ORDER BY fecha DESC`,
         [id],
       );
 
