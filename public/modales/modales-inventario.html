@@ -1,0 +1,160 @@
+<!-- ==================== MODALES DE INVENTARIO ==================== -->
+
+<!-- Modal: Movimiento de Stock (Entrada/Salida) -->
+<div class="modal" id="modalMovimientoStock">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="tituloModalMovimiento">➕ Agregar Stock</h2>
+      <span
+        class="close-modal"
+        onclick="InventarioModule.cerrarModalMovimiento()"
+        >&times;</span
+      >
+    </div>
+
+    <div class="modal-body">
+      <!-- Información del producto -->
+      <div id="movimientoProductoInfo"></div>
+
+      <form id="formMovimiento">
+        <input type="hidden" id="movimientoTipo" value="entrada" />
+
+        <div class="form-group">
+          <label>Cantidad: <span class="campo-requerido">*</span></label>
+          <input
+            type="number"
+            id="movimientoCantidad"
+            min="1"
+            step="1"
+            placeholder="Ej: 10"
+            required
+            autofocus
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Motivo:</label>
+          <select id="movimientoMotivo">
+            <option value="">Seleccione un motivo</option>
+            <option value="Compra a proveedor">Compra a proveedor</option>
+            <option value="Venta realizada">Venta realizada</option>
+            <option value="Devolución de cliente">Devolución de cliente</option>
+            <option value="Devolución a proveedor">
+              Devolución a proveedor
+            </option>
+            <option value="Producto defectuoso">Producto defectuoso</option>
+            <option value="Ajuste de inventario">Ajuste de inventario</option>
+            <option value="Pérdida o robo">Pérdida o robo</option>
+            <option value="Transferencia entre sucursales">
+              Transferencia entre sucursales
+            </option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="InventarioModule.cerrarModalMovimiento()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn btn-success"
+            id="btnGuardarMovimiento"
+          >
+            ➕ Agregar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Ajustar Inventario -->
+<div class="modal" id="modalAjustarInventario">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>⚙️ Ajustar Inventario</h2>
+      <span class="close-modal" onclick="InventarioModule.cerrarModalAjustar()"
+        >&times;</span
+      >
+    </div>
+
+    <div class="modal-body">
+      <!-- Información del producto -->
+      <div id="ajusteProductoInfo"></div>
+
+      <div class="aviso-ajuste-inventario">
+        <p class="aviso-ajuste-inventario-texto">
+          ⚠️ <strong>Advertencia:</strong> Esta acción ajustará el inventario
+          directamente a la cantidad especificada. Use esta función solo para
+          correcciones manuales o conteos físicos.
+        </p>
+      </div>
+
+      <form id="formAjuste">
+        <div class="form-group">
+          <label>Nueva Cantidad: <span class="campo-requerido">*</span></label>
+          <input
+            type="number"
+            id="ajusteNuevaCantidad"
+            min="0"
+            step="1"
+            placeholder="Ej: 25"
+            required
+            autofocus
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Motivo del Ajuste: <span class="campo-requerido">*</span></label>
+          <textarea
+            id="ajusteMotivo"
+            rows="3"
+            placeholder="Ej: Ajuste por conteo físico de inventario..."
+            required
+          ></textarea>
+          <small class="campo-ayuda-secundaria"
+            >Es obligatorio indicar el motivo del ajuste para control
+            interno</small
+          >
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="InventarioModule.cerrarModalAjustar()"
+          >
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-warning">
+            ⚙️ Ajustar Inventario
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Historial de Movimientos -->
+<div class="modal" id="modalHistorialMovimientos">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>📜 Historial de Movimientos</h2>
+      <span
+        class="close-modal"
+        onclick="InventarioModule.cerrarModalHistorial()"
+        >&times;</span
+      >
+    </div>
+    <div class="modal-body">
+      <div id="historialMovimientosContent">
+        <!-- Contenido generado dinámicamente -->
+      </div>
+    </div>
+  </div>
+</div>

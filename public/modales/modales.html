@@ -1,0 +1,246 @@
+<!-- Agregar este contenido ANTES de </body> en index.html -->
+
+<!-- Modal: Generar Factura -->
+<div class="modal" id="modalGenerarFactura">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>📄 Generar Factura</h2>
+      <span class="close-modal" onclick="FacturacionModule.cerrarModalFactura()"
+        >&times;</span
+      >
+    </div>
+
+    <div class="modal-body">
+      <form
+        id="formGenerarFactura"
+        onsubmit="event.preventDefault(); FacturacionModule.generarFacturaDesdeVenta();"
+      >
+        <input type="hidden" id="facturaVentaId" />
+        <input type="hidden" id="facturaClienteId" />
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Tipo de Factura:</label>
+            <select id="facturaTipo" required>
+              <option value="electronica">Factura Electrónica</option>
+              <option value="fiscal">Factura Fiscal</option>
+              <option value="credito_fiscal">Crédito Fiscal</option>
+              <option value="normal">Factura Normal</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Tipo de Comprobante (NCF):</label>
+            <select id="facturaComprobante" required>
+              <option value="B01">B01 - Factura con Crédito Fiscal</option>
+              <option value="B02">B02 - Factura de Consumo</option>
+              <option value="B14">B14 - Comprobante para Gastos Menores</option>
+              <option value="B15">B15 - Comprobante Gubernamental</option>
+              <option value="Sin NCF">Sin NCF</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Condiciones de Pago:</label>
+            <select
+              id="facturaCondiciones"
+              required
+              onchange="toggleFechaVencimiento(this.value)"
+            >
+              <option value="Contado">Contado</option>
+              <option value="30 días">30 días</option>
+              <option value="60 días">60 días</option>
+              <option value="90 días">90 días</option>
+              <option value="Personalizado">Personalizado</option>
+            </select>
+          </div>
+
+          <div
+            class="form-group fecha-vencimiento-oculta"
+            id="grupoFechaVencimiento"
+          >
+            <label>Fecha de Vencimiento:</label>
+            <input type="date" id="facturaVencimiento" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Observaciones:</label>
+          <textarea
+            id="facturaObservaciones"
+            rows="3"
+            placeholder="Observaciones adicionales..."
+          ></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="FacturacionModule.cerrarModalFactura()"
+          >
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-success">
+            📄 Generar Factura
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detalle de Factura -->
+<div class="modal" id="modalDetalleFactura">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>📄 Detalle de Factura</h2>
+      <span
+        class="close-modal"
+        onclick="FacturacionModule.cerrarModalDetalleFactura()"
+        >&times;</span
+      >
+    </div>
+
+    <div class="modal-body">
+      <div id="detalleFacturaContent">
+        <!-- Contenido generado dinámicamente -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Registrar Pago -->
+<div class="modal" id="modalRegistrarPago">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>💳 Registrar Pago</h2>
+      <span class="close-modal" onclick="FacturacionModule.cerrarModalPago()"
+        >&times;</span
+      >
+    </div>
+
+    <div class="modal-body">
+      <form
+        id="formRegistrarPago"
+        onsubmit="event.preventDefault(); FacturacionModule.registrarPagoFactura();"
+      >
+        <input type="hidden" id="pagoFacturaId" />
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Fecha de Pago: <span class="campo-requerido">*</span></label>
+            <input type="date" id="pagoFecha" required />
+          </div>
+
+          <div class="form-group">
+            <label>Monto: <span class="campo-requerido">*</span></label>
+            <input
+              type="number"
+              id="pagoMonto"
+              step="0.01"
+              min="0.01"
+              placeholder="0.00"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Método de Pago:</label>
+            <select id="pagoMetodo" required>
+              <option value="efectivo">Efectivo</option>
+              <option value="tarjeta">Tarjeta</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="cheque">Cheque</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Banco:</label>
+            <input type="text" id="pagoBanco" placeholder="Nombre del banco" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Referencia / No. de Transacción:</label>
+          <input
+            type="text"
+            id="pagoReferencia"
+            placeholder="Número de referencia"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Observaciones:</label>
+          <textarea
+            id="pagoObservaciones"
+            rows="2"
+            placeholder="Observaciones adicionales..."
+          ></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="FacturacionModule.cerrarModalPago()"
+          >
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-success">
+            💳 Registrar Pago
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Estado de Cuenta Cliente -->
+<div class="modal" id="modalEstadoCuenta">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>💼 Estado de Cuenta</h2>
+      <span
+        class="close-modal"
+        onclick="FacturacionModule.cerrarModalEstadoCuenta()"
+        >&times;</span
+      >
+    </div>
+
+    <div class="modal-body">
+      <div id="estadoCuentaContent">
+        <!-- Contenido generado dinámicamente -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Script auxiliar para fecha de vencimiento -->
+<script>
+  function toggleFechaVencimiento(condicion) {
+    const grupo = document.getElementById("grupoFechaVencimiento");
+    if (condicion !== "Contado") {
+      grupo.style.display = "block";
+
+      // Calcular fecha de vencimiento automática
+      const hoy = new Date();
+      let dias = 30;
+
+      if (condicion === "30 días") dias = 30;
+      else if (condicion === "60 días") dias = 60;
+      else if (condicion === "90 días") dias = 90;
+
+      const vencimiento = new Date(hoy.setDate(hoy.getDate() + dias));
+      document.getElementById("facturaVencimiento").value = vencimiento
+        .toISOString()
+        .split("T")[0];
+    } else {
+      grupo.style.display = "none";
+    }
+  }
+</script>

@@ -1,0 +1,1697 @@
+/* ==================== DESIGN TOKENS ==================== */
+:root {
+  /* Primary — Flat UI blue */
+  --clr-primary:      #3498db;
+  --clr-primary-dark: #2980b9;
+  --clr-primary-tint: #ebf5fb;
+
+  /* Info — teal (distinct from primary) */
+  --clr-info:         #16a085;
+  --clr-info-dark:    #138570;
+  --clr-info-tint:    #d1ece8;
+  --clr-info-text:    #0b4f43;
+
+  /* Success — green */
+  --clr-success:      #27ae60;
+  --clr-success-dark: #229954;
+  --clr-success-tint: #eafaf1;
+  --clr-success-mid:  #d4edda;
+  --clr-success-text: #1a6b3a;
+
+  /* Warning — amber */
+  --clr-warning:      #f39c12;
+  --clr-warning-dark: #e67e22;
+  --clr-warning-tint: #fef9ec;
+  --clr-warning-text: #7d4e00;
+
+  /* Danger — red */
+  --clr-danger:       #e74c3c;
+  --clr-danger-dark:  #c0392b;
+  --clr-danger-tint:  #fdedec;
+  --clr-danger-text:  #6b1a14;
+
+  /* Neutrals */
+  --clr-dark:         #2c3e50;
+  --clr-muted:        #7f8c8d;
+  --clr-muted-light:  #95a5a6;
+  --clr-muted-subtle: #bdc3c7;
+  --clr-border:       #ddd;
+
+  /* Backgrounds */
+  --clr-bg-page:      #ecf0f1;
+  --clr-bg-surface:   #f8f9fa;
+  --clr-bg-white:     #fff;
+
+  /* Sidebar */
+  --clr-sidebar-bg:   #1a2332;
+
+  /* Stat card semantic gradients */
+  --stat-count-a:     #2980b9;  --stat-count-b:    #1a5276;
+  --stat-revenue-a:   #1565c0;  --stat-revenue-b:  #0d3b7a;
+  --stat-positive-a:  #27ae60;  --stat-positive-b: #1e8449;
+  --stat-pending-a:   #f39c12;  --stat-pending-b:  #d35400;
+  --stat-cost-a:      #c0392b;  --stat-cost-b:     #922b21;
+  --stat-itbis-a:     #5c6bc0;  --stat-itbis-b:    #3949ab;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--clr-bg-page);
+  overflow-x: hidden;
+}
+
+.container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background: var(--clr-sidebar-bg);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 3px 0 12px rgba(0, 0, 0, 0.35);
+  overflow-y: auto;
+}
+
+.logo {
+  padding: 24px 20px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.logo h2 {
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.nav-group-label {
+  padding: 18px 20px 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.32);
+  user-select: none;
+}
+
+.nav-item {
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s, border-left-color 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-left: 3px solid transparent;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-left-color: var(--clr-primary);
+}
+
+.nav-item.active {
+  background: rgba(52, 152, 219, 0.14);
+  border-left-color: var(--clr-primary);
+}
+
+.nav-label {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.72);
+  font-weight: 400;
+  transition: color 0.15s;
+}
+
+.nav-item:hover .nav-label,
+.nav-item.active .nav-label {
+  color: white;
+  font-weight: 600;
+}
+
+.nav-kbd {
+  font-size: 10px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-kbd {
+  background: rgba(52, 152, 219, 0.25);
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(52, 152, 219, 0.45);
+}
+
+.nav-item svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: var(--clr-bg-page);
+}
+
+.header {
+  background: var(--clr-bg-white);
+  padding: 20px 30px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header h1 {
+  color: var(--clr-dark);
+  font-size: 28px;
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+.card {
+  background: var(--clr-bg-white);
+  border-radius: 10px;
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.card h3 {
+  color: var(--clr-dark);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--clr-primary);
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--clr-dark);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--clr-border);
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--clr-primary);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.form-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+}
+
+.form-row-4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 15px;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: var(--clr-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--clr-primary-dark);
+}
+
+.btn-success {
+  background: var(--clr-success);
+  color: white;
+}
+
+.btn-success:hover {
+  background: var(--clr-success-dark);
+}
+
+.btn-danger {
+  background: var(--clr-danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background: var(--clr-danger-dark);
+}
+
+.btn-warning {
+  background: var(--clr-warning);
+  color: white;
+}
+
+.btn-warning:hover {
+  background: var(--clr-warning-dark);
+}
+
+.btn-info {
+  background: var(--clr-info);
+  color: white;
+}
+
+.btn-info:hover {
+  background: var(--clr-info-dark);
+}
+
+.btn-secondary {
+  background: var(--clr-muted-light);
+  color: white;
+}
+
+.btn-small {
+  padding: 4px 8px;
+  font-size: 11px;
+  min-width: 80px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+thead {
+  background: var(--clr-dark);
+  color: white;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--clr-bg-page);
+}
+
+tbody tr:hover {
+  background: var(--clr-bg-surface);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: var(--clr-bg-white);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid var(--clr-primary);
+}
+
+.stat-card h4 {
+  color: var(--clr-muted);
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.stat-card .value {
+  color: var(--clr-dark);
+  font-size: 28px;
+  font-weight: bold;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--clr-bg-white);
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 900px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--clr-primary);
+}
+
+.close-modal {
+  cursor: pointer;
+  font-size: 28px;
+  color: var(--clr-muted);
+  font-weight: bold;
+}
+
+.close-modal:hover {
+  color: var(--clr-danger);
+}
+
+/* Invoice Items */
+.invoice-items {
+  margin: 20px 0;
+}
+
+.invoice-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 80px;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: end;
+}
+
+.invoice-total-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--clr-bg-page);
+  border-radius: 5px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 16px;
+}
+
+.total-row.final {
+  border-top: 2px solid var(--clr-dark);
+  margin-top: 10px;
+  padding-top: 10px;
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--clr-success);
+}
+
+/* Payment methods */
+.payment-methods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin: 20px 0;
+}
+
+.payment-method {
+  padding: 15px;
+  border: 2px solid var(--clr-border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.payment-method.active {
+  border-color: var(--clr-primary);
+  background: var(--clr-primary-tint);
+}
+
+.payment-method:hover {
+  border-color: var(--clr-primary);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--clr-bg-page);
+}
+
+.tab {
+  padding: 12px 24px;
+  cursor: pointer;
+  background: var(--clr-bg-page);
+  border: none;
+  border-radius: 5px 5px 0 0;
+  transition: all 0.3s;
+}
+
+.tab.active {
+  background: var(--clr-primary);
+  color: white;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Search Bar */
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--clr-border);
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-success {
+  background: var(--clr-success-mid);
+  color: var(--clr-success-text);
+}
+
+.badge-danger {
+  background: var(--clr-danger-tint);
+  color: var(--clr-danger-text);
+}
+
+.badge-warning {
+  background: var(--clr-warning-tint);
+  color: var(--clr-warning-text);
+}
+
+.badge-info {
+  background: var(--clr-info-tint);
+  color: var(--clr-info-text);
+}
+
+/* Alert */
+.alert {
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.alert-success {
+  background: var(--clr-success-mid);
+  color: var(--clr-success-text);
+  border-left: 4px solid var(--clr-success);
+}
+
+.alert-danger {
+  background: var(--clr-danger-tint);
+  color: var(--clr-danger-text);
+  border-left: 4px solid var(--clr-danger);
+}
+
+.alert-info {
+  background: var(--clr-info-tint);
+  color: var(--clr-info-text);
+  border-left: 4px solid var(--clr-info);
+}
+
+/* Cost breakdown */
+.cost-breakdown {
+  background: var(--clr-bg-surface);
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+.cost-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.cost-item:last-child {
+  border-bottom: none;
+  font-weight: bold;
+  color: var(--clr-success);
+}
+
+/* Print styles */
+@media print {
+  .sidebar,
+  .btn,
+  .actions,
+  .search-bar {
+    display: none !important;
+  }
+  .main-content {
+    padding: 0;
+  }
+  .card {
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    height: auto;
+  }
+  .form-row,
+  .form-row-2,
+  .form-row-3,
+  .form-row-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.mt-20 {
+  margin-top: 20px;
+}
+
+.barcode-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ==================== BARCODE SCANNER ==================== */
+
+.barcode-field-wrapper {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-barcode-scan {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: var(--clr-dark);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-barcode-scan:hover {
+  background: var(--clr-primary);
+}
+
+.btn-barcode-scan:active {
+  transform: scale(0.94);
+}
+
+.barcode-input.scanning-mode {
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+  animation: scan-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes scan-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25); }
+  50%       { box-shadow: 0 0 0 6px rgba(52, 152, 219, 0.08); }
+}
+
+/* ==================== ESTILOS PARA COSTOS DINÁMICOS ==================== */
+
+/* Animación de entrada */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animación de salida */
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+/* Contenedor de costos */
+#costosContainer {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+/* Scrollbar personalizado */
+#costosContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+#costosContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+#costosContainer::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+#costosContainer::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Items de costo dinámico */
+.costo-item-dinamico {
+  transition: all 0.3s ease;
+}
+
+.costo-item-dinamico:hover {
+  background: var(--clr-bg-page) !important;
+  transform: translateX(5px);
+}
+
+/* Inputs dentro de items de costo */
+.costo-item-dinamico input:focus {
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  outline: none;
+}
+
+/* Botón de agregar costo */
+.btn-success {
+  background: var(--clr-success);
+  transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+  background: var(--clr-success-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+}
+
+/* Mensaje cuando no hay costos */
+.costos-vacio {
+  text-align: center;
+  padding: 30px;
+  color: var(--clr-muted-light);
+  font-style: italic;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+  .costo-item-dinamico {
+    grid-template-columns: 1fr !important;
+  }
+
+  .costo-item-dinamico button {
+    justify-self: end;
+  }
+}
+
+/* ==================== SIDEBAR ==================== */
+
+/* Subtítulo del logo en el sidebar */
+.logo-subtitulo {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.36);
+  letter-spacing: 0.04em;
+}
+
+/* ==================== VENTAS - FORM ==================== */
+
+/* Título de sección simple con margen uniforme */
+.seccion-titulo-simple {
+  margin: 20px 0;
+}
+
+/* Encabezado del bloque de servicios adicionales */
+.servicios-adicionales-titulo {
+  margin: 25px 0 15px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--clr-success);
+  padding-bottom: 10px;
+}
+
+/* Texto principal del encabezado de servicios */
+.servicios-adicionales-label {
+  color: var(--clr-dark);
+}
+
+/* Subtexto descriptivo dentro del encabezado de servicios */
+.servicios-adicionales-hint {
+  font-size: 12px;
+  color: var(--clr-muted);
+  font-weight: normal;
+  margin-left: 10px;
+}
+
+/* Botón de agregar servicio en el encabezado */
+.btn-agregar-servicio {
+  font-size: 14px;
+}
+
+/* Contenedor de accesos rápidos de servicios */
+.servicios-rapidos-contenedor {
+  background: var(--clr-bg-surface);
+  padding: 12px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+}
+
+/* Etiqueta "Servicios Rápidos:" */
+.servicios-rapidos-label {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Fila de botones de servicios rápidos */
+.servicios-rapidos-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* Área donde se listan los servicios ya agregados a la venta */
+.servicios-en-venta {
+  margin-bottom: 20px;
+  min-height: 50px;
+}
+
+/* Nota informativa verde de servicios */
+.servicios-nota-info {
+  background: var(--clr-success-tint);
+  padding: 12px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--clr-success);
+}
+
+/* Texto de la nota informativa de servicios */
+.servicios-nota-info-texto {
+  margin: 0;
+  font-size: 13px;
+  color: var(--clr-success-text);
+}
+
+/* ==================== VENTAS - FACTURACIÓN OPTIONS ==================== */
+
+/* Panel de opciones de facturación (azul claro) */
+.panel-opciones-facturacion {
+  background: var(--clr-primary-tint);
+  padding: 15px;
+  border-radius: 5px;
+  margin: 20px 0;
+  border-left: 4px solid var(--clr-primary);
+}
+
+/* Título del panel de opciones de facturación */
+.panel-opciones-facturacion-titulo {
+  margin: 0 0 15px 0;
+  color: var(--clr-primary-dark);
+}
+
+/* Fila de checkboxes de opciones de facturación */
+.opciones-facturacion-fila {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+/* Label-wrapper de cada checkbox de opción */
+.opcion-facturacion-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* Checkbox de opción de facturación */
+.opcion-facturacion-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* Texto destacado de cada opción (ITBIS, Factura, Crédito) */
+.opcion-facturacion-nombre {
+  color: var(--clr-primary-dark);
+}
+
+/* Texto secundario de cada opción */
+.opcion-facturacion-descripcion {
+  color: #555;
+}
+
+/* Panel de campos de crédito (amarillo, oculto por defecto, JS lo muestra) */
+.panel-credito {
+  display: none;
+  margin-top: 20px;
+  padding: 20px;
+  background: var(--clr-warning-tint);
+  border: 2px solid var(--clr-warning);
+  border-radius: 8px;
+}
+
+/* Título del panel de configuración de crédito */
+.panel-credito-titulo {
+  margin: 0 0 15px 0;
+  color: var(--clr-warning-dark);
+}
+
+/* Grid de dos columnas para los campos de crédito */
+.credito-campos-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+/* Label dentro del panel de crédito */
+.credito-campo-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+/* Select de plazo de crédito */
+.credito-select {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid var(--clr-muted-subtle);
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+/* Input de pago inicial de crédito */
+.credito-input {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid var(--clr-muted-subtle);
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+/* Texto de ayuda pequeño en formularios */
+.campo-ayuda {
+  color: var(--clr-muted);
+}
+
+/* ==================== VENTAS - PAGO ==================== */
+
+/* Input de cambio (solo lectura, resaltado en verde) */
+.input-cambio {
+  background: var(--clr-bg-surface);
+  font-weight: bold;
+  font-size: 18px;
+  color: var(--clr-success);
+}
+
+/* Paneles de pago ocultos por defecto (tarjeta, transferencia, mixto) */
+.payment-details-oculto {
+  display: none;
+}
+
+/* Barra de acción inferior del formulario de venta */
+.venta-acciones {
+  margin-top: 30px;
+  display: flex;
+  gap: 15px;
+}
+
+/* Botón procesar venta (ocupa todo el espacio disponible) */
+.btn-procesar-venta {
+  flex: 1;
+}
+
+/* ==================== TABLAS - ESTADO VACÍO ==================== */
+
+/* Celda de tabla con mensaje de lista vacía */
+.tabla-vacia-mensaje {
+  color: var(--clr-muted);
+}
+
+/* Celda de tabla con estado de carga (padding amplio) */
+.tabla-cargando {
+  padding: 40px;
+  color: var(--clr-muted-light);
+}
+
+/* Ícono grande dentro de celda de carga */
+.tabla-cargando-icono {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+/* ==================== CLIENTES - SECCIÓN ==================== */
+
+/* Encabezado de la sección de clientes */
+.clientes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* Barra de acciones (búsqueda + botones) de clientes */
+.clientes-acciones {
+  display: flex;
+  gap: 10px;
+}
+
+/* Input de búsqueda de clientes */
+.clientes-buscador {
+  padding: 8px 12px;
+  border: 1px solid var(--clr-border);
+  border-radius: 5px;
+  width: 300px;
+}
+
+/* Contador de clientes registrados */
+.clientes-contador {
+  margin-bottom: 15px;
+  color: var(--clr-muted);
+  font-size: 14px;
+}
+
+/* Wrapper de tabla con scroll horizontal */
+.tabla-scroll-horizontal {
+  overflow-x: auto;
+}
+
+/* Encabezado de columna "Acciones" centrado */
+.th-acciones-centrado {
+  text-align: center;
+}
+
+/* ==================== PRODUCTOS - FORM ==================== */
+
+/* Encabezado de sección con flex (título + botón acción) */
+.producto-seccion-titulo {
+  margin: 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Contenedor de características del producto */
+.caracteristicas-contenedor {
+  margin-bottom: 20px;
+}
+
+/* Caja de información azul genérica (ejemplos, notas) */
+.caja-info-azul {
+  background: var(--clr-primary-tint);
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--clr-primary);
+}
+
+/* Texto dentro de caja de información azul */
+.caja-info-azul-texto {
+  margin: 0;
+  font-size: 14px;
+  color: var(--clr-primary-dark);
+}
+
+/* Fila de costo total: alineada a la derecha */
+.costo-total-fila {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 15px;
+  margin-top: 15px;
+  padding: 15px;
+  background: var(--clr-bg-page);
+  border-radius: 5px;
+  border-left: 4px solid var(--clr-danger);
+}
+
+/* Etiqueta "COSTO TOTAL:" */
+.costo-total-etiqueta {
+  font-weight: bold;
+  color: var(--clr-dark);
+  font-size: 16px;
+}
+
+/* Input de costo total calculado automáticamente */
+.costo-total-input {
+  width: 180px;
+  padding: 10px;
+  background: var(--clr-bg-white);
+  font-weight: bold;
+  font-size: 18px;
+  color: var(--clr-danger);
+  border: 2px solid var(--clr-danger-dark);
+  border-radius: 5px;
+  text-align: right;
+}
+
+/* Grid de precios con margen superior */
+.precios-grid {
+  margin-top: 20px;
+}
+
+/* ==================== PRODUCTOS - DESCUENTOS ==================== */
+
+/* Panel del precio final con descuento (fondo verde degradado) */
+.panel-precio-final {
+  background: linear-gradient(135deg, var(--clr-success-mid) 0%, #c3e6cb 100%);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid var(--clr-success);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Fila interior del panel precio final */
+.panel-precio-final-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Etiqueta "Precio Final:" */
+.precio-final-etiqueta {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--clr-success-text);
+}
+
+/* Valor del precio final con descuento */
+.precio-final-valor {
+  font-size: 32px;
+  font-weight: bold;
+  color: var(--clr-success-text);
+  font-family: "Arial Black", sans-serif;
+}
+
+/* ==================== PRODUCTOS - DISPONIBILIDAD ==================== */
+
+/* Caja de disponibilidad del producto (fondo amarillo) */
+.caja-disponibilidad {
+  background: var(--clr-warning-tint);
+  padding: 20px;
+  border-radius: 5px;
+  margin-top: 15px;
+  border-left: 4px solid var(--clr-warning);
+}
+
+/* Label-wrapper del checkbox de disponibilidad */
+.disponibilidad-label {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+}
+
+/* Checkbox de disponibilidad */
+.disponibilidad-checkbox {
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+}
+
+/* Título de disponibilidad */
+.disponibilidad-titulo {
+  font-size: 18px;
+  color: var(--clr-warning-text);
+}
+
+/* Descripción de disponibilidad */
+.disponibilidad-descripcion {
+  margin: 5px 0 0 0;
+  color: var(--clr-warning-text);
+  font-size: 14px;
+}
+
+/* Caja de nota azul de disponibilidad/stock */
+.caja-nota-stock {
+  background: var(--clr-primary-tint);
+  padding: 15px;
+  border-radius: 5px;
+  margin: 20px 0;
+  border-left: 4px solid var(--clr-primary);
+}
+
+/* ==================== INVENTARIO - STATS ==================== */
+
+/* Valor de productos bajo stock (resaltado en rojo) */
+.stat-bajo-stock {
+  color: var(--clr-danger);
+}
+
+/* ==================== FACTURACIÓN - STATS CARDS ==================== */
+
+/* Grid de tarjetas de estadísticas de facturación */
+.facturacion-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+/* Tarjeta de stat: Total Facturas (count — azul) */
+.stat-card-total-facturas {
+  background: linear-gradient(135deg, var(--stat-count-a) 0%, var(--stat-count-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Tarjeta de stat: Monto Total (revenue — azul marino) */
+.stat-card-monto-total {
+  background: linear-gradient(135deg, var(--stat-revenue-a) 0%, var(--stat-revenue-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Tarjeta de stat: Pendientes (pending — ámbar) */
+.stat-card-pendientes {
+  background: linear-gradient(135deg, var(--stat-pending-a) 0%, var(--stat-pending-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Tarjeta de stat: Pagadas (positive — verde) */
+.stat-card-pagadas {
+  background: linear-gradient(135deg, var(--stat-positive-a) 0%, var(--stat-positive-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Fila interior de cada stat card (ícono + texto) */
+.stat-card-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Párrafo de etiqueta dentro de stat card */
+.stat-card-etiqueta {
+  margin: 0;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* Valor numérico principal en stat card - tamaño grande */
+.stat-card-valor-grande {
+  margin: 10px 0 0 0;
+  font-size: 36px;
+}
+
+/* Valor numérico en stat card - tamaño mediano (montos) */
+.stat-card-valor-mediano {
+  margin: 10px 0 0 0;
+  font-size: 32px;
+}
+
+/* Ícono decorativo de stat card (grande, semitransparente) */
+.stat-card-icono {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+/* ==================== FACTURACIÓN - FILTROS ==================== */
+
+/* Encabezado del bloque de búsqueda de facturas */
+.facturacion-busqueda-titulo {
+  margin: 0 0 15px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Fila de filtros rápidos de fecha */
+.filtros-rapidos-fila {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+/* Grid de filtros avanzados de facturas */
+.filtros-avanzados-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+/* Fila de botones de acción de filtros */
+.filtros-acciones-fila {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* ==================== FACTURACIÓN - TABLA ==================== */
+
+/* Encabezado del bloque de listado de facturas */
+.facturacion-tabla-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+/* Título del listado de facturas */
+.facturacion-tabla-titulo {
+  margin: 0;
+}
+
+/* Loader de facturas (oculto por defecto, JS lo muestra) */
+.loader-facturas {
+  display: none;
+}
+
+/* Texto de estado de carga */
+.loader-texto {
+  color: var(--clr-primary);
+  font-size: 14px;
+}
+
+/* Tabla completa de facturas */
+.tabla-facturas {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+/* Fila de encabezado de tabla de facturas/reportes */
+.tabla-header-oscuro {
+  background: var(--clr-dark);
+  color: white;
+}
+
+/* Celda de encabezado de tabla alineada a la izquierda */
+.th-tabla-izquierda {
+  padding: 12px;
+  text-align: left;
+}
+
+/* Celda de encabezado de tabla alineada a la derecha */
+.th-tabla-derecha {
+  padding: 12px;
+  text-align: right;
+}
+
+/* Celda de encabezado de tabla centrada */
+.th-tabla-centro {
+  padding: 12px;
+  text-align: center;
+}
+
+/* Celda de cuerpo de tabla: estado vacío centrado */
+.td-tabla-vacia {
+  text-align: center;
+  padding: 40px;
+  color: var(--clr-muted);
+}
+
+/* Ícono grande en celda vacía de tabla */
+.td-tabla-vacia-icono {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+/* Texto descriptivo en celda vacía de tabla */
+.td-tabla-vacia-texto {
+  font-size: 16px;
+  margin: 5px 0;
+}
+
+/* ==================== REPORTES - FILTROS Y ACCIONES ==================== */
+
+/* Fila principal de filtros + botón Excel */
+.reportes-filtros-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* Grupo de botones de período */
+.reportes-periodo-grupo {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* Título "Periodo:" */
+.reportes-periodo-titulo {
+  margin: 0;
+}
+
+/* Botón de descarga Excel principal */
+.btn-excel-principal {
+  font-size: 15px;
+  padding: 10px 20px;
+}
+
+/* Loader de reportes (oculto por defecto, JS lo muestra) */
+.loader-reportes {
+  display: none;
+  margin-top: 10px;
+}
+
+/* Texto de estado del loader de reportes */
+.loader-reportes-texto {
+  color: var(--clr-primary);
+}
+
+/* ==================== REPORTES - EXPORTAR PERSONALIZADO ==================== */
+
+/* Tarjeta del exportador de rango personalizado (verde) */
+.card-exportar-personalizado {
+  background: #f8fff8;
+  border-left: 4px solid var(--clr-success);
+}
+
+/* Título de la tarjeta de exportación personalizada */
+.exportar-personalizado-titulo {
+  margin: 0 0 15px 0;
+  color: var(--clr-success);
+}
+
+/* Fila de campos del exportador personalizado */
+.exportar-personalizado-fila {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+/* Grupo de formulario sin margen inferior (inline) */
+.form-group-inline {
+  margin: 0;
+}
+
+/* Label bold para fechas del exportador */
+.exportar-fecha-label {
+  font-weight: 600;
+}
+
+/* Input de fecha del exportador personalizado */
+.exportar-fecha-input {
+  padding: 8px 12px;
+  border: 2px solid var(--clr-muted-subtle);
+  border-radius: 5px;
+}
+
+/* Botón de descarga dentro del exportador personalizado */
+.btn-excel-personalizado {
+  padding: 10px 20px;
+}
+
+/* Nota informativa del exportador de Excel */
+.exportar-excel-hint {
+  color: var(--clr-muted);
+  display: block;
+  margin-top: 10px;
+}
+
+/* ==================== REPORTES - STAT CARDS ==================== */
+
+/* Grid de tarjetas de resumen de reportes */
+.reportes-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+/* Tarjeta de stat: Total Ventas (count — azul) */
+.stat-card-ventas {
+  background: linear-gradient(135deg, var(--stat-count-a) 0%, var(--stat-count-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Tarjeta de stat: Ganancias (positive — verde) */
+.stat-card-ganancias {
+  background: linear-gradient(135deg, var(--stat-positive-a) 0%, var(--stat-positive-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Tarjeta de stat: Costos Mercancía (cost — rojo) */
+.stat-card-costos-mercancia {
+  background: linear-gradient(135deg, var(--stat-cost-a) 0%, var(--stat-cost-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Tarjeta de stat: Costos Operativos (cost — rojo) */
+.stat-card-costos-operativos {
+  background: linear-gradient(135deg, var(--stat-cost-a) 0%, var(--stat-cost-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Tarjeta de stat: Cantidad Ventas (count — azul) */
+.stat-card-cantidad-ventas {
+  background: linear-gradient(135deg, var(--stat-count-a) 0%, var(--stat-count-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Tarjeta de stat: Margen (positive — verde) */
+.stat-card-margen {
+  background: linear-gradient(135deg, var(--stat-positive-a) 0%, var(--stat-positive-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Tarjeta de stat: ITBIS Recaudado (indigo) */
+.stat-card-itbis {
+  background: linear-gradient(135deg, var(--stat-itbis-a) 0%, var(--stat-itbis-b) 100%);
+  color: white;
+  border: none;
+}
+
+/* Valor numérico de stat card: tamaño medio-grande (para montos RD$) */
+.stat-card-valor-reportes {
+  margin: 10px 0 0 0;
+  font-size: 26px;
+}
+
+/* Valor de ITBIS (más pequeño por el texto largo) */
+.stat-card-valor-itbis {
+  margin: 10px 0 0 0;
+  font-size: 22px;
+}
+
+/* ==================== REPORTES - GRÁFICOS Y TABLA ==================== */
+
+/* Título de tarjetas de gráficos y tabla en reportes */
+.card-reporte-titulo {
+  margin: 0 0 20px 0;
+  color: var(--clr-dark);
+}
+
+/* ==================== CAMPOS REQUERIDOS ==================== */
+
+/* Asterisco rojo para campos requeridos */
+.campo-requerido {
+  color: var(--clr-danger);
+}
+
+/* ==================== CONFIGURACIÓN — GESTIÓN ==================== */
+
+.config-add-form {
+  background: var(--clr-bg-surface);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.config-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+}
+
+.config-tabla thead {
+  background: var(--clr-dark);
+  color: white;
+}
+
+.config-tabla th,
+.config-tabla td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--clr-bg-page);
+}
+
+.config-tabla tbody tr:hover {
+  background: var(--clr-bg-surface);
+}
+
+.config-lista-vacia {
+  text-align: center;
+  color: var(--clr-muted-light);
+  padding: 30px;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ==================== TOAST NOTIFICATIONS ==================== */
+#toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 280px;
+  max-width: 420px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  opacity: 0;
+  transform: translateX(40px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: all;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.toast.toast-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-success { background: var(--clr-success); }
+.toast-error   { background: var(--clr-danger); }
+.toast-warning { background: var(--clr-warning); }
+.toast-info    { background: var(--clr-primary); }

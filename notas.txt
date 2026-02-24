@@ -1,0 +1,5 @@
+Basciamente manejo de usuarios para cualquier accion, sea venta , registro de productos, con diferentes tipos de accesos 
+Usuario general: solo acceso a ventas y pagos de abonos y descuentos
+
+Usuario administrador : full accesos
+Y registracion: poder dar diferentes tipos de permisos

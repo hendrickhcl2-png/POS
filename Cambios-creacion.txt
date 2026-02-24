@@ -1,0 +1,84 @@
+Leer los tickets cone lector de codigo de barra
+
+Opcion de buscar cualquier productos por en la seccion de ventas por IMEI (en las facturas)
+cuando se vaya a devolver algo que se pueda devolver aunque el sistema no tenga dinero, 
+en el area de facturacion debe de tener un boton que diga salida
+Una seccion de salidas que represente los gastos del negocio
+Facturas de servicio para entradas
+
+Verificador de precios
+Control de inventario para poder eliminar y agregar a gusto
+tambien poder actualizar el inventario
+Creacion de clientes: datos de clientes, modo de contacto no necesariamente obligatorio todos los datos
+
+una opcion a credito en la cual un cliente puede comprar articulos (sea individual o al por mayor) se debera ver una factura total y un detalle factura en el cual podemos observar lo que debe de cada articulo con cada abono
+Cancelacion de factura que sea acredito: que se pueda devolver un articulo aunque este en credito (poder reemplazar) es decir que si se compro al mayor poder hacer devolucion a uno de los productos dentro de la factura a credito
+
+Productos:
+
+### Crear y modificar
+--Nuevo: poner el codigo de barra, descripcion, precio de costo
+---- Precio de costo (descripcion de costos por ejemplo: Costo de pantalla, costo de housing,)
+==== Precio de venta
+---- Precio a por mayoreo
+Categoria
+cuanto existe de cada producto
+Eliminacion de producto sin afectar el cuadre, poder eliminar el producto de la factura sin que afecte el reporte del dia, que si tengo un producto que se vendio el dia 1ro de este mes, no afecte los reportes del dia actual, sino que cambie el reporte del dia que se facturo
+
+##### Reportes
+Se puede verificar por dia, por rango de fecha y que de los detalles de cada producto vendido
+que detalle todo por dia, digase si se vendio cables que lo detalle si se vendio telefonos que tambien lo ponga basicamente un detalle de inventario vendido en ese dia
+
+Reporte con costos, ganacias y detalles del mismo
+que se pueda ver por categoria
+
+Seccion de proveedores
+ de manera mensual y de manera diaria
+
+Modificacion de inventario para poder modificar precio, cantidad disponible o elmiinacion del producto
+poder pagar con diferentes tipos de ingresos, sea ya efectivo, tarjeta, transferencia o mixto
+poner opciones de banco (banreservas, popular, etc)
+de ser en efectivo que se pueda confirmar el cambio de dinero por ejemplo: si pago con 500 y el articulo vale 350 que muestre lo que se le tiene que devolver
+
+
+#####Area de credito:
+Poder abonar a un producto en especifico
+
+
+####Factura
+Eliminar productos de factura ya registradas
+
+-------------- ANOTACIONES NUEVAS ----------------
+en la gestion de productos se tiene que poder editar los productos, y agregar una parte de descuentos tambien
+Hay que agregar una seccion de caracteristicas para cada producto, por ejemplo si se compro un iphone 14 pro max
+y la bateria esta al 80% entonces dichas caracteristicas tienen que ponerse,
+eliminar la parte de stocks ya que cada uno es diferente, por asuntos de mano de obra, piezas que se le compro etc que solo este la parte de disponible o no disponible
+
+En la seccion de ventas hay que agregar servicios, en caso de que se le aplique un protector de pantalla
+dicho servicios pueden ser gratis o pagos
+
+En las salidas por ejemplo cuando se haga una compra a un proveedor se tiene que poner la descripcion de cada producto de compra
+digase se compraron 20 cables negros, quiero el valor por unidad y el valor total
+tambien la capacidad de agregar mas productos y una descripcion que sea opcional
+por ejemplo compro 20 celulares digase, iphone samsung, etc y cada uno tiene un problema diferente o es color diferente
+quiero tener la capacidad de ponerle el precio a cada uno, precio total de cada uno y en la descripcion los problemas que tiene
+
+Poder imprimir facturas en diferentes printers, sean los peque;os o grandes 
+Emisor de factura electronicas / facturas fiscales y normales
+
+Quiero saber cuando un cliente tiene cuentas pendientes
+Ver la factura por clientes en la seccion de clientes
+Cuando se seleccione un cliente que se pueda ver el estado de cuenta si tiene cuentas pendientes,
+
+Que cuando la categoria sea de celulares/telefonos que se le pueda agregar el IMEI
+
+
+Luego trabajar en las devoluciones:
+ 1: Que las facturas sean dinamicas: por ejemplo, hice una factura una semana anterior y luego el cliente viene para devolver
+ un articulo en la factura que dicha factura se pueda ajustar, eliminar el producto de la factura y luego hacer que el producto vuelva a estar disponible
+ 2: que no afecte el cuadre en los reportes, si se hizo la devolucion de la factura hoy y dicha factura fue efectuada hace 3 dias entonces que dicha factura 
+ solo cambie el cuadre de ese dia
+ 3: Solo las facturas con comprobante fiscar se le ponen con ITBIS
+ 4: en el Dropdown de seleccionar el producto quiero poder buscar el producto por el codigo (leido desde el codigo de barras),
+ Por el IMEI o Codigo si es un telefono pero que principalmente que se pueda agregar a la factura con el codigo de barra 
+ 5: La parte de Creditos cambiarla por seccion de facturas a credito (completadas o no completadas)

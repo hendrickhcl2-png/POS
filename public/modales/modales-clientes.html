@@ -1,0 +1,117 @@
+<!-- ==================== MODALES DE CLIENTES ==================== -->
+
+<!-- Modal: Agregar/Editar Cliente -->
+<div class="modal" id="modalCliente">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="tituloModalCliente">➕ Agregar Cliente</h2>
+      <span class="close-modal" onclick="ClientesModule.cerrarModalCliente()"
+        >&times;</span
+      >
+    </div>
+    <div class="modal-body">
+      <form id="formCliente">
+        <input type="hidden" id="clienteId" />
+
+        <h4 class="modal-seccion-titulo">
+          👤 Información Personal
+        </h4>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Nombre: <span class="campo-requerido">*</span></label>
+            <input type="text" id="clienteNombre" placeholder="Juan" required />
+          </div>
+          <div class="form-group">
+            <label>Apellido:</label>
+            <input type="text" id="clienteApellido" placeholder="Pérez" />
+          </div>
+        </div>
+
+        <h4 class="modal-seccion-titulo-espaciado">
+          📄 Documentos de Identidad
+        </h4>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Cédula:</label>
+            <input type="text" id="clienteCedula" placeholder="000-0000000-0" />
+          </div>
+          <div class="form-group">
+            <label>RNC:</label>
+            <input type="text" id="clienteRnc" placeholder="000-00000-0" />
+          </div>
+        </div>
+
+        <h4 class="modal-seccion-titulo-espaciado">
+          📞 Información de Contacto
+        </h4>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>Teléfono:</label>
+            <input type="tel" id="clienteTelefono" placeholder="809-000-0000" />
+          </div>
+          <div class="form-group">
+            <label>Email:</label>
+            <input
+              type="email"
+              id="clienteEmail"
+              placeholder="cliente@ejemplo.com"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Dirección:</label>
+          <input
+            type="text"
+            id="clienteDireccion"
+            placeholder="Calle, No., Sector, Ciudad"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Notas:</label>
+          <textarea
+            id="clienteNotas"
+            rows="3"
+            placeholder="Notas adicionales sobre el cliente..."
+          ></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="ClientesModule.cerrarModalCliente()"
+          >
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-success">
+            💾 Guardar Cliente
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Detalle de Cliente -->
+<div class="modal" id="modalDetalleCliente">
+  <div class="modal-content modal-large">
+    <div class="modal-header">
+      <h2>👤 Detalle de Cliente</h2>
+      <span
+        class="close-modal"
+        onclick="ClientesModule.cerrarModalDetalleCliente()"
+        >&times;</span
+      >
+    </div>
+    <div class="modal-body">
+      <div id="detalleClienteContent">
+        <!-- Contenido generado dinámicamente -->
+      </div>
+    </div>
+  </div>
+</div>
