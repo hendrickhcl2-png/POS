@@ -20,6 +20,10 @@ const FacturaImpresion = {
   email: "info@fiftytech.com",
   };
 
+  // Guardar datos actuales para impresión térmica
+  this._factura = factura;
+  this._config = config;
+
   // Construir HTML de la factura
   const modal = document.createElement("div");
   modal.id = "modalFacturaImpresion";
@@ -33,6 +37,7 @@ const FacturaImpresion = {
   <div class="no-print" style="background:#2c3e50;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:10px 10px 0 0;">
   <span style="color:white;font-size:16px;font-weight:bold;"> Factura / Recibo</span>
   <div style="display:flex;gap:10px;">
+  <button type="button" onclick="FacturaImpresion.imprimirTermica()" style="background:#8e44ad;color:white;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;">🖨️ Térmica</button>
   <button type="button" onclick="FacturaImpresion.imprimir()" style="background:#27ae60;color:white;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;"> Imprimir</button>
   <button type="button" onclick="FacturaImpresion.descargarPDF()" style="background:#3498db;color:white;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;"> PDF</button>
   <button type="button" onclick="FacturaImpresion.cerrar()" style="background:#e74c3c;color:white;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;"> Cerrar</button>
@@ -363,6 +368,180 @@ const FacturaImpresion = {
   const s = document.getElementById("estilos-impresion-factura");
   if (s) s.remove();
   }, 1000);
+  },
+
+  // ==================== IMPRIMIR TÉRMICA (80mm) ====================
+  imprimirTermica() {
+    const factura = this._factura;
+    const config = this._config;
+    if (!factura) return;
+
+    const fmt = (n) =>
+      new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP" }).format(n);
+
+    const fmtFecha = (f) => {
+      if (!f) return "";
+      const d = new Date(f + "T12:00:00");
+      return d.toLocaleDateString("es-DO", { day: "2-digit", month: "2-digit", year: "numeric" });
+    };
+
+    const sep = (tipo = "dashed") =>
+      `<hr style="border:none;border-top:${tipo === "solid" ? "2px solid" : "1px dashed"} #000;margin:4px 0;">`;
+
+    const itemsHtml = (factura.items || []).map((item) => `
+      <tr>
+        <td colspan="2" style="padding-top:5px;font-weight:bold;word-break:break-word;">${item.nombre_producto}</td>
+      </tr>
+      <tr>
+        <td style="padding-left:6px;">${item.cantidad} x ${fmt(item.precio_unitario)}</td>
+        <td style="text-align:right;font-weight:bold;">${fmt(item.subtotal)}</td>
+      </tr>
+    `).join("");
+
+    const serviciosHtml = factura.servicios && factura.servicios.length > 0 ? `
+      ${sep()}
+      <tr><td colspan="2" style="font-weight:bold;padding-top:3px;">SERVICIOS:</td></tr>
+      ${factura.servicios.map((s) => `
+        <tr>
+          <td style="word-break:break-word;">${s.nombre_servicio}</td>
+          <td style="text-align:right;">${s.es_gratuito ? "GRATIS" : fmt(s.precio)}</td>
+        </tr>
+      `).join("")}
+    ` : "";
+
+    const ncfHtml = factura.ncf ? `
+      ${sep()}
+      <div style="text-align:center;margin:3px 0;">
+        <div style="font-weight:bold;">NCF: ${factura.ncf}</div>
+        <div>${factura.tipo_comprobante || "B02"} - Consumidor Final</div>
+      </div>
+    ` : "";
+
+    const clienteHtml = `
+      <div style="margin:4px 0;">
+        <span style="font-weight:bold;">Cliente:</span> ${factura.cliente_nombre}
+        ${factura.cliente_cedula ? `<br><span style="font-weight:bold;">Cédula:</span> ${factura.cliente_cedula}` : ""}
+        ${factura.cliente_rnc ? `<br><span style="font-weight:bold;">RNC:</span> ${factura.cliente_rnc}` : ""}
+      </div>
+    `;
+
+    const descuentoHtml = factura.descuento > 0 ? `
+      <tr>
+        <td>Descuento:</td>
+        <td style="text-align:right;">-${fmt(factura.descuento)}</td>
+      </tr>
+    ` : "";
+
+    const devolucionHtml = factura.total_devuelto > 0 ? `
+      <tr>
+        <td>Monto devuelto:</td>
+        <td style="text-align:right;">-${fmt(factura.total_devuelto)}</td>
+      </tr>
+      <tr style="font-size:13px;font-weight:bold;">
+        <td style="border-top:1px solid #000;padding-top:3px;">TOTAL NETO:</td>
+        <td style="text-align:right;border-top:1px solid #000;padding-top:3px;">${fmt(factura.total_neto)}</td>
+      </tr>
+    ` : "";
+
+    let pagoHtml = `<div style="margin:4px 0;"><span style="font-weight:bold;">Pago:</span> ${this.formatMetodoPago(factura.metodo_pago).replace(/[^\w\sáéíóúÁÉÍÓÚ]/g, "").trim()}</div>`;
+    if (factura.metodo_pago === "efectivo" || factura.metodo_pago === "mixto") {
+      pagoHtml += `
+        <table><tbody>
+          <tr><td>Recibido:</td><td style="text-align:right;">${fmt(factura.monto_recibido || factura.total)}</td></tr>
+          <tr><td>Cambio:</td><td style="text-align:right;">${fmt(factura.cambio || 0)}</td></tr>
+        </tbody></table>
+      `;
+    }
+    if (factura.metodo_pago === "tarjeta" || factura.metodo_pago === "transferencia" || factura.metodo_pago === "mixto") {
+      if (factura.banco) pagoHtml += `<div><span style="font-weight:bold;">Banco:</span> ${factura.banco}</div>`;
+      if (factura.referencia) pagoHtml += `<div><span style="font-weight:bold;">Ref:</span> ${factura.referencia}</div>`;
+    }
+
+    const estadoTexto = factura.total_devuelto > 0
+      ? "*** CON DEVOLUCIONES ***"
+      : (factura.estado_texto || "*** COMPLETADO ***");
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Recibo Térmico</title>
+<style>
+  @page { size: 80mm auto; margin: 3mm 4mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Courier New', Courier, monospace; font-size: 10px; color: #000; width: 72mm; }
+  .center { text-align: center; }
+  table { width: 100%; border-collapse: collapse; font-family: inherit; font-size: inherit; }
+  td { padding: 1px 0; vertical-align: top; }
+</style>
+</head><body>
+
+<div class="center">
+  <div style="font-size:15px;font-weight:bold;">${config.nombre}</div>
+  <div>${config.direccion}</div>
+  <div>Tel: ${config.telefono}</div>
+  <div>RNC: ${config.rnc}</div>
+</div>
+
+${sep("solid")}
+
+<div class="center">
+  <div style="font-size:12px;font-weight:bold;">${factura.esFacturaElectronica ? "FACTURA" : "RECIBO"} ${factura.numeroDocumento}</div>
+  <div>${fmtFecha(factura.fecha)}&nbsp;&nbsp;${factura.hora || ""}</div>
+</div>
+
+${ncfHtml}
+
+${sep()}
+${clienteHtml}
+${sep()}
+
+<div style="font-weight:bold;margin-bottom:3px;">PRODUCTOS:</div>
+<table><tbody>
+  ${itemsHtml}
+  ${serviciosHtml}
+</tbody></table>
+
+${sep("solid")}
+
+<table><tbody>
+  <tr>
+    <td>Subtotal:</td>
+    <td style="text-align:right;">${fmt(factura.subtotal)}</td>
+  </tr>
+  ${descuentoHtml}
+  <tr>
+    <td>ITBIS (18%):</td>
+    <td style="text-align:right;">${fmt(factura.itbis)}</td>
+  </tr>
+  <tr style="font-size:13px;font-weight:bold;">
+    <td style="border-top:2px solid #000;padding-top:3px;">${factura.total_devuelto > 0 ? "TOTAL BRUTO:" : "TOTAL:"}</td>
+    <td style="text-align:right;border-top:2px solid #000;padding-top:3px;">${fmt(factura.total)}</td>
+  </tr>
+  ${devolucionHtml}
+</tbody></table>
+
+${sep("solid")}
+
+${pagoHtml}
+
+${sep()}
+
+<div class="center" style="margin-top:5px;">
+  <div style="font-weight:bold;">${estadoTexto}</div>
+  <div style="margin-top:8px;">Gracias por su compra en</div>
+  <div style="font-weight:bold;">${config.nombre}</div>
+  <div style="margin-top:4px;font-size:9px;">Conserve este recibo para cualquier reclamacion</div>
+</div>
+
+<div style="margin-top:12px;"></div>
+</body></html>`;
+
+    const ventana = window.open("", "_blank", "width=320,height=600");
+    ventana.document.write(html);
+    ventana.document.close();
+    ventana.focus();
+    setTimeout(() => {
+      ventana.print();
+      ventana.close();
+    }, 400);
   },
 
   // ==================== DESCARGAR PDF ====================
