@@ -61,6 +61,11 @@ const ClientesAPI = {
     return await APIClient.get(url);
   },
 
+  // Obtener historial de pagos (pagos_factura) de un cliente
+  async getHistorialPagos(clienteId) {
+    return await APIClient.get(`/clientes/${clienteId}/historial-pagos`);
+  },
+
   // Obtener estadísticas del cliente
   async getEstadisticas(clienteId) {
     return await APIClient.get(`/clientes/${clienteId}/estadisticas`);

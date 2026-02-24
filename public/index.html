@@ -494,66 +494,43 @@
 
   <!-- CRÉDITOS SECTION -->
   <section id="creditos" class="section">
-  <div class="header">
-  <h1> Gestión de Créditos</h1>
-  </div>
+    <div class="clientes-header">
+      <h2>Cuentas por Cobrar</h2>
+      <div class="clientes-acciones">
+        <input
+          type="text"
+          id="filtroCreditos"
+          placeholder="Filtrar por nombre o teléfono..."
+          class="clientes-buscador"
+          oninput="CreditosModule.filtrar(this.value)"
+        />
+        <button class="btn btn-secondary" onclick="CreditosModule.cargarClientes()">
+          Actualizar
+        </button>
+      </div>
+    </div>
 
-  <div class="tabs">
-  <button class="tab active" onclick="switchTab('estadoCuenta')">
-  Estado de Cuenta
-  </button>
-  <button class="tab" onclick="switchTab('reporteSaldos')">
-  Reporte de Saldos
-  </button>
-  </div>
+    <!-- Stats bar -->
+    <div id="creditosStats" style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;"></div>
 
-  <div id="estadoCuenta" class="tab-content active">
-  <div class="card">
-  <h3>Seleccionar Cliente</h3>
-  <div class="search-bar">
-  <input
-  type="text"
-  id="buscarClienteCredito"
-  placeholder="Buscar cliente..."
-  />
-  <button
-  class="btn btn-primary"
-  onclick="buscarClienteCredito()"
-  >
-  Buscar
-  </button>
-  </div>
-
-  <table>
-  <thead>
-  <tr>
-  <th>Cliente</th>
-  <th>RNC/Cédula</th>
-  <th>Saldo Pendiente</th>
-  <th>Acciones</th>
-  </tr>
-  </thead>
-  <tbody id="tablaClientesCredito">
-  <tr>
-  <td colspan="4" class="text-center tabla-vacia-mensaje">
-  No hay clientes con crédito
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
-  </div>
-
-  <div id="reporteSaldos" class="tab-content">
-  <div class="card">
-  <h3>Reporte de Saldos Pendientes</h3>
-  <div id="reporteSaldosContent">
-  <p class="text-center tabla-vacia-mensaje">
-  No hay saldos pendientes
-  </p>
-  </div>
-  </div>
-  </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Teléfono</th>
+            <th style="text-align:center;">Facturas</th>
+            <th style="text-align:right;">Saldo Pendiente</th>
+            <th style="text-align:center;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaClientesCredito">
+          <tr>
+            <td colspan="5" class="text-center tabla-vacia-mensaje">Cargando...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <!-- Sección Clientes -->
@@ -1711,6 +1688,7 @@
   <script src="js/modules/facturacion-busqueda.js"></script>
   <script src="js/modules/devoluciones-module.js"></script>
   <script src="js/modules/pagos-module.js"></script>
+  <script src="js/modules/creditos-module.js"></script>
   <script src="js/modules/reportes-module.js"></script>
   <script src="index.js"></script>
   </body>

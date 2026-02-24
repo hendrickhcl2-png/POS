@@ -670,6 +670,9 @@ window.verDetalleVenta = async function (ventaId) {
 
 // ==================== CRÉDITOS ====================
 function actualizarTablaCreditos() {
+  if (window.CreditosModule) {
+    CreditosModule.init();
+  }
 }
 
 // ==================== UTILIDADES ====================

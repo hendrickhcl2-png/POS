@@ -186,6 +186,42 @@ router.get(
   }),
 );
 
+// ==================== HISTORIAL DE PAGOS ====================
+// ⚠️ IMPORTANTE: Esta ruta DEBE ir ANTES de /:id
+router.get(
+  "/:id/historial-pagos",
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const result = await pool.query(
+        `SELECT
+           pf.id,
+           pf.numero_pago,
+           pf.monto,
+           pf.metodo_pago,
+           pf.banco,
+           pf.referencia,
+           pf.fecha,
+           pf.hora,
+           pf.notas,
+           f.numero_factura,
+           f.total AS factura_total,
+           f.saldo_pendiente AS factura_saldo
+         FROM pagos_factura pf
+         JOIN facturas f ON pf.factura_id = f.id
+         WHERE f.cliente_id = $1
+         ORDER BY pf.fecha DESC, pf.hora DESC`,
+        [id],
+      );
+
+      res.json({ success: true, data: result.rows });
+    } catch (error) {
+      res.json({ success: true, data: [] });
+    }
+  }),
+);
+
 // ==================== ESTADÍSTICAS DEL CLIENTE ====================
 // ⚠️ IMPORTANTE: Esta ruta DEBE ir ANTES de /:id
 router.get(
