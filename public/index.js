@@ -69,6 +69,17 @@ async function cargarDatosIniciales() {
 
 // ==================== SETUP EVENT LISTENERS ====================
 function setupEventListeners() {
+  // Atajos de teclado globales
+  document.addEventListener("keydown", function (e) {
+    const tag = document.activeElement?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    const map = { "1": "ventas", "2": "creditos", "3": "clientes", "4": "productos", "5": "reportes", "6": "facturacion" };
+    if (map[e.key]) {
+      e.preventDefault();
+      showSection(map[e.key]);
+    }
+  });
+
   addSubmitListener("formProducto", guardarProducto);
   addSubmitListener("formProveedor", guardarProveedor);
   addSubmitListener("formSalida", guardarSalida);
