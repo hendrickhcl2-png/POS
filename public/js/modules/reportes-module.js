@@ -136,12 +136,22 @@ const ReportesModule = {
   if (!tbody) return;
 
   const ventas = this.reporteActual.ventas.ventas || [];
+  const pagosCredito = this.reporteActual.ventas.pagos_credito || [];
 
-  if (ventas.length === 0) {
+  // Combinar y ordenar por fecha+hora descendente
+  const filas = [
+    ...ventas.map(v => ({ ...v, _tipo: "venta" })),
+    ...pagosCredito.map(p => ({ ...p, _tipo: "pago" })),
+  ].sort((a, b) => {
+    const da = a.fecha + (a.hora || "");
+    const db = b.fecha + (b.hora || "");
+    return db.localeCompare(da);
+  });
+
+  if (filas.length === 0) {
   tbody.innerHTML = `
   <tr>
   <td colspan="7" style="text-align: center; padding: 40px; color: #7f8c8d;">
-  <div style="font-size: 48px; margin-bottom: 10px;"></div>
   <p>No hay ventas en este periodo</p>
   </td>
   </tr>
@@ -149,28 +159,45 @@ const ReportesModule = {
   return;
   }
 
-  tbody.innerHTML = ventas
-.map((venta) => {
-  const devuelto = parseFloat(venta.monto_devuelto || 0);
-  const neto = parseFloat(venta.total) - devuelto;
+  tbody.innerHTML = filas.map((row) => {
+  if (row._tipo === "pago") {
+    return `
+    <tr style="background:color-mix(in srgb, var(--clr-warning) 8%, transparent);">
+      <td style="font-weight:600;color:var(--clr-warning);">
+        ${row.numero_pago}
+        <br><small style="font-size:10px;color:var(--clr-muted);font-weight:normal;">
+          Pago crédito · ${row.numero_factura || ""}
+        </small>
+      </td>
+      <td>${this.formatFecha(row.fecha)}</td>
+      <td>${row.hora || "N/A"}</td>
+      <td>${row.cliente_nombre || "—"}</td>
+      <td style="text-align:right;">—</td>
+      <td style="text-align:right;font-weight:600;color:var(--clr-success);">
+        ${this.formatCurrency(row.monto)}
+      </td>
+      <td>${this.formatMetodoPago(row.metodo_pago)}</td>
+    </tr>`;
+  }
+  const devuelto = parseFloat(row.monto_devuelto || 0);
+  const neto = parseFloat(row.total) - devuelto;
   const tieneDevolucion = devuelto > 0;
   return `
   <tr>
-  <td style="font-weight:600;color:var(--clr-primary);">${venta.numero_ticket}</td>
-  <td>${this.formatFecha(venta.fecha)}</td>
-  <td>${venta.hora || "N/A"}</td>
-  <td>${venta.cliente_nombre || "Cliente General"}</td>
-  <td style="text-align:right;">${this.formatCurrency(venta.subtotal)}</td>
+  <td style="font-weight:600;color:var(--clr-primary);">${row.numero_ticket}</td>
+  <td>${this.formatFecha(row.fecha)}</td>
+  <td>${row.hora || "N/A"}</td>
+  <td>${row.cliente_nombre || "Cliente General"}</td>
+  <td style="text-align:right;">${this.formatCurrency(row.subtotal)}</td>
   <td style="text-align:right;font-weight:600;color:${tieneDevolucion ? "var(--clr-danger)" : "var(--clr-success)"};">
   ${this.formatCurrency(neto)}
   ${tieneDevolucion ? `<br><small style="font-size:10px;font-weight:normal;color:var(--clr-muted);">
-  <span style="text-decoration:line-through;">${this.formatCurrency(venta.total)}</span>
+  <span style="text-decoration:line-through;">${this.formatCurrency(row.total)}</span>
   &nbsp;↩ ${this.formatCurrency(devuelto)}</small>` : ""}
   </td>
-  <td>${this.formatMetodoPago(venta.metodo_pago)}</td>
+  <td>${this.formatMetodoPago(row.metodo_pago)}</td>
   </tr>`;
-})
-.join("");
+  }).join("");
   },
 
   renderizarDevoluciones() {

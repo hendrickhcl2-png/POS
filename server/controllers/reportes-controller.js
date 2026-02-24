@@ -49,7 +49,7 @@ const ReportesController = {
         fechaFin = fecha_fin;
       }
 
-      // Obtener ventas del periodo (con monto devuelto por venta)
+      // Ventas contado del periodo (excluye ventas con factura de crédito)
       const ventasResult = await pool.query(
         `SELECT
           v.id,
@@ -75,7 +75,30 @@ const ReportesController = {
           GROUP BY venta_id
         ) dev ON dev.venta_id = v.id
         WHERE v.fecha >= $1 AND v.fecha <= $2
+          AND COALESCE(f.tipo_factura, 'contado') != 'credito'
         ORDER BY v.fecha DESC, v.hora DESC`,
+        [fechaInicio, fechaFin],
+      );
+
+      // Pagos de facturas de crédito realizados en el periodo
+      const pagosResult = await pool.query(
+        `SELECT
+          pf.id,
+          pf.numero_pago,
+          pf.fecha,
+          pf.hora,
+          pf.monto,
+          pf.metodo_pago,
+          f.numero_factura,
+          f.estado AS factura_estado,
+          v.numero_ticket,
+          TRIM(CONCAT(c.nombre, ' ', COALESCE(c.apellido, ''))) AS cliente_nombre
+        FROM pagos_factura pf
+        JOIN facturas f ON pf.factura_id = f.id
+        LEFT JOIN ventas v ON f.venta_id = v.id
+        LEFT JOIN clientes c ON f.cliente_id = c.id
+        WHERE pf.fecha >= $1 AND pf.fecha <= $2
+        ORDER BY pf.fecha DESC, pf.hora DESC`,
         [fechaInicio, fechaFin],
       );
 
@@ -101,6 +124,11 @@ const ReportesController = {
           totalCostos += parseFloat(item.costo || 0) * parseInt(item.cantidad);
         }
       }
+
+      // Sumar pagos de crédito al total bruto
+      const totalPagosCredito = pagosResult.rows.reduce(
+        (sum, p) => sum + parseFloat(p.monto), 0,
+      );
 
       // Devoluciones del periodo
       const devolucionesResult = await pool.query(
@@ -139,6 +167,7 @@ const ReportesController = {
       const totalDevoluciones = devolucionesResult.rows.reduce(
         (sum, d) => sum + parseFloat(d.monto_devuelto), 0,
       );
+      totalVentasBruto += totalPagosCredito;
       const totalVentasNeto = totalVentasBruto - totalDevoluciones;
 
       // Costos operativos del periodo (salidas/gastos)
@@ -152,29 +181,49 @@ const ReportesController = {
       const gananciaNeta = totalVentasNeto - totalCostos - totalSalidas;
       const margen = totalVentasNeto > 0 ? (ganancia / totalVentasNeto) * 100 : 0;
 
-      // Resumen por método de pago
+      // Resumen por método de pago (contado + pagos crédito)
       const metodosPagoResult = await pool.query(
-        `SELECT
-          metodo_pago,
-          COUNT(*) AS cantidad_ventas,
-          SUM(total) AS total_ventas
-        FROM ventas
-        WHERE fecha >= $1 AND fecha <= $2
+        `SELECT metodo_pago,
+          SUM(cantidad) AS cantidad_ventas,
+          SUM(total_ventas) AS total_ventas
+        FROM (
+          SELECT metodo_pago, COUNT(*) AS cantidad, SUM(total) AS total_ventas
+          FROM ventas v
+          LEFT JOIN facturas f ON v.id = f.venta_id
+          WHERE v.fecha >= $1 AND v.fecha <= $2
+            AND COALESCE(f.tipo_factura, 'contado') != 'credito'
+          GROUP BY metodo_pago
+          UNION ALL
+          SELECT pf.metodo_pago, COUNT(*) AS cantidad, SUM(pf.monto) AS total_ventas
+          FROM pagos_factura pf
+          JOIN facturas f ON pf.factura_id = f.id
+          WHERE pf.fecha >= $1 AND pf.fecha <= $2
+          GROUP BY pf.metodo_pago
+        ) combined
         GROUP BY metodo_pago
         ORDER BY total_ventas DESC`,
         [fechaInicio, fechaFin],
       );
 
-      // Ventas por día
+      // Ventas por día (contado + pagos crédito)
       const ventasPorDiaResult = await pool.query(
-        `SELECT
-          fecha,
-          COUNT(*) AS cantidad_ventas,
-          SUM(total) AS total_ventas,
-          SUM(subtotal) AS subtotal,
-          SUM(itbis) AS itbis
-        FROM ventas
-        WHERE fecha >= $1 AND fecha <= $2
+        `SELECT fecha,
+          SUM(cantidad) AS cantidad_ventas,
+          SUM(total_ventas) AS total_ventas
+        FROM (
+          SELECT v.fecha, COUNT(*) AS cantidad, SUM(v.total) AS total_ventas
+          FROM ventas v
+          LEFT JOIN facturas f ON v.id = f.venta_id
+          WHERE v.fecha >= $1 AND v.fecha <= $2
+            AND COALESCE(f.tipo_factura, 'contado') != 'credito'
+          GROUP BY v.fecha
+          UNION ALL
+          SELECT pf.fecha, COUNT(*) AS cantidad, SUM(pf.monto) AS total_ventas
+          FROM pagos_factura pf
+          JOIN facturas f ON pf.factura_id = f.id
+          WHERE pf.fecha >= $1 AND pf.fecha <= $2
+          GROUP BY pf.fecha
+        ) combined
         GROUP BY fecha
         ORDER BY fecha ASC`,
         [fechaInicio, fechaFin],
@@ -198,9 +247,10 @@ const ReportesController = {
           ganancia: parseFloat(ganancia.toFixed(2)),
           ganancia_neta: parseFloat(gananciaNeta.toFixed(2)),
           margen_porcentaje: parseFloat(margen.toFixed(2)),
-          cantidad_ventas: ventasResult.rows.length,
+          cantidad_ventas: ventasResult.rows.length + pagosResult.rows.length,
         },
         ventas: ventasResult.rows,
+        pagos_credito: pagosResult.rows,
         devoluciones: devolucionesResult.rows,
         metodos_pago: metodosPagoResult.rows,
         ventas_por_dia: ventasPorDiaResult.rows,
