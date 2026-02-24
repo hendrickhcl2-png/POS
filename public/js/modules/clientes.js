@@ -15,35 +15,17 @@ const ClientesModule = {
 
   // Configurar event listeners
   setupEventListeners() {
-  // Botón agregar cliente
   const btnAgregar = document.getElementById("btnAgregarCliente");
   if (btnAgregar) {
-  btnAgregar.addEventListener("click", () => this.mostrarModalCliente());
+    btnAgregar.addEventListener("click", () => this.mostrarModalCliente());
   }
 
-  // Botón buscar
-  const btnBuscar = document.getElementById("btnBuscarCliente");
-  if (btnBuscar) {
-  btnBuscar.addEventListener("click", () => this.buscarCliente());
-  }
-
-  // Búsqueda en tiempo real
-  const inputBuscar = document.getElementById("buscarCliente");
-  if (inputBuscar) {
-  inputBuscar.addEventListener("keyup", (e) => {
-  if (e.key === "Enter") {
-  this.buscarCliente();
-  }
-  });
-  }
-
-  // Form submit
   const form = document.getElementById("formCliente");
   if (form) {
-  form.addEventListener("submit", (e) => {
-  e.preventDefault();
-  this.guardarCliente();
-  });
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.guardarCliente();
+    });
   }
   },
 
@@ -51,135 +33,118 @@ const ClientesModule = {
 
   async cargarClientes() {
   try {
-  this.clientes = await ClientesAPI.getAll();
-  await this.actualizarTablaClientes();
-  this.actualizarContador();
+    this.clientes = await ClientesAPI.getAll();
+    this._renderStats(this.clientes);
+    this.actualizarTablaClientes(this.clientes);
   } catch (error) {
-  console.error(" Error al cargar clientes:", error);
-  mostrarAlerta("Error al cargar clientes: " + error.message, "danger");
+    console.error("Error al cargar clientes:", error);
+    mostrarAlerta("Error al cargar clientes: " + error.message, "danger");
   }
+  },
+
+  // ==================== FILTRAR LOCAL ====================
+
+  filtrarLocal(texto) {
+  const q = (texto || "").toLowerCase().trim();
+  if (!q) {
+    this.actualizarTablaClientes(this.clientes);
+    return;
+  }
+  const filtrados = this.clientes.filter((c) =>
+    (`${c.nombre} ${c.apellido || ""}`).toLowerCase().includes(q) ||
+    (c.cedula || "").toLowerCase().includes(q) ||
+    (c.telefono || "").toLowerCase().includes(q) ||
+    (c.email || "").toLowerCase().includes(q)
+  );
+  this.actualizarTablaClientes(filtrados);
+  },
+
+  // ==================== STATS BAR ====================
+
+  _renderStats(clientes) {
+  const container = document.getElementById("clientesStats");
+  if (!container) return;
+
+  const conDeuda = clientes.filter(c => parseFloat(c.saldo_pendiente) > 0).length;
+  const sinDeuda = clientes.length - conDeuda;
+
+  container.innerHTML = `
+    <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Total clientes</div>
+      <div style="font-size:28px;font-weight:700;color:var(--clr-dark);">${clientes.length}</div>
+    </div>
+    <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Al corriente</div>
+      <div style="font-size:28px;font-weight:700;color:var(--clr-success);">${sinDeuda}</div>
+    </div>
+    <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:140px;">
+      <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Con saldo pendiente</div>
+      <div style="font-size:28px;font-weight:700;color:var(--clr-danger);">${conDeuda}</div>
+    </div>`;
   },
 
   // ==================== ACTUALIZAR TABLA ====================
 
-  async actualizarTablaClientes() {
+  actualizarTablaClientes(clientes) {
   const tbody = document.getElementById("tablaClientes");
-  if (!tbody) {
-  console.error(" Elemento tablaClientes no encontrado");
-  return;
+  if (!tbody) return;
+
+  if (!clientes || clientes.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4" class="text-center" style="padding:48px;color:var(--clr-muted);">
+          <p style="margin:0;font-size:15px;">No hay clientes registrados</p>
+          <p style="margin:6px 0 0;font-size:13px;">Haz clic en "+ Nuevo Cliente" para comenzar</p>
+        </td>
+      </tr>`;
+    return;
   }
 
-  if (this.clientes.length === 0) {
-  tbody.innerHTML = `
-  <tr>
-  <td colspan="6" class="text-center" style="padding: 40px; color: #95a5a6;">
-  <div style="font-size: 48px; margin-bottom: 10px;"></div>
-  <p style="margin: 0; font-size: 16px;">No hay clientes registrados</p>
-  <p style="margin: 5px 0 0 0; font-size: 14px; color: #7f8c8d;">
-  Haz clic en "Agregar Cliente" para comenzar
-  </p>
-  </td>
-  </tr>
-  `;
-  return;
-  }
+  tbody.innerHTML = clientes.map((c) => {
+    const iniciales = this.getIniciales(c.nombre, c.apellido);
+    const nombreCompleto = `${c.nombre} ${c.apellido || ""}`.trim();
+    const saldo = parseFloat(c.saldo_pendiente) || 0;
+    const tieneDeuda = saldo > 0;
 
-  tbody.innerHTML = this.clientes
-.map((cliente) => {
-  const iniciales = this.getIniciales(cliente.nombre, cliente.apellido);
-  const nombreCompleto =
-  `${cliente.nombre} ${cliente.apellido || ""}`.trim();
-  const saldoPendiente = parseFloat(cliente.saldo_pendiente) || 0;
-  const tieneDeuda = saldoPendiente > 0;
-
-  return `
-  <tr style="${tieneDeuda ? "background: #fff3cd;": ""}">
-  <td>
-  <div style="display: flex; align-items: center; gap: 12px;">
-  <div class="avatar" style="
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 14px;
-  ">
-  ${iniciales}
-  </div>
-  <div>
-  <strong style="font-size: 15px;">${nombreCompleto}</strong>
-  ${cliente.notas ? `<br><small style="color: #7f8c8d;">${cliente.notas}</small>`: ""}
-  </div>
-  </div>
-  </td>
-  <td>
-  ${cliente.cedula ? `<div> ${cliente.cedula}</div>`: ""}
-  ${cliente.rnc ? `<div> ${cliente.rnc}</div>`: ""}
-  ${!cliente.cedula && !cliente.rnc ? "-": ""}
-  </td>
-  <td>
-  ${cliente.telefono ? `<div> ${cliente.telefono}</div>`: ""}
-  ${cliente.email ? `<div> ${cliente.email}</div>`: ""}
-  ${!cliente.telefono && !cliente.email ? "-": ""}
-  </td>
-  <td>${cliente.direccion || "-"}</td>
-  <td style="text-align: right;">
-  ${tieneDeuda
-  ? `<span class="badge" style="background: #e74c3c; color: white; padding: 5px 10px; border-radius: 5px; font-weight: bold;">
-  ${Formatters.formatCurrency(saldoPendiente)}
-  </span>`
-: `<span style="color: #27ae60; font-weight: 600;">$0.00</span>`
-  }
-  </td>
-  <td class="actions" style="text-align: center;">
-  ${tieneDeuda
-  ? `<button class="btn btn-warning btn-small" onclick="ClientesModule.verEstadoCuenta(${cliente.id})" title="Estado de cuenta">
-  Estado de Cuenta
-  </button>`
-: ""
-  }
-  <button class="btn btn-info btn-small" onclick="ClientesModule.verDetalleCliente(${cliente.id})" title="Ver detalle">
-  Ver
-  </button>
-  <button class="btn btn-primary btn-small" onclick="ClientesModule.editarCliente(${cliente.id})" title="Editar">
-  Editar
-  </button>
-  <button class="btn btn-danger btn-small" onclick="ClientesModule.confirmarEliminar(${cliente.id})" title="Eliminar">
-  Eliminar
-  </button>
-  </td>
-  </tr>
-  `;
-  })
-.join("");
-  },
-
-  // ==================== BUSCAR CLIENTE ====================
-
-  async buscarCliente() {
-  const termino = getValue("buscarCliente");
-
-  if (!termino || termino.trim() === "") {
-  await this.cargarClientes();
-  return;
-  }
-
-  try {
-  this.clientes = await ClientesAPI.search(termino);
-  await this.actualizarTablaClientes();
-  this.actualizarContador();
-
-  if (this.clientes.length === 0) {
-  mostrarAlerta("No se encontraron clientes", "info");
-  }
-  } catch (error) {
-  console.error(" Error al buscar:", error);
-  mostrarAlerta("Error al buscar clientes", "danger");
-  }
+    return `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="
+            width:40px;height:40px;border-radius:50%;flex-shrink:0;
+            background:var(--clr-primary);
+            display:flex;align-items:center;justify-content:center;
+            color:white;font-weight:700;font-size:14px;">
+            ${iniciales}
+          </div>
+          <div>
+            <strong style="font-size:14px;color:var(--clr-dark);">${nombreCompleto}</strong>
+            ${c.cedula ? `<br><small style="color:var(--clr-muted);">${c.cedula}</small>` : ""}
+            ${c.rnc ? `<br><small style="color:var(--clr-muted);">RNC: ${c.rnc}</small>` : ""}
+          </div>
+        </div>
+      </td>
+      <td>
+        ${c.telefono ? `<div style="font-size:13px;">${c.telefono}</div>` : ""}
+        ${c.email ? `<div style="font-size:12px;color:var(--clr-muted);">${c.email}</div>` : ""}
+        ${!c.telefono && !c.email ? `<span style="color:var(--clr-muted);">—</span>` : ""}
+      </td>
+      <td style="text-align:right;">
+        ${tieneDeuda
+          ? `<span style="background:var(--clr-danger);color:white;padding:4px 10px;border-radius:8px;font-weight:700;font-size:13px;">
+              ${Formatters.formatCurrency(saldo)}
+             </span>`
+          : `<span style="color:var(--clr-success);font-weight:600;font-size:13px;">Al corriente</span>`}
+      </td>
+      <td style="text-align:center;">
+        <div style="display:flex;gap:6px;justify-content:center;">
+          <button class="btn btn-secondary btn-small" onclick="ClientesModule.verDetalleCliente(${c.id})">Ver</button>
+          <button class="btn btn-primary btn-small" onclick="ClientesModule.editarCliente(${c.id})">Editar</button>
+          <button class="btn btn-danger btn-small" onclick="ClientesModule.confirmarEliminar(${c.id})">Eliminar</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
   },
 
   // ==================== MOSTRAR MODAL ====================
@@ -468,14 +433,6 @@ const ClientesModule = {
   const inicial1 = nombre ? nombre.charAt(0).toUpperCase(): "";
   const inicial2 = apellido ? apellido.charAt(0).toUpperCase(): "";
   return inicial1 + inicial2 || "??";
-  },
-
-  actualizarContador() {
-  const contador = document.getElementById("contadorClientes");
-  if (contador) {
-  const total = this.clientes.length;
-  contador.textContent = `${total} cliente${total !== 1 ? "s": ""} registrado${total !== 1 ? "s": ""}`;
-  }
   },
 
   getClienteById(id) {

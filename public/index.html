@@ -37,14 +37,6 @@
     <span class="nav-label">Productos</span><kbd class="nav-kbd">F3</kbd>
   </div>
 
-  <div class="nav-item" onclick="showSection('inventario')">
-    <span class="nav-label">Inventario</span><kbd class="nav-kbd">F4</kbd>
-  </div>
-
-  <div class="nav-item" onclick="showSection('compras')">
-    <span class="nav-label">Compras</span>
-  </div>
-
   <div class="nav-item" onclick="showSection('proveedores')">
     <span class="nav-label">Proveedores</span>
   </div>
@@ -535,57 +527,45 @@
 
   <!-- Sección Clientes -->
   <section id="clientes" class="section">
-  <div class="clientes-header">
-  <h2> Clientes</h2>
-  <div class="clientes-acciones">
-  <input
-  type="text"
-  id="buscarCliente"
-  placeholder=" Buscar cliente..."
-  class="clientes-buscador"
-  />
-  <button id="btnBuscarCliente" class="btn btn-info" title="Buscar">
-  Buscar
-  </button>
-  <button
-  id="btnAgregarCliente"
-  class="btn btn-success"
-  title="Agregar cliente"
-  >
-  Agregar Cliente
-  </button>
-  </div>
-  </div>
+    <div class="clientes-header">
+      <h2>Clientes</h2>
+      <div class="clientes-acciones">
+        <input
+          type="text"
+          id="buscarCliente"
+          placeholder="Buscar por nombre, cédula, teléfono..."
+          class="clientes-buscador"
+          oninput="ClientesModule.filtrarLocal(this.value)"
+        />
+        <button id="btnAgregarCliente" class="btn btn-primary">
+          + Nuevo Cliente
+        </button>
+      </div>
+    </div>
 
-  <div class="clientes-contador">
-  <span id="contadorClientes">0 clientes registrados</span>
-  </div>
+    <!-- Stats bar -->
+    <div id="clientesStats" style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;"></div>
 
-  <div class="tabla-scroll-horizontal">
-  <table>
-  <thead>
-  <tr>
-  <th>Cliente</th>
-  <th>Documento</th>
-  <th>Contacto</th>
-  <th>Dirección</th>
-  <th>Saldo Pendiente</th>
-  <th class="th-acciones-centrado">Acciones</th>
-  </tr>
-  </thead>
-  <tbody id="tablaClientes">
-  <tr>
-  <td
-  colspan="6"
-  class="text-center tabla-cargando"
-  >
-  <div class="tabla-cargando-icono"></div>
-  Cargando clientes...
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Contacto</th>
+            <th style="text-align:right;">Saldo</th>
+            <th style="text-align:center;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaClientes">
+          <tr>
+            <td colspan="4" class="text-center tabla-cargando">
+              <div class="tabla-cargando-icono"></div>
+              Cargando clientes...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </section>
 
   <!-- PRODUCTOS SECTION -->
@@ -834,74 +814,6 @@
   <tr>
   <td colspan="7" class="text-center tabla-vacia-mensaje">
   No hay productos registrados
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
-  </section>
-
-  <!-- INVENTARIO SECTION -->
-  <section id="inventario" class="section">
-  <div class="header">
-  <h1>Control de Inventario</h1>
-  </div>
-
-  <div class="stats-grid">
-  <div class="stat-card">
-  <h4>Total Productos</h4>
-  <div class="value" id="totalProductosInv">0</div>
-  </div>
-  <div class="stat-card">
-  <h4>Valor Inventario</h4>
-  <div class="value" id="valorInventario">$0</div>
-  </div>
-  <div class="stat-card">
-  <h4>Productos Bajo Stock</h4>
-  <div class="value stat-bajo-stock" id="productosBajoStock">
-  0
-  </div>
-  </div>
-  </div>
-
-  <div class="card">
-  <h3>Inventario Completo</h3>
-  <div class="form-row-2">
-  <div class="form-group">
-  <label>Filtrar por categoría:</label>
-  <select
-  id="filtroCategoria"
-  onchange="filtrarInventarioPorCategoria()"
-  >
-  <option value="">Todas las categorías</option>
-  </select>
-  </div>
-  <div class="form-group">
-  <label>Buscar:</label>
-  <input
-  type="text"
-  id="filtroInventario"
-  placeholder="Buscar..."
-  onkeyup="filtrarInventarioTabla()"
-  />
-  </div>
-  </div>
-  <table>
-  <thead>
-  <tr>
-  <th>Código</th>
-  <th>Producto</th>
-  <th>Categoría</th>
-  <th>Stock</th>
-  <th>Costo Unitario</th>
-  <th>Valor Total</th>
-  <th>Estado</th>
-  </tr>
-  </thead>
-  <tbody id="inventarioTabla">
-  <tr>
-  <td colspan="7" class="text-center tabla-vacia-mensaje">
-  No hay productos en inventario
   </td>
   </tr>
   </tbody>
@@ -1654,8 +1566,7 @@
   <script src="js/api/ventas-api.js"></script>
   <script src="js/api/facturacion-api.js"></script>
   <script src="js/api/servicios-api.js"></script>
-  <script src="js/api/inventario-api.js"></script>
-  <script src="js/api/categorias-api.js"></script>
+<script src="js/api/categorias-api.js"></script>
   <script src="js/api/proveedores-api.js"></script>
   <script src="js/api/devoluciones-api.js"></script>
   <script src="js/api/pagos-api.js"></script>
@@ -1667,10 +1578,9 @@
   Promise.all([
   fetch("modales/modales.html").then((r) => r.text()),
   fetch("modales/modales-clientes.html").then((r) => r.text()),
-  fetch("modales/modales-inventario.html").then((r) => r.text()), // ← NUEVO
-  ]).then(([modalesFacturacion, modalesClientes, modalesInventario]) => {
+  ]).then(([modalesFacturacion, modalesClientes]) => {
   document.getElementById("modales-container").innerHTML =
-  modalesFacturacion + modalesClientes + modalesInventario; // ← AGREGAR
+  modalesFacturacion + modalesClientes;
   console.log(" Modales HTML cargados");
   });
   </script>
@@ -1683,8 +1593,7 @@
   <script src="js/modules/configuracion-module.js"></script>
   <script src="js/modules/clientes.js"></script>
   <script src="js/modules/ventas.js"></script>
-  <script src="js/modules/inventario.js"></script>
-  <script src="js/modules/factura-impresion.js"></script>
+<script src="js/modules/factura-impresion.js"></script>
   <script src="js/modules/facturacion-busqueda.js"></script>
   <script src="js/modules/devoluciones-module.js"></script>
   <script src="js/modules/pagos-module.js"></script>

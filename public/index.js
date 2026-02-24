@@ -143,10 +143,7 @@ window.showSection = function (sectionId) {
     case "productos":
       actualizarTablaProductos();
       break;
-    case "inventario":
-      actualizarInventario();
-      break;
-    case "proveedores":
+case "proveedores":
       actualizarTablaProveedores();
       break;
     case "creditos":
