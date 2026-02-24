@@ -62,7 +62,7 @@ router.get(
           COUNT(f.id) as facturas_pendientes
         FROM clientes c
         INNER JOIN facturas f ON c.id = f.cliente_id
-        WHERE f.estado_pago IN ('pendiente', 'parcial')
+        WHERE f.estado IN ('pendiente', 'parcial')
         GROUP BY c.id, c.nombre, c.apellido, c.rnc, c.cedula, c.telefono
         HAVING SUM(f.saldo_pendiente) > 0
         ORDER BY saldo_pendiente DESC
@@ -109,8 +109,8 @@ router.get(
          COALESCE(SUM(total), 0) as total_facturado,
          COALESCE(SUM(monto_pagado), 0) as total_pagado,
          COALESCE(SUM(saldo_pendiente), 0) as saldo_pendiente
-       FROM facturas 
-       WHERE cliente_id = $1 AND estado_pago != 'anulada'`,
+       FROM facturas
+       WHERE cliente_id = $1 AND estado != 'anulada'`,
         [id],
       );
 
@@ -242,8 +242,8 @@ router.get(
       const facturasResult = await pool.query(
         `SELECT COUNT(*) as total_facturas, 
               COALESCE(SUM(saldo_pendiente), 0) as saldo_pendiente
-         FROM facturas 
-         WHERE cliente_id = $1 AND estado_pago != 'anulada'`,
+         FROM facturas
+         WHERE cliente_id = $1 AND estado != 'anulada'`,
         [id],
       );
 
