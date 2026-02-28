@@ -313,8 +313,8 @@ const VentasModule = {
 
   mostrarModalAgregarManual() {
   const modal = `
-  <div id="modalAgregarManual" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;">
-  <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; width: 90%;">
+  <div id="modalAgregarManual" class="js-overlay">
+  <div class="js-modal js-modal--md" style="padding: 30px;">
   <h3 style="margin: 0 0 20px 0;"> Agregar Artículo Manual</h3>
 
   <div style="margin-bottom: 15px;">
@@ -329,7 +329,7 @@ const VentasModule = {
 
   <div id="resultadosManual" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;"></div>
 
-  <div style="display: flex; gap: 10px; justify-content: flex-end;">
+  <div class="flex-end">
   <button
   type="button"
   class="btn btn-secondary"

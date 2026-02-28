@@ -146,7 +146,7 @@ const FacturacionModule = {
   ${this.getBadgeEstado(factura.estado)}
   </td>
   <td style="text-align: center;">
-  <div style="display: flex; gap: 5px; justify-content: center;">
+  <div class="flex-gap-sm" style="justify-content:center;">
  <button
   class="btn btn-info btn-small"
   onclick="event.stopPropagation(); FacturacionModule.verDetalleFactura(${factura.id})"

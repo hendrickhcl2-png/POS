@@ -2365,3 +2365,173 @@ tbody tr:hover {
 .campo-ayuda-secundaria {
   color: var(--clr-muted);
 }
+
+/* ==================== STAT MINI CARDS ==================== */
+.stat-mini {
+  background: var(--clr-bg-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: 10px;
+  padding: 16px 24px;
+  flex: 1;
+  min-width: 160px;
+}
+.stat-mini__label {
+  font-size: 12px;
+  color: var(--clr-muted);
+  margin-bottom: 4px;
+}
+.stat-mini__value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--clr-dark);
+}
+.stat-mini__value--success { color: var(--clr-success); }
+.stat-mini__value--warning { color: var(--clr-warning); }
+.stat-mini__value--danger  { color: var(--clr-danger); }
+.stats-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+/* ==================== JS MODAL OVERLAY/BOX ==================== */
+.js-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.js-modal {
+  background: white;
+  width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.js-modal--sm  { max-width: 480px; }
+.js-modal--md  { max-width: 600px; }
+.js-modal--lg  { max-width: 800px; }
+.js-modal--xl  { max-width: 1000px; }
+.js-modal__hdr {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-radius: 10px 10px 0 0;
+}
+.js-modal__hdr--primary  { background: var(--clr-primary); color: white; }
+.js-modal__hdr--danger   { background: #e74c3c; color: white; }
+.js-modal__hdr--success  { background: var(--clr-success); color: white; }
+.js-modal__hdr--gradient { background: linear-gradient(135deg,#667eea 0%,#764ba2 100%); color: white; }
+.js-modal__title { font-size: 18px; font-weight: 700; margin: 0; }
+.js-modal__close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.js-modal__body    { padding: 25px; }
+.js-modal__actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* ==================== INFO PANELS ==================== */
+.info-panel {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+.info-panel--blue    { background: #e8f4fd; border-left: 4px solid #3498db; }
+.info-panel--warning { background: #fef9e7; border-left: 4px solid #f39c12; }
+.info-panel--success { background: #eafaf1; border-left: 4px solid var(--clr-success); }
+
+/* ==================== INFO GRID ==================== */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+.info-grid--2 { grid-template-columns: repeat(2, 1fr); }
+.info-grid--3 { grid-template-columns: repeat(3, 1fr); }
+.info-grid--4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ==================== CARD HERO ==================== */
+.card-hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30px;
+  border-radius: 10px 10px 0 0;
+  color: white;
+  margin: -25px -25px 20px -25px;
+}
+
+/* ==================== AVATAR CIRCLE ==================== */
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--clr-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.avatar-circle--lg {
+  width: 70px;
+  height: 70px;
+  font-size: 24px;
+}
+
+/* ==================== TABLE UTILITIES ==================== */
+.td-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--clr-muted);
+}
+.td-money        { text-align: right; font-family: monospace; }
+.td-money--green { color: var(--clr-success); font-weight: 700; }
+.td-money--red   { color: var(--clr-danger);  font-weight: 700; }
+.tbl-scroll      { overflow-x: auto; }
+
+/* ==================== FORM GROUP ==================== */
+.form-grp       { margin-bottom: 16px; }
+.form-grp label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+.form-grp input,
+.form-grp select,
+.form-grp textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #bdc3c7;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+.form-grp input:focus,
+.form-grp select:focus,
+.form-grp textarea:focus {
+  border-color: var(--clr-primary);
+  outline: none;
+}
+
+/* ==================== FLEX UTILITIES ==================== */
+.flex-end     { display: flex; justify-content: flex-end; gap: 10px; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-center  { display: flex; justify-content: center; align-items: center; }
+.flex-gap-sm  { display: flex; gap: 5px; flex-wrap: wrap; }
+.flex-gap     { display: flex; gap: 10px; flex-wrap: wrap; }
+.flex-gap-lg  { display: flex; gap: 20px; flex-wrap: wrap; }

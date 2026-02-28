@@ -78,13 +78,13 @@ const CreditosModule = {
     );
 
     container.innerHTML = `
-      <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:160px;">
-        <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Facturas saldadas</div>
-        <div style="font-size:28px;font-weight:700;color:var(--clr-dark);">${pagados.length}</div>
+      <div class="stat-mini">
+        <div class="stat-mini__label">Facturas saldadas</div>
+        <div class="stat-mini__value">${pagados.length}</div>
       </div>
-      <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:2;min-width:200px;">
-        <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Total cobrado</div>
-        <div style="font-size:28px;font-weight:700;color:var(--clr-success);">${this._fmt(totalCobrado)}</div>
+      <div class="stat-mini" style="flex:2;min-width:200px;">
+        <div class="stat-mini__label">Total cobrado</div>
+        <div class="stat-mini__value stat-mini__value--success">${this._fmt(totalCobrado)}</div>
       </div>`;
   },
 
@@ -171,17 +171,17 @@ const CreditosModule = {
     );
 
     container.innerHTML = `
-      <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:160px;">
-        <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Clientes con deuda</div>
-        <div style="font-size:28px;font-weight:700;color:var(--clr-dark);">${clientes.length}</div>
+      <div class="stat-mini">
+        <div class="stat-mini__label">Clientes con deuda</div>
+        <div class="stat-mini__value">${clientes.length}</div>
       </div>
-      <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:160px;">
-        <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Facturas pendientes</div>
-        <div style="font-size:28px;font-weight:700;color:var(--clr-warning);">${totalFacturas}</div>
+      <div class="stat-mini">
+        <div class="stat-mini__label">Facturas pendientes</div>
+        <div class="stat-mini__value stat-mini__value--warning">${totalFacturas}</div>
       </div>
-      <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:2;min-width:200px;">
-        <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Total por cobrar</div>
-        <div style="font-size:28px;font-weight:700;color:var(--clr-danger);">${this._fmt(totalSaldo)}</div>
+      <div class="stat-mini" style="flex:2;min-width:200px;">
+        <div class="stat-mini__label">Total por cobrar</div>
+        <div class="stat-mini__value stat-mini__value--danger">${this._fmt(totalSaldo)}</div>
       </div>`;
   },
 
@@ -305,7 +305,7 @@ const CreditosModule = {
             style="width:100%;padding:10px;border:1px solid var(--clr-border);border-radius:8px;font-size:14px;" />
         </div>
 
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+        <div class="js-modal__actions">
           <button type="button" class="btn btn-secondary" onclick="CreditosModule._cerrarModal('modalCreditoPago')">Cancelar</button>
           <button type="submit" class="btn btn-primary">Registrar Pago</button>
         </div>
@@ -393,7 +393,7 @@ const CreditosModule = {
         .join("");
 
       contenido = `
-        <div style="overflow-x:auto;">
+        <div class="tbl-scroll">
           <table style="width:100%;border-collapse:collapse;">
             <thead>
               <tr style="background:var(--clr-bg-surface);">
@@ -425,7 +425,7 @@ const CreditosModule = {
       "modalCreditoHistorial",
       `Historial de Pagos — ${nombreCliente}`,
       contenido +
-        `<div style="display:flex;justify-content:flex-end;margin-top:20px;">
+        `<div class="js-modal__actions">
            <button class="btn btn-secondary" onclick="CreditosModule._cerrarModal('modalCreditoHistorial')">Cerrar</button>
          </div>`,
       "660px",
@@ -444,9 +444,8 @@ const CreditosModule = {
 
     const overlay = document.createElement("div");
     overlay.id = id;
-    overlay.style.cssText = `
-      display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);
-      z-index:9999;align-items:center;justify-content:center;padding:20px;`;
+    overlay.className = "js-overlay";
+    overlay.style.cssText = "display:none;padding:20px;";
 
     overlay.innerHTML = `
       <div style="background:var(--clr-bg);border-radius:12px;width:100%;max-width:${maxWidth};max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">

@@ -69,17 +69,17 @@ const ClientesModule = {
   const sinDeuda = clientes.length - conDeuda;
 
   container.innerHTML = `
-    <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:140px;">
-      <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Total clientes</div>
-      <div style="font-size:28px;font-weight:700;color:var(--clr-dark);">${clientes.length}</div>
+    <div class="stat-mini" style="min-width:140px;">
+      <div class="stat-mini__label">Total clientes</div>
+      <div class="stat-mini__value">${clientes.length}</div>
     </div>
-    <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:140px;">
-      <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Al corriente</div>
-      <div style="font-size:28px;font-weight:700;color:var(--clr-success);">${sinDeuda}</div>
+    <div class="stat-mini" style="min-width:140px;">
+      <div class="stat-mini__label">Al corriente</div>
+      <div class="stat-mini__value stat-mini__value--success">${sinDeuda}</div>
     </div>
-    <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:140px;">
-      <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Con saldo pendiente</div>
-      <div style="font-size:28px;font-weight:700;color:var(--clr-danger);">${conDeuda}</div>
+    <div class="stat-mini" style="min-width:140px;">
+      <div class="stat-mini__label">Con saldo pendiente</div>
+      <div class="stat-mini__value stat-mini__value--danger">${conDeuda}</div>
     </div>`;
   },
 
@@ -110,11 +110,7 @@ const ClientesModule = {
     <tr>
       <td>
         <div style="display:flex;align-items:center;gap:12px;">
-          <div style="
-            width:40px;height:40px;border-radius:50%;flex-shrink:0;
-            background:var(--clr-primary);
-            display:flex;align-items:center;justify-content:center;
-            color:white;font-weight:700;font-size:14px;">
+          <div class="avatar-circle" style="font-size:14px;">
             ${iniciales}
           </div>
           <div>
@@ -137,7 +133,7 @@ const ClientesModule = {
           : `<span style="color:var(--clr-success);font-weight:600;font-size:13px;">Al corriente</span>`}
       </td>
       <td style="text-align:center;">
-        <div style="display:flex;gap:6px;justify-content:center;">
+        <div class="flex-gap-sm" style="justify-content:center;">
           <button class="btn btn-secondary btn-small" onclick="ClientesModule.verDetalleCliente(${c.id})">Ver</button>
           ${window.Auth?.isAdmin() ? `<button class="btn btn-primary btn-small" onclick="ClientesModule.editarCliente(${c.id})">Editar</button>` : ""}
           ${window.Auth?.isAdmin() ? `<button class="btn btn-danger btn-small" onclick="ClientesModule.confirmarEliminar(${c.id})">Eliminar</button>` : ""}
@@ -277,7 +273,7 @@ const ClientesModule = {
   const iniciales = this.getIniciales(cliente.nombre, cliente.apellido);
 
   let content = `
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px; border-radius: 10px 10px 0 0; color: white; margin: -25px -25px 30px -25px;">
+  <div class="card-hero" style="padding:40px;margin:-25px -25px 30px -25px;">
   <div style="display: flex; align-items: center; gap: 20px;">
   <div class="avatar" style="
   width: 80px;
@@ -300,7 +296,7 @@ const ClientesModule = {
   </div>
   </div>
 
-  <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 30px;">
+  <div class="info-grid--2" style="gap:20px;margin-bottom:30px;">
   <div>
   <h4 style="color: #2c3e50; margin-bottom: 10px;"> Información Personal</h4>
   <p><strong>Nombre:</strong> ${cliente.nombre}</p>
@@ -318,7 +314,7 @@ const ClientesModule = {
 
   ${cliente.notas
   ? `
-  <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 30px; border-left: 4px solid #3498db;">
+  <div class="info-panel info-panel--blue" style="margin-bottom:30px;">
   <h4 style="color: #2c3e50; margin: 0 0 10px 0;"> Notas</h4>
   <p style="margin: 0;">${cliente.notas}</p>
   </div>
@@ -327,7 +323,7 @@ const ClientesModule = {
   }
 
   <h4 style="color: #2c3e50; margin-bottom: 15px;"> Estadísticas</h4>
-  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px;">
+  <div class="info-grid--4" style="gap:15px;margin-bottom:30px;">
   <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; text-align: center; color: white;">
   <div style="font-size: 28px; font-weight: bold;">${estadisticas.total_compras || 0}</div>
   <div style="opacity: 0.9; margin-top: 5px;">Compras</div>
@@ -346,7 +342,7 @@ const ClientesModule = {
   </div>
   </div>
 
-  <div style="display: flex; gap: 10px; justify-content: flex-end;">
+  <div class="flex-end">
   ${estadisticas.saldo_pendiente > 0
   ? `<button class="btn btn-warning" onclick="ClientesModule.verEstadoCuenta(${clienteId})">
   Ver Estado de Cuenta

@@ -140,14 +140,14 @@ const ModalesFacturacion = {
   const estadoBadge = this.getEstadoBadge(factura.estado_pago);
 
   return `
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; color: white; margin: -25px -25px 20px -25px;">
+  <div class="card-hero">
   <h2 style="margin: 0 0 10px 0; font-size: 28px;"> ${factura.numero_factura}</h2>
   ${factura.ncf ? `<p style="margin: 5px 0; font-size: 16px;">NCF: <strong>${factura.ncf}</strong></p>`: ""}
   <p style="margin: 5px 0;">Fecha: ${Formatters.formatFecha(factura.fecha_emision)}</p>
   <div style="margin-top: 15px;">${estadoBadge}</div>
   </div>
 
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+  <div class="info-grid--2" style="gap:20px;margin-bottom:20px;">
   <div>
   <h4 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px;"> Cliente</h4>
   <p><strong>Nombre:</strong> ${factura.cliente_nombre}</p>
@@ -189,7 +189,7 @@ const ModalesFacturacion = {
   </tbody>
   </table>
 
-  <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+  <div class="info-panel">
   <div style="display: flex; justify-content: space-between; margin: 5px 0;">
   <span>Subtotal:</span>
   <span style="font-weight: bold;">${Formatters.formatCurrency(factura.subtotal)}</span>
@@ -215,7 +215,7 @@ const ModalesFacturacion = {
   </div>
 
   <h4 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px;"> Estado de Pagos</h4>
-  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+  <div class="info-grid--3" style="gap:15px;margin-bottom:20px;">
   <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; text-align: center;">
   <p style="margin: 0; color: #1976d2; font-size: 12px;">Total Facturado</p>
   <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #1565c0;">${Formatters.formatCurrency(factura.total)}</p>
@@ -274,7 +274,7 @@ const ModalesFacturacion = {
 : ""
   }
 
-  <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+  <div class="flex-end" style="margin-top:20px;">
   <button class="btn btn-secondary" onclick="ModalesFacturacion.cerrarModalDetalleFactura()">
   Cerrar
   </button>
@@ -383,12 +383,12 @@ const ModalesFacturacion = {
   ).length;
 
   return `
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; color: white; margin: -25px -25px 20px -25px;">
+  <div class="card-hero">
   <h2 style="margin: 0 0 10px 0; font-size: 28px;"> Estado de Cuenta</h2>
   <p style="margin: 5px 0; font-size: 18px;">${estadoCuenta.cliente.nombre}</p>
   </div>
 
-  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+  <div class="info-grid--4" style="gap:15px;margin-bottom:20px;">
   <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; text-align: center;">
   <p style="margin: 0; color: #1976d2; font-size: 12px;">Total Facturas</p>
   <p style="margin: 5px 0 0 0; font-size: 28px; font-weight: bold; color: #1565c0;">${estadoCuenta.total_facturas}</p>
@@ -464,7 +464,7 @@ const ModalesFacturacion = {
   </tbody>
   </table>
 
-  <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+  <div class="flex-end" style="margin-top:20px;">
   <button class="btn btn-secondary" onclick="ModalesFacturacion.cerrarModalEstadoCuenta()">
   Cerrar
   </button>

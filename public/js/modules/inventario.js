@@ -251,7 +251,7 @@ const InventarioModule = {
 
   // Mostrar información del producto
   document.getElementById("movimientoProductoInfo").innerHTML = `
-  <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+  <div class="info-panel">
   <strong style="font-size: 16px;">${producto.nombre}</strong><br>
   <small style="color: #7f8c8d;">Stock actual: <strong style="font-size: 18px; color: #2c3e50;">${producto.stock}</strong></small>
   </div>
@@ -333,7 +333,7 @@ const InventarioModule = {
 
   // Mostrar información del producto
   document.getElementById("ajusteProductoInfo").innerHTML = `
-  <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+  <div class="info-panel">
   <strong style="font-size: 16px;">${producto.nombre}</strong><br>
   <small style="color: #7f8c8d;">Stock actual: <strong style="font-size: 18px; color: #2c3e50;">${producto.stock}</strong></small>
   </div>
@@ -410,7 +410,7 @@ const InventarioModule = {
   }
 
   let content = `
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; color: white; margin: -25px -25px 20px -25px;">
+  <div class="card-hero">
   <h2 style="margin: 0 0 10px 0; font-size: 28px;"> Historial de Movimientos</h2>
   <p style="margin: 5px 0; font-size: 18px;">${producto.nombre}</p>
   <p style="margin: 5px 0; opacity: 0.9;">Stock actual: <strong style="font-size: 24px;">${producto.stock}</strong></p>
@@ -464,7 +464,7 @@ const InventarioModule = {
   }
 
   content += `
-  <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+  <div class="flex-end" style="margin-top:20px;">
   <button class="btn btn-secondary" onclick="InventarioModule.cerrarModalHistorial()">
   Cerrar
   </button>

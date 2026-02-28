@@ -32,31 +32,31 @@ const DevolucionModule = {
 
   const modal = document.createElement("div");
   modal.id = "modalDevolucion";
-  modal.style.cssText =
-  "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:20px;";
+  modal.className = "js-overlay";
+  modal.style.cssText = "overflow-y:auto;padding:20px;";
 
   modal.innerHTML = `
-  <div style="background:white;width:100%;max-width:900px;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto;">
+  <div class="js-modal js-modal--xl">
 
   <!-- HEADER -->
-  <div style="background:#e74c3c;color:white;padding:20px;border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center;">
+  <div class="js-modal__hdr js-modal__hdr--danger">
   <div>
   <h2 style="margin:0;font-size:24px;"> Procesar Devolución</h2>
   <p style="margin:5px 0 0 0;font-size:14px;opacity:0.9;">Factura: ${this.facturaActual.numero_factura}</p>
   </div>
   <button
   onclick="DevolucionModule.cerrar()"
-  style="background:rgba(255,255,255,0.2);border:none;color:white;font-size:24px;width:40px;height:40px;border-radius:50%;cursor:pointer;">
-
+  class="js-modal__close">
+  &times;
   </button>
   </div>
 
   <!-- BODY -->
-  <div style="padding:30px;">
+  <div class="js-modal__body">
 
   <!-- INFO DE LA FACTURA -->
-  <div style="background:#f8f9fa;border-radius:8px;padding:15px;margin-bottom:20px;">
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;">
+  <div class="info-panel">
+  <div class="info-grid">
   <div>
   <strong style="color:#7f8c8d;font-size:13px;">Cliente:</strong><br>
   <span style="font-size:15px;">${this.facturaActual.cliente_nombre || "Cliente General"}</span>
@@ -73,7 +73,7 @@ const DevolucionModule = {
   </div>
 
   <!-- INSTRUCCIONES -->
-  <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 15px;margin-bottom:20px;">
+  <div class="info-panel info-panel--warning">
   <strong style="color:#856404;"> Instrucciones:</strong>
   <p style="margin:5px 0 0 0;color:#856404;font-size:14px;">
   Seleccione los productos que desea devolver y especifique la cantidad.
@@ -83,7 +83,7 @@ const DevolucionModule = {
 
   <!-- TABLA DE ITEMS -->
   <h3 style="margin:0 0 15px 0;">Productos de la factura:</h3>
-  <div style="overflow-x:auto;">
+  <div class="tbl-scroll">
   <table style="width:100%;border-collapse:collapse;">
   <thead>
   <tr style="background:#2c3e50;color:white;">
@@ -199,7 +199,7 @@ const DevolucionModule = {
   </div>
 
   <!-- BOTONES -->
-  <div style="margin-top:30px;display:flex;gap:15px;justify-content:flex-end;">
+  <div class="js-modal__actions" style="margin-top:30px;gap:15px;">
   <button
   onclick="DevolucionModule.cerrar()"
   style="background:#95a5a6;color:white;border:none;padding:12px 30px;border-radius:5px;cursor:pointer;font-size:16px;font-weight:600;">
