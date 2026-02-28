@@ -110,7 +110,7 @@ const ReporteInventarioModule = {
     if (conteo) conteo.textContent = `${this._filtrados.length} producto(s)`;
 
     if (this._filtrados.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem">Sin resultados</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem">Sin resultados</td></tr>`;
       return;
     }
 
@@ -144,6 +144,7 @@ const ReporteInventarioModule = {
           <td>
             <span class="inv-stock${sinStock ? " inv-stock--cero" : bajStock ? " inv-stock--bajo" : ""}">${stock}</span>
           </td>
+          <td style="color:var(--text-muted);font-size:0.85rem">${p.creado_por || "—"}</td>
         </tr>`;
       })
       .join("");
@@ -155,7 +156,7 @@ const ReporteInventarioModule = {
       return;
     }
 
-    const headers = ["Codigo/IMEI", "Descripcion", "Categoria", "Costo Total", "Precio Venta", "Disponible", "Cantidad"];
+    const headers = ["Codigo/IMEI", "Descripcion", "Categoria", "Costo Total", "Precio Venta", "Disponible", "Cantidad", "Agregado por"];
     const filas = this._filtrados.map((p) => [
       p.imei || p.codigo_barras || "",
       `"${(p.nombre || "").replace(/"/g, '""')}"`,
@@ -164,6 +165,7 @@ const ReporteInventarioModule = {
       parseFloat(p.precio_efectivo) || 0,
       p.disponible ? "Si" : "No",
       p.stock_actual || 0,
+      p.creado_por || "",
     ]);
 
     // Calcular resumen sobre los datos completos (no filtrados)

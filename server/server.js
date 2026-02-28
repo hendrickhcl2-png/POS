@@ -121,6 +121,11 @@ async function initAuth() {
       );
       console.log("✅ Usuarios iniciales creados (admin, cajero)");
     }
+    // Migración: columna creado_por en productos
+    await pool.query(`
+      ALTER TABLE productos ADD COLUMN IF NOT EXISTS creado_por VARCHAR(100)
+    `);
+
     console.log("✅ Auth inicializado");
   } catch (error) {
     console.error("❌ Error en initAuth:", error);

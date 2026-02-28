@@ -524,7 +524,8 @@ const ReportesController = {
           p.descuento_monto,
           p.disponible,
           p.stock_actual,
-          p.stock_minimo
+          p.stock_minimo,
+          p.creado_por
         FROM productos p
         LEFT JOIN categorias c ON p.categoria_id = c.id
         WHERE p.activo = true

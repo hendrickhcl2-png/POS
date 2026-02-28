@@ -125,6 +125,8 @@ router.post("/", requireAdmin, async (req, res) => {
       return res.status(400).json({ error: "El nombre es obligatorio" });
     }
 
+    const creadoPor = req.session?.usuario?.nombre || req.session?.usuario?.username || null;
+
     // Insertar producto (SIN sku y codigo)
     const result = await pool.query(
       `INSERT INTO productos (
@@ -147,10 +149,11 @@ router.post("/", requireAdmin, async (req, res) => {
         aplica_itbis,
         activo,
         costos,
-        caracteristicas
+        caracteristicas,
+        creado_por
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+        $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
       ) RETURNING *`,
       [
         codigo_barras || null,
@@ -173,6 +176,7 @@ router.post("/", requireAdmin, async (req, res) => {
         activo !== false,
         costos ? JSON.stringify(costos) : null,
         caracteristicas ? JSON.stringify(caracteristicas) : null,
+        creadoPor,
       ],
     );
 
