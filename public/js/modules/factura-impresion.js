@@ -27,14 +27,13 @@ const FacturaImpresion = {
     // Construir HTML de la factura
     const modal = document.createElement("div");
     modal.id = "modalFacturaImpresion";
-    modal.style.cssText =
-      "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:10000;display:flex;align-items:center;justify-content:center;";
+    modal.className = "js-overlay";
 
     modal.innerHTML = `
-  <div style="background:white;width:90%;max-width:700px;max-height:90vh;overflow-y:auto;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.3);">
+  <div class="js-modal" style="max-width:700px;">
 
   <!-- BOTONES DE ACCIÓN (fuera de print) -->
-  <div class="no-print" style="background:#2c3e50;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;border-radius:10px 10px 0 0;">
+  <div class="no-print factura-action-bar">
   <span style="color:white;font-size:16px;font-weight:bold;"> Factura / Recibo</span>
   <div style="display:flex;gap:10px;">
   <button type="button" onclick="FacturaImpresion.imprimirTermica()" style="background:#8e44ad;color:white;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;">🖨️ Térmica</button>

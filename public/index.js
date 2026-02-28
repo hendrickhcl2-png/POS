@@ -482,17 +482,6 @@ window.agregarServicioAVenta = function (servicioId = null) {
 
   const servicioDiv = document.createElement("div");
   servicioDiv.className = "servicio-item";
-  servicioDiv.style.cssText = `
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr auto;
-    gap: 10px;
-    margin-bottom: 10px;
-    padding: 12px;
-    background: #f0f8ff;
-    border-radius: 5px;
-    border-left: 4px solid #4CAF50;
-    align-items: center;
-  `;
 
   const opcionesServicios = serviciosDisponibles
     .map((s) => {
@@ -516,20 +505,17 @@ window.agregarServicioAVenta = function (servicioId = null) {
       min="1"
       value="1"
       onchange="calcularTotalesVenta()"
-      style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;"
     />
     <input
       type="number"
       class="servicio-precio"
       placeholder="Precio"
       readonly
-      style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; background: #f5f5f5; text-align: right; font-weight: bold;"
     />
     <button
       type="button"
       class="btn btn-danger btn-small"
       onclick="this.parentElement.remove(); calcularTotalesVenta();"
-      style="padding: 8px 12px; white-space: nowrap;"
     >
       Eliminar
     </button>

@@ -106,13 +106,13 @@ const FacturacionModule = {
 
   <div class="info-grid--2" style="gap:20px;margin-bottom:20px;">
   <div>
-  <h4 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px;"> Cliente</h4>
+  <h4 class="modal-seccion-titulo"> Cliente</h4>
   <p><strong>Nombre:</strong> ${factura.cliente_nombre}</p>
   <p><strong>RNC/Cédula:</strong> ${factura.cliente_rnc || "-"}</p>
   <p><strong>Teléfono:</strong> ${factura.cliente_telefono || "-"}</p>
   </div>
   <div>
-  <h4 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px;"> Detalles</h4>
+  <h4 class="modal-seccion-titulo"> Detalles</h4>
   <p><strong>Tipo:</strong> ${factura.tipo_factura}</p>
   <p><strong>Comprobante:</strong> ${factura.tipo_comprobante}</p>
   <p><strong>Condiciones:</strong> ${factura.condiciones_pago}</p>
@@ -120,14 +120,14 @@ const FacturacionModule = {
   </div>
   </div>
 
-  <h4 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px;"> Artículos</h4>
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+  <h4 class="modal-seccion-titulo"> Artículos</h4>
+  <table class="data-tbl">
   <thead>
-  <tr style="background: #f8f9fa;">
-  <th style="padding: 10px; text-align: left; border-bottom: 2px solid #dee2e6;">Descripción</th>
-  <th style="padding: 10px; text-align: center; border-bottom: 2px solid #dee2e6;">Cant.</th>
-  <th style="padding: 10px; text-align: right; border-bottom: 2px solid #dee2e6;">Precio Unit.</th>
-  <th style="padding: 10px; text-align: right; border-bottom: 2px solid #dee2e6;">Total</th>
+  <tr>
+  <th>Descripción</th>
+  <th class="text-center">Cant.</th>
+  <th class="text-right">Precio Unit.</th>
+  <th class="text-right">Total</th>
   </tr>
   </thead>
   <tbody>
@@ -135,10 +135,10 @@ const FacturacionModule = {
 .map(
   (item) => `
   <tr>
-  <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">${item.descripcion}</td>
-  <td style="padding: 10px; text-align: center; border-bottom: 1px solid #dee2e6;">${item.cantidad}</td>
-  <td style="padding: 10px; text-align: right; border-bottom: 1px solid #dee2e6;">${Formatters.formatCurrency(item.precio_unitario)}</td>
-  <td style="padding: 10px; text-align: right; border-bottom: 1px solid #dee2e6;">${Formatters.formatCurrency(item.total)}</td>
+  <td>${item.descripcion}</td>
+  <td class="text-center">${item.cantidad}</td>
+  <td class="text-right">${Formatters.formatCurrency(item.precio_unitario)}</td>
+  <td class="text-right">${Formatters.formatCurrency(item.total)}</td>
   </tr>
   `,
   )
@@ -147,34 +147,34 @@ const FacturacionModule = {
   </table>
 
   <div class="info-panel">
-  <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+  <div class="price-row">
   <span>Subtotal:</span>
   <span style="font-weight: bold;">${Formatters.formatCurrency(factura.subtotal)}</span>
   </div>
   ${
   factura.descuento > 0
   ? `
-  <div style="display: flex; justify-content: space-between; margin: 5px 0; color: #e74c3c;">
+  <div class="price-row price-row--danger">
   <span>Descuento:</span>
   <span style="font-weight: bold;">-${Formatters.formatCurrency(factura.descuento)}</span>
   </div>
   `
 : ""
   }
-  <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+  <div class="price-row">
   <span>ITBIS (18%):</span>
   <span style="font-weight: bold;">${Formatters.formatCurrency(factura.itbis)}</span>
   </div>
-  <div style="display: flex; justify-content: space-between; margin: 10px 0 0 0; padding-top: 10px; border-top: 2px solid #34495e; font-size: 20px;">
+  <div class="price-row price-row--total">
   <span><strong>${factura.total_devuelto > 0 ? "TOTAL BRUTO:" : "TOTAL:"}</strong></span>
   <span style="font-weight: bold; color: #27ae60;">${Formatters.formatCurrency(factura.total)}</span>
   </div>
   ${factura.total_devuelto > 0 ? `
-  <div style="display: flex; justify-content: space-between; margin: 5px 0 0 0; padding-top: 8px; font-size: 16px; color: #c0392b;">
+  <div class="price-row" style="padding-top:8px;font-size:16px;color:#c0392b;">
   <span><strong>Monto Devuelto:</strong></span>
   <span style="font-weight: bold;">-${Formatters.formatCurrency(factura.total_devuelto)}</span>
   </div>
-  <div style="display: flex; justify-content: space-between; margin: 5px 0 0 0; padding-top: 8px; border-top: 2px solid #27ae60; font-size: 20px; color: #27ae60;">
+  <div class="price-row" style="padding-top:8px;border-top:2px solid #27ae60;font-size:20px;color:#27ae60;">
   <span><strong>TOTAL NETO:</strong></span>
   <span style="font-weight: bold;">${Formatters.formatCurrency(factura.total_neto)}</span>
   </div>
@@ -182,14 +182,14 @@ const FacturacionModule = {
   </div>
 
   ${factura.devoluciones && factura.devoluciones.length > 0 ? `
-  <div style="margin-top:20px;border:2px solid #c0392b;border-radius:8px;overflow:hidden;">
-  <div style="background:#c0392b;padding:10px 18px;display:flex;justify-content:space-between;align-items:center;">
+  <div class="dev-box">
+  <div class="dev-box__hdr">
   <strong style="color:white;font-size:14px;"> Devoluciones Registradas</strong>
   <span style="color:white;font-size:13px;">Total devuelto: ${Formatters.formatCurrency(factura.total_devuelto)}</span>
   </div>
-  ${factura.devoluciones.map((dev, idx) => `
-  <div style="padding:12px 18px;${idx > 0 ? "border-top:1px solid #f5c6cb;" : ""}background:#fff5f5;">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+  ${factura.devoluciones.map((dev) => `
+  <div class="dev-box__row">
+  <div class="flex-between" style="margin-bottom:8px;">
   <div>
   <strong style="color:#c0392b;font-size:13px;">${dev.numero_devolucion}</strong>
   <span style="background:#c0392b;color:white;padding:2px 10px;border-radius:12px;font-size:11px;margin-left:8px;">${dev.tipo === "total" ? "Total" : "Parcial"}</span>
@@ -217,7 +217,7 @@ const FacturacionModule = {
   `).join("")}
   </tbody>
   </table>
-  <div style="text-align:right;padding:6px 0 0 0;">
+  <div class="text-right" style="padding:6px 0 0 0;">
   <strong style="color:#c0392b;font-size:13px;">Subtotal devuelto: ${Formatters.formatCurrency(dev.monto_devuelto)}</strong>
   </div>
   </div>
@@ -225,18 +225,18 @@ const FacturacionModule = {
   </div>
   ` : ""}
 
-  <h4 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px;"> Estado de Pagos</h4>
+  <h4 class="modal-seccion-titulo"> Estado de Pagos</h4>
   <div class="info-grid--3" style="gap:15px;margin-bottom:20px;">
-  <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; text-align: center;">
+  <div class="stat-pago stat-pago--blue">
   <p style="margin: 0; color: #1976d2; font-size: 12px;">${factura.total_devuelto > 0 ? "Total Neto" : "Total Facturado"}</p>
   <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #1565c0;">${Formatters.formatCurrency(factura.total_devuelto > 0 ? factura.total_neto : factura.total)}</p>
   ${factura.total_devuelto > 0 ? `<p style="margin:2px 0 0 0;font-size:11px;color:#c0392b;">Bruto: ${Formatters.formatCurrency(factura.total)}</p>` : ""}
   </div>
-  <div style="background: #e8f5e9; padding: 15px; border-radius: 5px; text-align: center;">
+  <div class="stat-pago stat-pago--green">
   <p style="margin: 0; color: #388e3c; font-size: 12px;">Pagado</p>
   <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: #2e7d32;">${Formatters.formatCurrency(factura.monto_pagado)}</p>
   </div>
-  <div style="background: ${factura.saldo_pendiente > 0 ? "#ffebee": "#f1f8e9"}; padding: 15px; border-radius: 5px; text-align: center;">
+  <div class="stat-pago" style="background: ${factura.saldo_pendiente > 0 ? "#ffebee": "#f1f8e9"};">
   <p style="margin: 0; color: ${factura.saldo_pendiente > 0 ? "#c62828": "#689f38"}; font-size: 12px;">Saldo Pendiente</p>
   <p style="margin: 5px 0 0 0; font-size: 24px; font-weight: bold; color: ${factura.saldo_pendiente > 0 ? "#d32f2f": "#558b2f"};">${Formatters.formatCurrency(factura.saldo_pendiente)}</p>
   </div>
@@ -257,14 +257,14 @@ const FacturacionModule = {
   ${
   factura.pagos && factura.pagos.length > 0
   ? `
-  <h4 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-top: 20px;"> Historial de Pagos</h4>
-  <table style="width: 100%; border-collapse: collapse;">
+  <h4 class="modal-seccion-titulo" style="margin-top:20px;"> Historial de Pagos</h4>
+  <table class="data-tbl">
   <thead>
-  <tr style="background: #f8f9fa;">
-  <th style="padding: 10px; text-align: left;">Fecha</th>
-  <th style="padding: 10px; text-align: left;">Método</th>
-  <th style="padding: 10px; text-align: right;">Monto</th>
-  <th style="padding: 10px; text-align: left;">Referencia</th>
+  <tr>
+  <th>Fecha</th>
+  <th>Método</th>
+  <th class="text-right">Monto</th>
+  <th>Referencia</th>
   </tr>
   </thead>
   <tbody>
@@ -272,10 +272,10 @@ const FacturacionModule = {
 .map(
   (pago) => `
   <tr>
-  <td style="padding: 10px;">${Formatters.formatFecha(pago.fecha_pago)}</td>
-  <td style="padding: 10px;">${Formatters.formatMetodoPago(pago.metodo_pago)}</td>
-  <td style="padding: 10px; text-align: right; font-weight: bold;">${Formatters.formatCurrency(pago.monto)}</td>
-  <td style="padding: 10px;">${pago.referencia || "-"}</td>
+  <td>${Formatters.formatFecha(pago.fecha_pago)}</td>
+  <td>${Formatters.formatMetodoPago(pago.metodo_pago)}</td>
+  <td class="text-right" style="font-weight:bold;">${Formatters.formatCurrency(pago.monto)}</td>
+  <td>${pago.referencia || "-"}</td>
   </tr>
   `,
   )
