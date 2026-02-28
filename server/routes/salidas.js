@@ -57,4 +57,63 @@ router.post(
   }),
 );
 
+// ==================== ACTUALIZAR SALIDA ====================
+router.put(
+  "/:id",
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const {
+      fecha,
+      concepto,
+      descripcion,
+      monto,
+      categoria_gasto,
+      metodo_pago,
+      beneficiario,
+      numero_referencia,
+    } = req.body;
+
+    const result = await pool.query(
+      `UPDATE salidas SET fecha=$1, concepto=$2, descripcion=$3, monto=$4,
+       categoria_gasto=$5, metodo_pago=$6, beneficiario=$7, numero_referencia=$8
+       WHERE id=$9 RETURNING *`,
+      [
+        fecha,
+        concepto,
+        descripcion || null,
+        monto,
+        categoria_gasto || null,
+        metodo_pago || null,
+        beneficiario || null,
+        numero_referencia || null,
+        id,
+      ],
+    );
+
+    if (result.rows.length === 0)
+      return res.status(404).json({ success: false, message: "Salida no encontrada" });
+
+    res.json({ success: true, data: result.rows[0] });
+  }),
+);
+
+// ==================== ELIMINAR SALIDA ====================
+router.delete(
+  "/:id",
+  requireAdmin,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const result = await pool.query(
+      "DELETE FROM salidas WHERE id=$1 RETURNING id",
+      [id],
+    );
+
+    if (result.rows.length === 0)
+      return res.status(404).json({ success: false, message: "Salida no encontrada" });
+
+    res.json({ success: true, message: "Salida eliminada" });
+  }),
+);
+
 module.exports = router;
