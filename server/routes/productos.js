@@ -125,6 +125,17 @@ router.post("/", requireAdmin, async (req, res) => {
       return res.status(400).json({ error: "El nombre es obligatorio" });
     }
 
+    const pv = parseFloat(precio_venta);
+    if (!precio_venta || pv <= 0) {
+      return res.status(400).json({ error: "El precio de venta debe ser mayor a 0" });
+    }
+    if (descuento_porcentaje !== undefined && descuento_porcentaje !== null) {
+      const dp = parseFloat(descuento_porcentaje);
+      if (isNaN(dp) || dp < 0 || dp > 100) {
+        return res.status(400).json({ error: "El descuento debe estar entre 0 y 100%" });
+      }
+    }
+
     const creadoPor = req.session?.usuario?.nombre || req.session?.usuario?.username || null;
 
     // Insertar producto (SIN sku y codigo)
@@ -258,6 +269,17 @@ router.put("/:id", requireAdmin, async (req, res) => {
 
     if (!nombre || nombre.trim() === "") {
       return res.status(400).json({ error: "El nombre es obligatorio" });
+    }
+
+    const pv = parseFloat(precio_venta);
+    if (!precio_venta || pv <= 0) {
+      return res.status(400).json({ error: "El precio de venta debe ser mayor a 0" });
+    }
+    if (descuento_porcentaje !== undefined && descuento_porcentaje !== null) {
+      const dp = parseFloat(descuento_porcentaje);
+      if (isNaN(dp) || dp < 0 || dp > 100) {
+        return res.status(400).json({ error: "El descuento debe estar entre 0 y 100%" });
+      }
     }
 
     const result = await pool.query(

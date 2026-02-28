@@ -192,6 +192,26 @@ router.post("/desde-venta", async (req, res) => {
 
     const { venta_id, tipo_comprobante, dias_credito } = req.body;
 
+    if (!venta_id) {
+      throw new Error("venta_id es requerido");
+    }
+
+    // Prevenir factura duplicada para la misma venta
+    const facturaExistente = await client.query(
+      "SELECT id, numero_factura FROM facturas WHERE venta_id = $1 LIMIT 1",
+      [venta_id]
+    );
+    if (facturaExistente.rows.length > 0) {
+      throw new Error(`Esta venta ya tiene la factura ${facturaExistente.rows[0].numero_factura} generada`);
+    }
+
+    if (dias_credito !== undefined && dias_credito !== null) {
+      const dc = parseInt(dias_credito);
+      if (isNaN(dc) || dc <= 0 || dc > 365) {
+        throw new Error("Los días de crédito deben estar entre 1 y 365");
+      }
+    }
+
     // Obtener venta completa
     const ventaResult = await client.query(
       "SELECT * FROM ventas WHERE id = $1",
@@ -322,21 +342,29 @@ router.post("/:id/anular", async (req, res) => {
     const { id } = req.params;
     const { motivo_anulacion } = req.body;
 
+    if (!motivo_anulacion || motivo_anulacion.trim() === "") {
+      return res.status(400).json({ success: false, message: "El motivo de anulación es obligatorio" });
+    }
+
+    // Verificar que la factura existe y no está ya anulada
+    const facturaActual = await pool.query(
+      "SELECT estado FROM facturas WHERE id = $1", [id]
+    );
+    if (facturaActual.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Factura no encontrada" });
+    }
+    if (facturaActual.rows[0].estado === "anulada") {
+      return res.status(400).json({ success: false, message: "Esta factura ya está anulada" });
+    }
+
     const result = await pool.query(
-      `UPDATE facturas 
+      `UPDATE facturas
        SET estado = 'anulada',
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $1
        RETURNING *`,
       [id],
     );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Factura no encontrada",
-      });
-    }
 
     res.json({
       success: true,

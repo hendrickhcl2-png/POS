@@ -41,6 +41,26 @@ const VentasController = {
         throw new Error("Debe especificar el método de pago");
       }
 
+      // Descuento no puede superar el subtotal
+      if (parseFloat(descuento) < 0 || parseFloat(descuento) > parseFloat(subtotal)) {
+        throw new Error("El descuento no puede ser mayor al subtotal");
+      }
+
+      // Pago mixto: los montos parciales deben sumar el total (tolerancia 1 centavo)
+      if (metodo_pago === "mixto") {
+        const sumaMixto = (parseFloat(monto_efectivo) || 0)
+                        + (parseFloat(monto_tarjeta) || 0)
+                        + (parseFloat(monto_transferencia) || 0);
+        if (Math.abs(sumaMixto - parseFloat(total)) > 0.01) {
+          throw new Error("Los montos del pago mixto no suman el total de la venta");
+        }
+      }
+
+      // Transferencia: referencia obligatoria
+      if (metodo_pago === "transferencia" && (!referencia || !referencia.trim())) {
+        throw new Error("Debe ingresar el número de referencia para pagos por transferencia");
+      }
+
       // Generar número de ticket
       const resultTicket = await client.query(
         `SELECT COALESCE(MAX(REGEXP_REPLACE(numero_ticket, '[^0-9]', '', 'g')::integer), 0) + 1 as siguiente_ticket 

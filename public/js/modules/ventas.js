@@ -900,6 +900,29 @@ const VentasModule = {
   }
   }
 
+  // Pago mixto: suma de componentes debe igualar el total
+  if (this.metodoPagoActual === "mixto") {
+  const ef = parseFloat(document.getElementById("montoEfectivo").value) || 0;
+  const ta = parseFloat(document.getElementById("montoTarjeta").value) || 0;
+  const tr = parseFloat(document.getElementById("montoTransferencia").value) || 0;
+  if (Math.abs(ef + ta + tr - totalVenta) > 0.01) {
+  this.mostrarAlerta(
+  `Los montos del pago mixto (${this.formatCurrency(ef + ta + tr)}) no coinciden con el total (${this.formatCurrency(totalVenta)})`,
+  "warning"
+  );
+  return false;
+  }
+  }
+
+  // Transferencia: referencia obligatoria
+  if (this.metodoPagoActual === "transferencia") {
+  const ref = document.getElementById("referenciaTransferencia")?.value?.trim();
+  if (!ref) {
+  this.mostrarAlerta("Debe ingresar el número de referencia para la transferencia", "warning");
+  return false;
+  }
+  }
+
   return true;
   },
 

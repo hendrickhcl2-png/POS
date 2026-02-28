@@ -108,6 +108,15 @@ async function guardarSalida(e) {
     beneficiario: getValue("salidaBeneficiario"),
   };
 
+  if (!salidaData.concepto || salidaData.concepto.trim() === "") {
+    mostrarAlerta("El concepto es obligatorio", "warning");
+    return;
+  }
+  if (!salidaData.monto || salidaData.monto <= 0 || isNaN(salidaData.monto)) {
+    mostrarAlerta("El monto debe ser mayor a 0", "warning");
+    return;
+  }
+
   try {
     if (salidaEnEdicion) {
       await window.API.Salidas.update(salidaEnEdicion, salidaData);

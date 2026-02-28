@@ -351,6 +351,35 @@ async function guardarProducto(e) {
     return;
   }
 
+  const precioVenta = parseFloat(getValue("productoPrecio")) || 0;
+  const precioCosto = parseFloat(getValue("productoCosto")) || 0;
+  const stockMin = parseInt(getValue("productoStockMin")) || 0;
+  const stockMax = parseInt(getValue("productoStockMax")) || 0;
+  const descPct = parseFloat(getValue("descuentoPorcentaje")) || 0;
+
+  if (precioVenta <= 0) {
+    mostrarAlerta("El precio de venta debe ser mayor a 0", "warning");
+    return;
+  }
+
+  if (precioCosto > 0 && precioVenta < precioCosto) {
+    mostrarAlerta(
+      `Atención: el precio de venta ($${precioVenta.toFixed(2)}) es menor al costo ($${precioCosto.toFixed(2)}). ¿Desea continuar?`,
+      "warning"
+    );
+    // Solo advierte, no bloquea (puede ser liquidación intencional)
+  }
+
+  if (stockMax > 0 && stockMin > stockMax) {
+    mostrarAlerta("El stock mínimo no puede ser mayor al stock máximo", "warning");
+    return;
+  }
+
+  if (descPct < 0 || descPct > 100) {
+    mostrarAlerta("El descuento debe estar entre 0 y 100%", "warning");
+    return;
+  }
+
   const costos = obtenerCostos();
   const caracteristicas = obtenerCaracteristicas();
 

@@ -94,6 +94,10 @@ window.agregarServicioConfig = async function () {
     mostrarAlerta("El nombre del servicio es obligatorio", "warning");
     return;
   }
+  if (tipo === "pagado" && precio <= 0) {
+    mostrarAlerta("Los servicios de pago deben tener un precio mayor a 0", "warning");
+    return;
+  }
   try {
     await window.API.Servicios.create({
       nombre,

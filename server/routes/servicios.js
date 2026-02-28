@@ -42,6 +42,14 @@ router.post("/", async (req, res) => {
   try {
     const { nombre, descripcion, precio, es_gratuito } = req.body;
 
+    if (!nombre || nombre.trim() === "") {
+      return res.status(400).json({ error: "El nombre del servicio es obligatorio" });
+    }
+    const esGratuito = es_gratuito === true || es_gratuito === "true";
+    if (!esGratuito && (!precio || parseFloat(precio) <= 0)) {
+      return res.status(400).json({ error: "Los servicios de pago deben tener un precio mayor a 0" });
+    }
+
     const result = await pool.query(
       `
       INSERT INTO servicios (nombre, descripcion, precio, es_gratuito, activo)
@@ -63,6 +71,14 @@ router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, descripcion, precio, es_gratuito } = req.body;
+
+    if (!nombre || nombre.trim() === "") {
+      return res.status(400).json({ error: "El nombre del servicio es obligatorio" });
+    }
+    const esGratuito = es_gratuito === true || es_gratuito === "true";
+    if (!esGratuito && (!precio || parseFloat(precio) <= 0)) {
+      return res.status(400).json({ error: "Los servicios de pago deben tener un precio mayor a 0" });
+    }
 
     const result = await pool.query(
       `

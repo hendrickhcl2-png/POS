@@ -31,6 +31,13 @@ router.post(
       numero_referencia,
     } = req.body;
 
+    if (!concepto || concepto.trim() === "") {
+      return res.status(400).json({ success: false, message: "El concepto es obligatorio" });
+    }
+    if (!monto || isNaN(parseFloat(monto)) || parseFloat(monto) <= 0) {
+      return res.status(400).json({ success: false, message: "El monto debe ser mayor a 0" });
+    }
+
     const numResult = await pool.query(
       `SELECT COALESCE(MAX(CAST(REGEXP_REPLACE(numero_salida, '[^0-9]', '', 'g') AS INTEGER)), 0) + 1 as siguiente FROM salidas`,
     );
@@ -73,6 +80,13 @@ router.put(
       beneficiario,
       numero_referencia,
     } = req.body;
+
+    if (!concepto || concepto.trim() === "") {
+      return res.status(400).json({ success: false, message: "El concepto es obligatorio" });
+    }
+    if (!monto || isNaN(parseFloat(monto)) || parseFloat(monto) <= 0) {
+      return res.status(400).json({ success: false, message: "El monto debe ser mayor a 0" });
+    }
 
     const result = await pool.query(
       `UPDATE salidas SET fecha=$1, concepto=$2, descripcion=$3, monto=$4,
