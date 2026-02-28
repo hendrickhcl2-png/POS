@@ -10,16 +10,6 @@ window.agregarLineaCosto = function () {
   const lineaDiv = document.createElement("div");
   lineaDiv.className = "costo-item-dinamico";
   lineaDiv.id = `costo-${contadorCostos}`;
-  lineaDiv.style.cssText = `
-    display: grid;
-    grid-template-columns: 2fr 1fr auto;
-    gap: 10px;
-    margin-bottom: 10px;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 5px;
-    border-left: 3px solid #3498db;
-  `;
 
   lineaDiv.innerHTML = `
     <input
@@ -27,7 +17,6 @@ window.agregarLineaCosto = function () {
       class="costo-concepto"
       data-id="${contadorCostos}"
       placeholder="Descripción del costo (ej: Costo de pantalla, Costo de batería...)"
-      style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"
     />
     <input
       type="number"
@@ -36,7 +25,6 @@ window.agregarLineaCosto = function () {
       step="0.01"
       min="0"
       placeholder="$0.00"
-      style="padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; text-align: right;"
       oninput="calcularCostoTotal()"
     />
     <button
@@ -44,7 +32,6 @@ window.agregarLineaCosto = function () {
       class="btn btn-danger btn-small"
       onclick="eliminarLineaCosto(${contadorCostos})"
       title="Eliminar esta línea"
-      style="padding: 8px 12px;"
     >
       Eliminar
     </button>
@@ -114,16 +101,6 @@ window.agregarCaracteristica = function (nombre = "", valor = "", tipo = "estado
   const lineaDiv = document.createElement("div");
   lineaDiv.className = "caracteristica-item";
   lineaDiv.id = `caracteristica-${contadorCaracteristicas}`;
-  lineaDiv.style.cssText = `
-    display: grid;
-    grid-template-columns: 1fr 2fr auto;
-    gap: 10px;
-    margin-bottom: 10px;
-    padding: 10px;
-    background: #f0f8ff;
-    border-radius: 5px;
-    border-left: 3px solid #2196F3;
-  `;
 
   lineaDiv.innerHTML = `
     <input
@@ -131,21 +108,18 @@ window.agregarCaracteristica = function (nombre = "", valor = "", tipo = "estado
       class="caracteristica-nombre"
       placeholder="Ej: Batería, Pantalla, Cámara..."
       value="${nombre}"
-      style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;"
     />
     <input
       type="text"
       class="caracteristica-valor"
       placeholder="Ej: 80%, Original, Funciona perfectamente..."
       value="${valor}"
-      style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;"
     />
     <button
       type="button"
       class="btn btn-danger btn-small"
       onclick="eliminarCaracteristica(${contadorCaracteristicas})"
       title="Eliminar"
-      style="padding: 8px 12px;"
     >
       Eliminar
     </button>
@@ -530,12 +504,12 @@ window.verDetalleProducto = async function (productoId) {
     let caracteristicasHTML = "";
     if (producto.caracteristicas && producto.caracteristicas.length > 0) {
       caracteristicasHTML = `
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 15px 0;">
+        <div class="prod-carac-panel">
           <h4 style="color: #34495e; margin-bottom: 10px;">Características del Producto:</h4>
           ${producto.caracteristicas
             .map(
               (c) => `
-            <div style="padding: 8px; margin: 5px 0; background: white; border-radius: 3px; border-left: 3px solid #2196F3;">
+            <div class="prod-carac-item">
               <strong style="color: #2c3e50;">${c.nombre}:</strong>
               <span style="color: #34495e;">${c.valor}</span>
             </div>
@@ -571,7 +545,7 @@ window.verDetalleProducto = async function (productoId) {
     let descuentoHTML = "";
     if (tieneDescuento) {
       descuentoHTML = `
-        <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 10px 0;">
+        <div class="prod-descuento-panel">
           <h4 style="color: #856404; margin-bottom: 10px;">Descuento Aplicado:</h4>
           ${producto.descuento_porcentaje > 0
             ? `<p style="margin: 5px 0; color: #856404;"><strong>Porcentaje:</strong> ${producto.descuento_porcentaje}%</p>`
@@ -589,40 +563,38 @@ window.verDetalleProducto = async function (productoId) {
     }
 
     const content = `
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div class="prod-detail-grid">
         <div>
-          <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
-            Información General
-          </h3>
+          <h3 class="prod-section-hdr">Información General</h3>
 
-          <div style="margin: 15px 0;">
+          <div class="prod-field">
             <strong>${tipoProducto}:</strong>
             <p style="font-size: 18px; color: #3498db; font-weight: bold;">${codigoPrincipal}</p>
           </div>
 
-          <div style="margin: 15px 0;">
+          <div class="prod-field">
             <strong>Nombre del Producto:</strong>
             <p style="font-size: 16px;">${producto.nombre}</p>
           </div>
 
           ${producto.descripcion
-            ? `<div style="margin: 15px 0;">
+            ? `<div class="prod-field">
                 <strong>Descripción:</strong>
                 <p>${producto.descripcion}</p>
                </div>`
             : ""}
 
-          <div style="margin: 15px 0;">
+          <div class="prod-field">
             <strong>Categoría:</strong>
             <p>${producto.categoria_nombre || "Sin categoría"}</p>
           </div>
 
-          <div style="margin: 15px 0;">
+          <div class="prod-field">
             <strong>Proveedor:</strong>
             <p>${producto.proveedor_nombre || "Sin proveedor"}</p>
           </div>
 
-          <div style="margin: 15px 0;">
+          <div class="prod-field">
             <strong>Estado:</strong>
             <p style="font-size: 20px; color: ${producto.disponible !== false ? "#27ae60" : "#e74c3c"}; font-weight: bold;">
               ${producto.disponible !== false ? "Disponible" : "Vendido"}
@@ -633,11 +605,9 @@ window.verDetalleProducto = async function (productoId) {
         </div>
 
         <div>
-          <h3 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
-            Costos y Precios
-          </h3>
+          <h3 class="prod-section-hdr">Costos y Precios</h3>
 
-          <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #3498db;">
+          <div class="info-panel info-panel--blue">
             <h4 style="color: #34495e; margin-bottom: 10px;">Desglose de Costos:</h4>
             ${costosHTML}
             <div class="cost-item" style="border-top: 2px solid #34495e; margin-top: 10px; padding-top: 10px;">
@@ -650,8 +620,8 @@ window.verDetalleProducto = async function (productoId) {
 
           ${descuentoHTML}
 
-          <div style="margin: 20px 0; padding: 15px; background: #ecf0f1; border-radius: 5px;">
-            <div style="margin: 10px 0;">
+          <div class="prod-precios-panel">
+            <div class="prod-field">
               <strong>Precio de Venta${tieneDescuento ? " Original" : ""}:</strong>
               <p style="font-size: ${tieneDescuento ? "16px" : "20px"}; color: ${tieneDescuento ? "#95a5a6" : "#27ae60"}; font-weight: bold; ${tieneDescuento ? "text-decoration: line-through;" : ""}">
                 $${parseFloat(producto.precio_venta).toFixed(2)}
@@ -659,7 +629,7 @@ window.verDetalleProducto = async function (productoId) {
             </div>
 
             ${tieneDescuento
-              ? `<div style="margin: 10px 0;">
+              ? `<div class="prod-field">
                   <strong>Precio Final con Descuento:</strong>
                   <p style="font-size: 22px; color: #27ae60; font-weight: bold;">
                     $${parseFloat(precioFinal).toFixed(2)}
@@ -668,7 +638,7 @@ window.verDetalleProducto = async function (productoId) {
               : ""}
 
             ${producto.precio_mayoreo
-              ? `<div style="margin: 10px 0;">
+              ? `<div class="prod-field">
                   <strong>Precio Mayoreo:</strong>
                   <p style="font-size: 18px; color: #f39c12; font-weight: bold;">
                     $${parseFloat(producto.precio_mayoreo).toFixed(2)}
@@ -677,7 +647,7 @@ window.verDetalleProducto = async function (productoId) {
                  </div>`
               : ""}
 
-            <div style="margin: 15px 0; padding: 15px; background: #d4edda; border-radius: 5px;">
+            <div class="prod-ganancia-panel">
               <strong>Ganancia por Unidad:</strong>
               <p style="font-size: 22px; color: #155724; font-weight: bold;">
                 $${ganancia.toFixed(2)}
@@ -688,7 +658,7 @@ window.verDetalleProducto = async function (productoId) {
         </div>
       </div>
 
-      <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+      <div class="flex-end mt-20">
         <button class="btn btn-primary" onclick="editarProducto(${producto.id}); cerrarModal('modalDetalleProducto');">
           Editar Producto
         </button>

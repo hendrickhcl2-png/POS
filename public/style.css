@@ -2535,3 +2535,83 @@ tbody tr:hover {
 .flex-gap-sm  { display: flex; gap: 5px; flex-wrap: wrap; }
 .flex-gap     { display: flex; gap: 10px; flex-wrap: wrap; }
 .flex-gap-lg  { display: flex; gap: 20px; flex-wrap: wrap; }
+
+/* ==================== PRODUCTOS - FILAS DINÁMICAS ==================== */
+.costo-item-dinamico {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 5px;
+  border-left: 3px solid #3498db;
+}
+.costo-item-dinamico input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+}
+.costo-item-dinamico .costo-monto { text-align: right; }
+
+.caracteristica-item {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: #f0f8ff;
+  border-radius: 5px;
+  border-left: 3px solid #2196F3;
+}
+.caracteristica-item input {
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+/* ==================== PRODUCTOS - MODAL DETALLE ==================== */
+.prod-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.prod-section-hdr {
+  color: #2c3e50;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+.prod-field { margin: 15px 0; }
+.prod-carac-panel {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 15px 0;
+}
+.prod-carac-item {
+  padding: 8px;
+  margin: 5px 0;
+  background: white;
+  border-radius: 3px;
+  border-left: 3px solid #2196F3;
+}
+.prod-descuento-panel {
+  background: #fff3cd;
+  padding: 15px;
+  border-radius: 5px;
+  margin: 10px 0;
+}
+.prod-precios-panel {
+  margin: 20px 0;
+  padding: 15px;
+  background: #ecf0f1;
+  border-radius: 5px;
+}
+.prod-ganancia-panel {
+  margin: 15px 0;
+  padding: 15px;
+  background: #d4edda;
+  border-radius: 5px;
+}
