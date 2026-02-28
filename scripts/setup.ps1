@@ -40,7 +40,7 @@ $startAction   = New-ScheduledTaskAction `
 $startTrigger  = New-ScheduledTaskTrigger -AtStartup
 $startSettings = New-ScheduledTaskSettingsSet `
     -ExecutionTimeLimit (New-TimeSpan -Minutes 5) `
-    -StartWhenAvailable $true
+    -StartWhenAvailable
 
 Register-ScheduledTask `
     -TaskName "FiftyTech POS - Inicio" `
@@ -64,7 +64,7 @@ $updateAction  = New-ScheduledTaskAction `
 $updateTrigger = New-ScheduledTaskTrigger -Daily -At "09:00"
 $updateSettings = New-ScheduledTaskSettingsSet `
     -ExecutionTimeLimit (New-TimeSpan -Minutes 10) `
-    -StartWhenAvailable $true
+    -StartWhenAvailable
 
 Register-ScheduledTask `
     -TaskName "FiftyTech POS - Actualizacion" `
