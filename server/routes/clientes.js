@@ -421,6 +421,20 @@ router.delete(
   asyncHandler(async (req, res) => {
     const { id } = req.params;
 
+    // Bloquear si tiene pagos pendientes
+    const saldoResult = await pool.query(
+      "SELECT saldo_pendiente FROM clientes WHERE id = $1",
+      [id],
+    );
+    if (saldoResult.rows.length === 0) {
+      return res.status(404).json({ error: "Cliente no encontrado" });
+    }
+    if (parseFloat(saldoResult.rows[0].saldo_pendiente) > 0) {
+      return res.status(400).json({
+        error: "No se puede eliminar el cliente porque tiene pagos pendientes",
+      });
+    }
+
     // Desvincular registros históricos antes de eliminar
     await pool.query("UPDATE ventas   SET cliente_id = NULL WHERE cliente_id = $1", [id]);
     await pool.query("UPDATE facturas SET cliente_id = NULL WHERE cliente_id = $1", [id]);
