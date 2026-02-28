@@ -33,8 +33,8 @@ const VentasController = {
       } = req.body;
 
       // Validaciones
-      if (!items || items.length === 0) {
-        throw new Error("La venta debe tener al menos un producto");
+      if ((!items || items.length === 0) && (!servicios || servicios.length === 0)) {
+        throw new Error("La venta debe tener al menos un producto o servicio");
       }
 
       if (!metodo_pago) {
