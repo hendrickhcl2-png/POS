@@ -685,6 +685,14 @@ const VentasModule = {
   this.calcularTotales();
   },
 
+  actualizarPrecioServicio(servicioId, valor) {
+  const servicio = this.serviciosEnVenta.find((s) => s.id === servicioId);
+  if (servicio) {
+  servicio.precio = parseFloat(valor) || 0;
+  this.calcularTotales();
+  }
+  },
+
   renderizarServiciosEnVenta() {
   const container = document.getElementById("serviciosEnVenta");
   if (!container) return;
@@ -699,14 +707,22 @@ const VentasModule = {
   (servicio) => `
   <div style="background: ${servicio.es_gratuito ? "#e8f5e9": "#fff3cd"}; padding: 12px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${servicio.es_gratuito ? "#4caf50": "#ffc107"};">
   <div>
-  <strong>${servicio.es_gratuito ? "": ""} ${servicio.nombre}</strong>
+  <strong>${servicio.nombre}</strong>
   <br>
   <small style="color: #555;">${servicio.descripcion || ""}</small>
   </div>
   <div style="display: flex; align-items: center; gap: 15px;">
-  <span style="font-size: 18px; font-weight: bold; color: ${servicio.es_gratuito ? "#4caf50": "#f57c00"};">
-  ${servicio.es_gratuito ? "GRATIS": this.formatCurrency(servicio.precio)}
-  </span>
+  ${servicio.es_gratuito
+    ? `<span style="font-size: 18px; font-weight: bold; color: #4caf50;">GRATIS</span>`
+    : `<input
+        type="number"
+        min="0"
+        step="0.01"
+        value="${parseFloat(servicio.precio) || 0}"
+        style="width: 110px; font-size: 15px; font-weight: bold; color: #f57c00; text-align: right; border: 1px solid #ffc107; border-radius: 4px; padding: 4px 8px;"
+        oninput="VentasModule.actualizarPrecioServicio(${servicio.id}, this.value)"
+      />`
+  }
   <button
   type="button"
   class="btn btn-danger btn-small"
