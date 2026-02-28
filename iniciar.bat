@@ -18,42 +18,45 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
+:: Crear carpeta de logs si no existe
+if not exist "logs" mkdir logs
+
 :: Verificar git
 git -v >nul 2>&1
 if %errorlevel% neq 0 goto :iniciar
 
 :: Buscar actualizaciones
 echo  Buscando actualizaciones...
-git pull origin main > "%~dp0logs\update.log" 2>&1
-findstr /C:"Already up to date" "%~dp0logs\update.log" >nul
+git pull origin main > "logs\update.log" 2>&1
+findstr /C:"Already up to date" "logs\update.log" >nul
 if %errorlevel% == 0 (
     echo  Sin cambios. El servidor esta al dia.
     goto :iniciar
 )
 
 echo  Actualizacion encontrada. Instalando dependencias...
-npm install --production
+call npm install --production
 echo  Dependencias actualizadas.
 
 :iniciar
 :: Instalar dependencias si no existen
 if not exist "node_modules" (
     echo  Instalando dependencias por primera vez...
-    npm install
+    call npm install
     echo.
 )
 
-:: Iniciar o reiniciar con PM2 si esta disponible
-pm2 -v >nul 2>&1
+:: Iniciar o reiniciar con PM2
+call pm2 -v >nul 2>&1
 if %errorlevel% neq 0 goto :sinpm2
 
-pm2 describe fifty-tech-pos >nul 2>&1
+call pm2 describe fifty-tech-pos >nul 2>&1
 if %errorlevel% == 0 (
     echo  Reiniciando servidor...
-    pm2 restart fifty-tech-pos
+    call pm2 restart fifty-tech-pos
 ) else (
     echo  Iniciando servidor...
-    pm2 start ecosystem.config.js
+    call pm2 start ecosystem.config.js
 )
 goto :abrir
 
