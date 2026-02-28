@@ -12,6 +12,7 @@ const VentasModule = {
   this.cargarClientes();
   this.cargarServicios();
   this.setupEventListeners();
+  this.renderizarCarrito();
   this.calcularTotales();
   this.cargarHistorialHoy();
   },

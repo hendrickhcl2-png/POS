@@ -42,7 +42,6 @@ window.inicializarApp = async function inicializarApp() {
   setupEventListeners();
   agregarLineaCosto();
   agregarCaracteristica();
-  agregarItemVenta();
   actualizarSelectsVentaProductos();
 
   // Inicializar sección activa
@@ -786,11 +785,7 @@ window.verificarPrecio = async function () {
 
 window.cancelarVenta = function () {
   if (confirm("¿Está seguro de cancelar la venta?")) {
-    document.getElementById("formVenta").reset();
-    document.getElementById("ventaItems").innerHTML = "";
-    document.getElementById("serviciosEnVenta").innerHTML = "";
-    agregarItemVenta();
-    calcularTotalesVenta();
+    VentasModule.limpiarVenta();
     mostrarAlerta("Venta cancelada", "info");
   }
 };
