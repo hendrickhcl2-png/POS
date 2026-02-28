@@ -7,6 +7,11 @@ const FacturacionAPI = {
     return await APIClient.post("/facturas/desde-venta", facturaData);
   },
 
+  // Crear factura directa de servicios (sin venta)
+  async crearDirecta(data) {
+    return await APIClient.post("/facturas/directa", data);
+  },
+
   // Obtener todas las facturas con filtros opcionales
   async getAll(filtros = {}) {
     let url = "/facturas";
