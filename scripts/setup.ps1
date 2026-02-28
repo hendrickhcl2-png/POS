@@ -32,20 +32,14 @@ pm2 save
 # ── 4. Tarea de inicio automático al encender Windows ────────
 Write-Host "[4/5] Configurando inicio automatico con Windows..." -ForegroundColor Yellow
 
-$startAction   = New-ScheduledTaskAction `
-    -Execute "pm2.cmd" `
-    -Argument "resurrect" `
-    -WorkingDirectory $projectDir
-
-$startTrigger    = New-ScheduledTaskTrigger -AtStartup
-$startSettings   = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 5)
-$startPrincipal  = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+$startAction    = New-ScheduledTaskAction -Execute "pm2.cmd" -Argument "resurrect" -WorkingDirectory $projectDir
+$startTrigger   = New-ScheduledTaskTrigger -AtStartup
+$startPrincipal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 
 Register-ScheduledTask `
     -TaskName  "FiftyTech POS - Inicio" `
     -Action    $startAction `
     -Trigger   $startTrigger `
-    -Settings  $startSettings `
     -Principal $startPrincipal `
     -Force | Out-Null
 
@@ -54,23 +48,15 @@ Write-Host "   Tarea creada: el servidor arranca solo al encender la PC." -Foreg
 # ── 5. Tarea de actualización diaria a las 9:00am ────────────
 Write-Host "[5/5] Configurando actualizacion automatica a las 9:00am..." -ForegroundColor Yellow
 
-$updateScript  = "$projectDir\scripts\update.ps1"
-$updateAction  = New-ScheduledTaskAction `
-    -Execute "powershell.exe" `
-    -Argument "-ExecutionPolicy Bypass -NonInteractive -File `"$updateScript`"" `
-    -WorkingDirectory $projectDir
-
-$updateTrigger    = New-ScheduledTaskTrigger -Daily -At "09:00"
-$updateSettings   = New-ScheduledTaskSettingsSet `
-    -ExecutionTimeLimit (New-TimeSpan -Minutes 10) `
-    -StartWhenAvailable
-$updatePrincipal  = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+$updateScript   = "$projectDir\scripts\update.ps1"
+$updateAction   = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -NonInteractive -File `"$updateScript`"" -WorkingDirectory $projectDir
+$updateTrigger  = New-ScheduledTaskTrigger -Daily -At "09:00"
+$updatePrincipal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 
 Register-ScheduledTask `
     -TaskName  "FiftyTech POS - Actualizacion" `
     -Action    $updateAction `
     -Trigger   $updateTrigger `
-    -Settings  $updateSettings `
     -Principal $updatePrincipal `
     -Force | Out-Null
 
