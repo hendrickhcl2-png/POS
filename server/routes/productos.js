@@ -207,16 +207,14 @@ router.post("/", requireAdmin, async (req, res) => {
 
     if (error.code === "23505") {
       const esImei = error.constraint && error.constraint.includes("imei");
-      const campo = esImei ? "IMEI" : "código de barras";
-      const valor = esImei ? imei : codigo_barras;
-      let mensaje = `El ${campo} "${valor}" ya está registrado`;
+      let mensaje = "Este producto ya existe";
       try {
         const existing = await pool.query(
           `SELECT nombre FROM productos WHERE (codigo_barras = $1 AND $1 IS NOT NULL) OR (imei = $2 AND $2 IS NOT NULL) LIMIT 1`,
           [codigo_barras || null, imei || null],
         );
         if (existing.rows.length > 0) {
-          mensaje += ` — pertenece a: "${existing.rows[0].nombre}"`;
+          mensaje += ` — ${esImei ? "IMEI" : "código"} pertenece a: "${existing.rows[0].nombre}"`;
         }
       } catch (_) {}
       return res.status(409).json({ error: mensaje });
@@ -313,16 +311,14 @@ router.put("/:id", requireAdmin, async (req, res) => {
 
     if (error.code === "23505") {
       const esImei = error.constraint && error.constraint.includes("imei");
-      const campo = esImei ? "IMEI" : "código de barras";
-      const valor = esImei ? imei : codigo_barras;
-      let mensaje = `El ${campo} "${valor}" ya está en uso`;
+      let mensaje = `Este ${esImei ? "IMEI" : "código de barras"} ya está en uso`;
       try {
         const existing = await pool.query(
           `SELECT nombre FROM productos WHERE ((codigo_barras = $1 AND $1 IS NOT NULL) OR (imei = $2 AND $2 IS NOT NULL)) AND id != $3 LIMIT 1`,
           [codigo_barras || null, imei || null, id],
         );
         if (existing.rows.length > 0) {
-          mensaje += ` — pertenece a: "${existing.rows[0].nombre}"`;
+          mensaje += ` por: "${existing.rows[0].nombre}"`;
         }
       } catch (_) {}
       return res.status(409).json({ error: mensaje });

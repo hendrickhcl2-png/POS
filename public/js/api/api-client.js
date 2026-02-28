@@ -16,7 +16,7 @@ const APIClient = {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Error en la petición");
+        throw new Error(error.message || error.error || "Error en la petición");
       }
 
       const result = await response.json();
@@ -27,6 +27,9 @@ const APIClient = {
       return result;
     } catch (error) {
       console.error("❌ Error en API:", error);
+      if (error.name === "TypeError" && error.message.includes("fetch")) {
+        throw new Error("No se pudo conectar con el servidor. Verifica que el servidor esté activo.");
+      }
       throw error;
     }
   },

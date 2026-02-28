@@ -428,7 +428,7 @@ async function guardarProducto(e) {
     actualizarSelectProductos();
     actualizarInventario();
   } catch (error) {
-    mostrarAlerta("Error al guardar producto: " + error.message, "danger");
+    mostrarAlerta(error.message, "danger");
   }
 }
 
