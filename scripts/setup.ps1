@@ -12,7 +12,7 @@ Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
 # ── 1. Instalar PM2 globalmente ──────────────────────────────
-Write-Host "[1/4] Instalando PM2..." -ForegroundColor Yellow
+Write-Host "[1/3] Instalando PM2..." -ForegroundColor Yellow
 npm install -g pm2
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error al instalar PM2. Asegurate de tener Node.js instalado." -ForegroundColor Red
@@ -20,30 +20,14 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 # ── 2. Crear carpeta de logs ─────────────────────────────────
-Write-Host "[2/4] Creando carpeta de logs..." -ForegroundColor Yellow
+Write-Host "[2/3] Creando carpeta de logs..." -ForegroundColor Yellow
 New-Item -ItemType Directory -Path "$projectDir\logs" -Force | Out-Null
 
 # ── 3. Arrancar el servidor con PM2 ─────────────────────────
-Write-Host "[3/4] Iniciando servidor..." -ForegroundColor Yellow
+Write-Host "[3/3] Iniciando servidor..." -ForegroundColor Yellow
 Set-Location $projectDir
 pm2 start ecosystem.config.js
 pm2 save
-
-# ── 4. Tarea de inicio automático al encender Windows ────────
-Write-Host "[4/4] Configurando inicio automatico con Windows..." -ForegroundColor Yellow
-
-$startAction    = New-ScheduledTaskAction -Execute "pm2.cmd" -Argument "resurrect" -WorkingDirectory $projectDir
-$startTrigger   = New-ScheduledTaskTrigger -AtStartup
-$startPrincipal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-
-Register-ScheduledTask `
-    -TaskName  "FiftyTech POS - Inicio" `
-    -Action    $startAction `
-    -Trigger   $startTrigger `
-    -Principal $startPrincipal `
-    -Force | Out-Null
-
-Write-Host "   Tarea creada: el servidor arranca solo al encender la PC." -ForegroundColor Green
 
 # ── Resumen ──────────────────────────────────────────────────
 Write-Host ""
@@ -58,9 +42,4 @@ Write-Host "Comandos utiles:" -ForegroundColor Cyan
 Write-Host "  pm2 status           -> ver estado del servidor"
 Write-Host "  pm2 logs             -> ver logs en tiempo real"
 Write-Host "  pm2 restart fifty-tech-pos  -> reiniciar manualmente"
-Write-Host ""
-Write-Host "Para actualizar manualmente:" -ForegroundColor Cyan
-Write-Host "  git pull origin main"
-Write-Host "  npm install --production"
-Write-Host "  pm2 restart fifty-tech-pos"
 Write-Host ""
