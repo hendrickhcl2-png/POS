@@ -421,23 +421,10 @@ router.delete(
   asyncHandler(async (req, res) => {
     const { id } = req.params;
 
-    try {
-      // Verificar si el cliente tiene ventas o facturas asociadas
-      const ventasResult = await pool.query(
-        "SELECT COUNT(*) as count FROM ventas WHERE cliente_id = $1",
-        [id],
-      );
-
-      if (parseInt(ventasResult.rows[0].count) > 0) {
-        return res.status(400).json({
-          error:
-            "No se puede eliminar el cliente porque tiene ventas registradas",
-        });
-      }
-    } catch (error) {
-      // Si la tabla ventas no existe, continuar con la eliminación
-      console.log("⚠️  Tabla ventas no existe, continuando con eliminación");
-    }
+    // Desvincular registros históricos antes de eliminar
+    await pool.query("UPDATE ventas   SET cliente_id = NULL WHERE cliente_id = $1", [id]);
+    await pool.query("UPDATE facturas SET cliente_id = NULL WHERE cliente_id = $1", [id]);
+    await pool.query("UPDATE creditos SET cliente_id = NULL WHERE cliente_id = $1", [id]);
 
     const result = await pool.query(
       "DELETE FROM clientes WHERE id = $1 RETURNING *",
