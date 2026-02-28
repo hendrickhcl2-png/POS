@@ -5,7 +5,7 @@ const VentasModule = {
   serviciosEnVenta: [],
   clienteSeleccionado: null,
   metodoPagoActual: "efectivo",
-  incluirITBIS: true,
+  incluirITBIS: false,
   generarFacturaElectronica: false,
 
   init() {
@@ -986,7 +986,7 @@ const VentasModule = {
   limpiarVenta() {
   this.carritoItems = [];
   this.serviciosEnVenta = [];
-  this.incluirITBIS = true;
+  this.incluirITBIS = false;
   this.generarFacturaElectronica = false;
   this.metodoPagoActual = "efectivo";
 
@@ -995,7 +995,7 @@ const VentasModule = {
 
   const checkITBIS = document.getElementById("incluirITBIS");
   const checkFactura = document.getElementById("generarFacturaElectronica");
-  if (checkITBIS) checkITBIS.checked = true;
+  if (checkITBIS) checkITBIS.checked = false;
   if (checkFactura) checkFactura.checked = false;
 
   document.querySelectorAll(".payment-method").forEach((el, index) => {
