@@ -1,7 +1,10 @@
-// ==================== SERVER.JS ACTUALIZADO ====================
+// ==================== SERVER.JS ====================
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const session = require("express-session");
+const bcrypt = require("bcrypt");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -11,10 +14,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "fifty_tech_fallback_secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { httpOnly: true, sameSite: "lax" },
+  })
+);
+
 // Servir archivos estáticos
 app.use(express.static(path.join(__dirname, "../public")));
 
 // ==================== IMPORTAR RUTAS ====================
+const authRoutes = require("./routes/auth");
 const clientesRoutes = require("./routes/clientes");
 const productosRoutes = require("./routes/productos");
 const ventasRoutes = require("./routes/ventas");
@@ -29,20 +42,23 @@ const devolucionesRoutes = require("./routes/devoluciones-routes");
 const pagosRoutes = require("./routes/pagos-routes");
 const salidasRoutes = require("./routes/salidas");
 
+const { requireAuth } = require("./middleware/auth-middleware");
+
 // ==================== REGISTRAR RUTAS ====================
-app.use("/api/clientes", clientesRoutes);
-app.use("/api/productos", productosRoutes);
-app.use("/api/ventas", ventasRoutes);
-app.use("/api/inventario", inventarioRoutes);
-app.use("/api/servicios", serviciosRoutes);
-app.use("/api/facturas", facturacionRoutes);
-app.use("/api/categorias", categoriasRoutes);
-app.use("/api/proveedores", proveedoresRoutes);
-app.use("/api/configuracion", configuracionRoutes);
-app.use("/api/reportes", reportesRoutes);
-app.use("/api/devoluciones", devolucionesRoutes);
-app.use("/api/pagos", pagosRoutes);
-app.use("/api/salidas", salidasRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/clientes", requireAuth, clientesRoutes);
+app.use("/api/productos", requireAuth, productosRoutes);
+app.use("/api/ventas", requireAuth, ventasRoutes);
+app.use("/api/inventario", requireAuth, inventarioRoutes);
+app.use("/api/servicios", requireAuth, serviciosRoutes);
+app.use("/api/facturas", requireAuth, facturacionRoutes);
+app.use("/api/categorias", requireAuth, categoriasRoutes);
+app.use("/api/proveedores", requireAuth, proveedoresRoutes);
+app.use("/api/configuracion", requireAuth, configuracionRoutes);
+app.use("/api/reportes", requireAuth, reportesRoutes);
+app.use("/api/devoluciones", requireAuth, devolucionesRoutes);
+app.use("/api/pagos", requireAuth, pagosRoutes);
+app.use("/api/salidas", requireAuth, salidasRoutes);
 
 // ==================== RUTA RAÍZ ====================
 app.get("/", (req, res) => {
@@ -77,32 +93,66 @@ app.use((req, res) => {
   });
 });
 
+// ==================== INIT AUTH (tabla + seeds) ====================
+async function initAuth() {
+  const pool = require("./database/pool");
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        nombre VARCHAR(100),
+        rol VARCHAR(20) NOT NULL DEFAULT 'cajero' CHECK (rol IN ('admin', 'cajero')),
+        activo BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    const count = await pool.query("SELECT COUNT(*) FROM usuarios");
+    if (parseInt(count.rows[0].count) === 0) {
+      const adminHash = await bcrypt.hash("admin123", 10);
+      const cajeroHash = await bcrypt.hash("cajero123", 10);
+      await pool.query(
+        `INSERT INTO usuarios (username, password_hash, nombre, rol) VALUES
+         ($1, $2, 'Administrador', 'admin'),
+         ($3, $4, 'Cajero', 'cajero')`,
+        ["admin", adminHash, "cajero", cajeroHash]
+      );
+      console.log("✅ Usuarios iniciales creados (admin, cajero)");
+    }
+    console.log("✅ Auth inicializado");
+  } catch (error) {
+    console.error("❌ Error en initAuth:", error);
+  }
+}
+
 // ==================== INICIAR SERVIDOR ====================
-app.listen(PORT, () => {
-  console.log("\n╔════════════════════════════════════════╗");
-  console.log("║   🚀 FIFTY TECH POS - SERVIDOR      ║");
-  console.log("╚════════════════════════════════════════╝");
-  console.log(`\n✅ Servidor corriendo en http://localhost:${PORT}`);
-  console.log(`✅ API disponible en http://localhost:${PORT}/api`);
-  console.log("\n📋 Rutas disponibles:");
-  console.log("   - /api/clientes");
-  console.log("   - /api/productos");
-  console.log("   - /api/ventas");
-  console.log("   - /api/inventario");
-  console.log("   - /api/servicios");
-  console.log("   - /api/facturacion");
-  console.log("   - /api/categorias       ⬅️ NUEVO");
-  console.log("   - /api/proveedores      ⬅️ NUEVO");
-  console.log("   - /api/configuracion    ⬅️ NUEVO");
-  console.log("   - /api/reportes");
-  console.log("\n⏰ Presiona Ctrl+C para detener el servidor\n");
+initAuth().then(() => {
+  app.listen(PORT, () => {
+    console.log("\n╔════════════════════════════════════════╗");
+    console.log("║   🚀 FIFTY TECH POS - SERVIDOR      ║");
+    console.log("╚════════════════════════════════════════╝");
+    console.log(`\n✅ Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`✅ API disponible en http://localhost:${PORT}/api`);
+    console.log("\n📋 Rutas disponibles:");
+    console.log("   - /api/auth");
+    console.log("   - /api/clientes");
+    console.log("   - /api/productos");
+    console.log("   - /api/ventas");
+    console.log("   - /api/inventario");
+    console.log("   - /api/servicios");
+    console.log("   - /api/facturacion");
+    console.log("   - /api/categorias");
+    console.log("   - /api/proveedores");
+    console.log("   - /api/configuracion");
+    console.log("   - /api/reportes");
+    console.log("\n⏰ Presiona Ctrl+C para detener el servidor\n");
+  });
 });
 
 // Manejo de cierre graceful
 process.on("SIGTERM", () => {
   console.log("\n⚠️  Señal SIGTERM recibida, cerrando servidor...");
-  server.close(() => {
-    console.log("✅ Servidor cerrado correctamente");
-    process.exit(0);
-  });
+  process.exit(0);
 });

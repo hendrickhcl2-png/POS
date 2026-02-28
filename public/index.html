@@ -9,12 +9,42 @@
   <link rel="stylesheet" href="modales/modales.css" />
   </head>
   <body>
+
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <div class="login-logo">
+        <h2>Fifty Tech SRL</h2>
+        <p>Sistema de Facturación</p>
+      </div>
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" id="loginUsername" placeholder="Usuario" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary" style="width:100%;" onclick="handleLoginSubmit()">Entrar</button>
+      <p id="loginError" class="login-error"></p>
+    </div>
+  </div>
+
   <div class="container">
   <!-- Sidebar Navigation -->
   <nav class="sidebar">
   <div class="logo">
   <h2>Fifty Tech</h2>
   <p class="logo-subtitulo">Sistema de Facturación</p>
+  </div>
+
+  <!-- Usuario logueado -->
+  <div class="usuario-sidebar">
+    <div class="usuario-sidebar-info">
+      <span class="usuario-sidebar-nombre" id="usuarioNombreSidebar"></span>
+      <span class="usuario-sidebar-rol" id="usuarioRolSidebar"></span>
+    </div>
+    <button class="btn-logout" onclick="Auth.logout()" title="Cerrar sesión">&#x2715;</button>
   </div>
 
   <div class="nav-group-label">Ventas</div>
@@ -31,23 +61,27 @@
     <span class="nav-label">Clientes</span><kbd class="nav-kbd">3</kbd>
   </div>
 
-  <div class="nav-group-label">Inventario</div>
+  <div id="nav-group-inventario" class="nav-group-label">Inventario</div>
 
-  <div class="nav-item" onclick="showSection('productos')">
+  <div id="nav-productos" class="nav-item" onclick="showSection('productos')">
     <span class="nav-label">Productos</span><kbd class="nav-kbd">4</kbd>
   </div>
 
-  <div class="nav-item" onclick="showSection('proveedores')">
+  <div id="nav-proveedores" class="nav-item" onclick="showSection('proveedores')">
     <span class="nav-label">Proveedores</span>
   </div>
 
-  <div class="nav-item" onclick="showSection('salidas')">
+  <div id="nav-salidas" class="nav-item" onclick="showSection('salidas')">
     <span class="nav-label">Salidas / Gastos</span>
   </div>
 
-  <div class="nav-group-label">Admin</div>
+  <div id="nav-reporte-inventario" class="nav-item" onclick="showSection('reporte-inventario')">
+    <span class="nav-label">Reporte Inventario</span>
+  </div>
 
-  <div class="nav-item" onclick="showSection('facturacion')">
+  <div id="nav-group-admin" class="nav-group-label">Admin</div>
+
+  <div id="nav-facturacion" class="nav-item" onclick="showSection('facturacion')">
     <span class="nav-label">Facturación</span><kbd class="nav-kbd">6</kbd>
   </div>
 
@@ -55,7 +89,7 @@
     <span class="nav-label">Reportes</span><kbd class="nav-kbd">5</kbd>
   </div>
 
-  <div class="nav-item" onclick="showSection('configuracion')">
+  <div id="nav-configuracion" class="nav-item" onclick="showSection('configuracion')">
     <span class="nav-label">Configuración</span>
   </div>
   </nav>
@@ -495,7 +529,7 @@
   <!-- CRÉDITOS SECTION -->
   <section id="creditos" class="section">
     <div class="clientes-header">
-      <h2>Cuentas por Cobrar</h2>
+      <h2>Créditos</h2>
       <div class="clientes-acciones">
         <input
           type="text"
@@ -504,32 +538,63 @@
           class="clientes-buscador"
           oninput="CreditosModule.filtrar(this.value)"
         />
-        <button class="btn btn-secondary" onclick="CreditosModule.cargarClientes()">
+        <button class="btn btn-secondary" onclick="CreditosModule.actualizarTabActivo()">
           Actualizar
         </button>
       </div>
     </div>
 
-    <!-- Stats bar -->
-    <div id="creditosStats" style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;"></div>
+    <div class="tabs">
+      <button class="tab active" id="tabCuentasCobrar" onclick="CreditosModule.switchTab('pendientes')">Cuentas por Cobrar</button>
+      <button class="tab" id="tabHistorialPagados" onclick="CreditosModule.switchTab('pagados')">Historial Pagados</button>
+    </div>
 
-    <div class="card" style="padding:0;overflow:hidden;">
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Teléfono</th>
-            <th style="text-align:center;">Facturas</th>
-            <th style="text-align:right;">Saldo Pendiente</th>
-            <th style="text-align:center;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tablaClientesCredito">
-          <tr>
-            <td colspan="5" class="text-center tabla-vacia-mensaje">Cargando...</td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Tab pendientes -->
+    <div class="tab-content active" id="tabContentPendientes">
+      <!-- Stats bar -->
+      <div id="creditosStats" style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;"></div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Teléfono</th>
+              <th style="text-align:center;">Facturas</th>
+              <th style="text-align:right;">Saldo Pendiente</th>
+              <th style="text-align:center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaClientesCredito">
+            <tr>
+              <td colspan="5" class="text-center tabla-vacia-mensaje">Cargando...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab pagados -->
+    <div class="tab-content" id="tabContentPagados">
+      <div id="creditosPagadosStats" style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;"></div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table>
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Teléfono</th>
+              <th>N° Factura</th>
+              <th style="text-align:right;">Total</th>
+              <th style="text-align:center;">Último Pago</th>
+              <th style="text-align:center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tablaHistorialPagados">
+            <tr><td colspan="6" class="text-center tabla-vacia-mensaje">Selecciona este tab para cargar</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -1146,6 +1211,16 @@
   <option value="anulada"> Anulada</option>
   </select>
   </div>
+
+  <div class="form-group">
+  <label>Código / IMEI:</label>
+  <input
+  type="text"
+  id="filtroCodigoProducto"
+  class="form-control"
+  placeholder="Buscar por código o IMEI..."
+  />
+  </div>
   </div>
 
   <div class="filtros-acciones-fila">
@@ -1440,6 +1515,85 @@
   </div>
   </section>
 
+  <!-- REPORTE INVENTARIO SECTION -->
+  <section id="reporte-inventario" class="section">
+  <div class="header">
+    <h1>Reporte de Inventario</h1>
+    <button id="invReporteBtnExportar" class="btn btn-success">Exportar CSV</button>
+  </div>
+
+  <!-- Resumen -->
+  <div class="inv-resumen-grid">
+    <div class="card inv-stat-card">
+      <span class="inv-stat-label">Costo Total del Inventario</span>
+      <span id="invResumenCostoTotal" class="inv-stat-valor">$0.00</span>
+    </div>
+    <div class="card inv-stat-card">
+      <span class="inv-stat-label">Total de Productos</span>
+      <span id="invResumenTotalProductos" class="inv-stat-valor">0</span>
+    </div>
+    <div class="card inv-stat-card">
+      <span class="inv-stat-label">Unidades en Stock</span>
+      <span id="invResumenUnidades" class="inv-stat-valor">0</span>
+    </div>
+    <div class="card inv-stat-card">
+      <span class="inv-stat-label">Valor Total de Venta</span>
+      <span id="invResumenValorVenta" class="inv-stat-valor">$0.00</span>
+    </div>
+    <div class="card inv-stat-card">
+      <span class="inv-stat-label">Ganancia Potencial</span>
+      <span id="invResumenGanancia" class="inv-stat-valor">$0.00</span>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card" style="margin-bottom:1rem">
+    <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
+      <div class="form-group" style="flex:1;min-width:200px;margin:0">
+        <label>Buscar:</label>
+        <input type="text" id="invReporteBusqueda" placeholder="Nombre, código, IMEI..." />
+      </div>
+      <div class="form-group" style="flex:1;min-width:180px;margin:0">
+        <label>Categoría:</label>
+        <select id="invReporteCategoria">
+          <option value="">Todas las categorías</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="ReporteInventarioModule.cargar()">Actualizar</button>
+    </div>
+  </div>
+
+  <!-- Loader -->
+  <div id="invReporteLoader" style="display:none;justify-content:center;align-items:center;padding:3rem">
+    <span class="loader-reportes-texto">Cargando inventario...</span>
+  </div>
+
+  <!-- Tabla -->
+  <div id="invReporteTablaWrap" class="card" style="padding:0;overflow:hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
+      <h3 style="margin:0">Productos</h3>
+      <span id="invReporteConteo" style="font-size:0.85rem;color:var(--text-muted)"></span>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Código / IMEI</th>
+            <th>Descripción</th>
+            <th>Costo Total</th>
+            <th>Precio Venta</th>
+            <th>Disponible</th>
+            <th>Cantidad</th>
+          </tr>
+        </thead>
+        <tbody id="invReporteTbody">
+          <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted)">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  </section>
+
   <!-- CONFIGURACIÓN SECTION -->
   <section id="configuracion" class="section">
   <div class="header">
@@ -1449,52 +1603,33 @@
   <div class="card">
   <h3>Información del Negocio</h3>
   <form id="formConfiguracion">
-  <div class="form-row-2">
-  <div class="form-group">
-  <label>Nombre del Negocio:</label>
-  <input type="text" id="configNombre" value="Fifty Tech" />
+  <table class="config-info-tabla">
+  <tbody>
+  <tr>
+  <th>Nombre del Negocio</th>
+  <td><input type="text" id="configNombre" class="form-control" /></td>
+  </tr>
+  <tr>
+  <th>RNC</th>
+  <td><input type="text" id="configRNC" class="form-control" placeholder="000-000000-0" /></td>
+  </tr>
+  <tr>
+  <th>Teléfono</th>
+  <td><input type="tel" id="configTelefono" class="form-control" placeholder="(809) 000-0000" /></td>
+  </tr>
+  <tr>
+  <th>Email</th>
+  <td><input type="email" id="configEmail" class="form-control" placeholder="correo@negocio.com" /></td>
+  </tr>
+  <tr>
+  <th>Dirección</th>
+  <td><textarea id="configDireccion" class="form-control" rows="2" placeholder="Dirección del negocio..."></textarea></td>
+  </tr>
+  </tbody>
+  </table>
+  <div style="margin-top:16px;">
+  <button type="submit" class="btn btn-primary">Guardar</button>
   </div>
-  <div class="form-group">
-  <label>RNC:</label>
-  <input type="text" id="configRNC" />
-  </div>
-  </div>
-  <div class="form-row-2">
-  <div class="form-group">
-  <label>Teléfono:</label>
-  <input type="tel" id="configTelefono" />
-  </div>
-  <div class="form-group">
-  <label>Email:</label>
-  <input type="email" id="configEmail" />
-  </div>
-  </div>
-  <div class="form-group">
-  <label>Dirección:</label>
-  <textarea id="configDireccion" rows="2"></textarea>
-  </div>
-
-  <h4 class="seccion-titulo-simple">Configuración de Tickets</h4>
-  <div class="form-row-2">
-  <div class="form-group">
-  <label>Serie de Tickets:</label>
-  <input type="text" id="configSerie" value="A" />
-  </div>
-  <div class="form-group">
-  <label>Folio Inicial:</label>
-  <input type="number" id="configFolio" value="1" />
-  </div>
-  </div>
-
-  <h4 class="seccion-titulo-simple">Impuestos</h4>
-  <div class="form-group">
-  <label>Porcentaje de ITBIS (%):</label>
-  <input type="number" id="configITBIS" value="18" step="0.01" />
-  </div>
-
-  <button type="submit" class="btn btn-primary">
-  Guardar Configuración
-  </button>
   </form>
   </div>
 
@@ -1541,6 +1676,17 @@
   </div>
   <div id="listaCategoriasConfig"></div>
   </div>
+
+  <!-- Gestión de Usuarios (solo admin) -->
+  <div class="card" id="tabUsuarios">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 style="margin:0;">Usuarios del Sistema</h3>
+      <button class="btn btn-success btn-small" onclick="UsuariosModule.mostrarModal()">+ Nuevo Usuario</button>
+    </div>
+    <div id="tablaUsuariosContainer">
+      <p style="color:var(--clr-muted);font-size:14px;">Cargando usuarios...</p>
+    </div>
+  </div>
   </section>
 
   <!-- Modal Detalle de Producto -->
@@ -1563,6 +1709,47 @@
   </div>
 
   <div id="modales-container"></div>
+  <!-- Modal de usuario -->
+  <div class="modal" id="modalUsuario">
+    <div class="modal-content" style="max-width:420px;">
+      <div class="modal-header">
+        <h2 id="tituloModalUsuario">Nuevo Usuario</h2>
+        <span class="close-modal" onclick="cerrarModal('modalUsuario')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="usuarioId" />
+        <div class="form-group">
+          <label>Nombre de usuario <span class="campo-requerido">*</span></label>
+          <input type="text" id="usuarioUsername" placeholder="Ej: maria" />
+        </div>
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input type="text" id="usuarioNombre" placeholder="Ej: María García" />
+        </div>
+        <div class="form-group">
+          <label>Contraseña <span class="campo-requerido">*</span> <small id="usuarioPasswordHint" style="color:var(--clr-muted);">(requerida)</small></label>
+          <input type="password" id="usuarioPassword" placeholder="Contraseña" />
+        </div>
+        <div class="form-group">
+          <label>Rol <span class="campo-requerido">*</span></label>
+          <select id="usuarioRol">
+            <option value="cajero">Cajero</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="form-group" id="usuarioActivoGroup" style="display:none;">
+          <label>
+            <input type="checkbox" id="usuarioActivo" checked /> Usuario activo
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal('modalUsuario')">Cancelar</button>
+        <button class="btn btn-primary" onclick="UsuariosModule.guardar()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Cargar en este orden -->
   <script src="js/utils/toast.js"></script>
   <script src="js/utils/dom-utils.js"></script>
@@ -1607,6 +1794,10 @@
   <script src="js/modules/pagos-module.js"></script>
   <script src="js/modules/creditos-module.js"></script>
   <script src="js/modules/reportes-module.js"></script>
+  <script src="js/modules/reporte-inventario-module.js"></script>
+  <script src="js/api/auth-api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/modules/usuarios-module.js"></script>
   <script src="index.js"></script>
   </body>
 </html>

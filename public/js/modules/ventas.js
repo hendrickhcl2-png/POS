@@ -710,9 +710,7 @@ const VentasModule = {
   type="button"
   class="btn btn-danger btn-small"
   onclick="VentasModule.eliminarServicio(${servicio.id})"
-  >
-
-  </button>
+  >&#x2715;</button>
   </div>
   </div>
   `,

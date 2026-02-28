@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../database/pool");
+const { requireAdmin } = require("../middleware/auth-middleware");
 
 // Obtener configuración del sistema
 router.get("/", async (req, res) => {
@@ -32,31 +33,12 @@ router.get("/", async (req, res) => {
 });
 
 // Actualizar configuración
-router.put("/", async (req, res) => {
+router.put("/", requireAdmin, async (req, res) => {
   try {
-    const {
-      nombre_negocio,
-      rnc,
-      telefono,
-      email,
-      direccion,
-      serie_ticket,
-      porcentaje_itbis,
-      mensaje_ticket,
-      logo_url,
-    } = req.body;
+    const { nombre_negocio, rnc, telefono, email, direccion } = req.body;
 
-    // Validaciones
     if (!nombre_negocio || nombre_negocio.trim() === "") {
-      return res
-        .status(400)
-        .json({ error: "El nombre del negocio es obligatorio" });
-    }
-
-    if (porcentaje_itbis && (porcentaje_itbis < 0 || porcentaje_itbis > 100)) {
-      return res
-        .status(400)
-        .json({ error: "El porcentaje de ITBIS debe estar entre 0 y 100" });
+      return res.status(400).json({ error: "El nombre del negocio es obligatorio" });
     }
 
     // Obtener configuración actual
@@ -66,45 +48,19 @@ router.put("/", async (req, res) => {
 
     let result;
     if (current.rows.length === 0) {
-      // Crear nueva configuración
       result = await pool.query(
-        `INSERT INTO configuracion 
-         (nombre_negocio, rnc, telefono, email, direccion, serie_ticket, porcentaje_itbis, mensaje_ticket, logo_url)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `INSERT INTO configuracion (nombre_negocio, rnc, telefono, email, direccion)
+         VALUES ($1, $2, $3, $4, $5)
          RETURNING *`,
-        [
-          nombre_negocio,
-          rnc || "",
-          telefono || "",
-          email || "",
-          direccion || "",
-          serie_ticket || "A01",
-          porcentaje_itbis || 18.0,
-          mensaje_ticket || "",
-          logo_url || "",
-        ],
+        [nombre_negocio, rnc || "", telefono || "", email || "", direccion || ""],
       );
     } else {
-      // Actualizar configuración existente
       result = await pool.query(
-        `UPDATE configuracion 
-         SET nombre_negocio = $1, rnc = $2, telefono = $3, email = $4, 
-             direccion = $5, serie_ticket = $6, porcentaje_itbis = $7,
-             mensaje_ticket = $8, logo_url = $9
-         WHERE id = $10
+        `UPDATE configuracion
+         SET nombre_negocio = $1, rnc = $2, telefono = $3, email = $4, direccion = $5
+         WHERE id = $6
          RETURNING *`,
-        [
-          nombre_negocio,
-          rnc,
-          telefono,
-          email,
-          direccion,
-          serie_ticket,
-          porcentaje_itbis,
-          mensaje_ticket,
-          logo_url,
-          current.rows[0].id,
-        ],
+        [nombre_negocio, rnc || "", telefono || "", email || "", direccion || "", current.rows[0].id],
       );
     }
 
@@ -133,7 +89,7 @@ router.get("/ncf", async (req, res) => {
 });
 
 // Actualizar secuencia NCF
-router.put("/ncf/:id", async (req, res) => {
+router.put("/ncf/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -172,7 +128,7 @@ router.put("/ncf/:id", async (req, res) => {
 });
 
 // Resetear base de datos (SOLO PARA DESARROLLO)
-router.post("/reset", async (req, res) => {
+router.post("/reset", requireAdmin, async (req, res) => {
   try {
     const { confirmar } = req.body;
 

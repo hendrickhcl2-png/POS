@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const asyncHandler = require("../middleware/async-handler");
 const pool = require("../database/pool");
+const { requireAdmin } = require("../middleware/auth-middleware");
 
 // ⚠️ IMPORTANTE: Las rutas específicas DEBEN ir ANTES de /:id
 
@@ -225,6 +226,7 @@ router.get(
 // ==================== ACTUALIZAR STOCK ====================
 router.post(
   "/:id/stock",
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { cantidad, tipo, motivo } = req.body;
@@ -314,6 +316,7 @@ router.post(
 // ==================== AJUSTAR INVENTARIO ====================
 router.post(
   "/:id/ajustar",
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { nueva_cantidad, motivo } = req.body;

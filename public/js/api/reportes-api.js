@@ -21,6 +21,10 @@ const ReportesAPI = {
     const endpoint = tipo === "ventas" ? "ventas" : "productos-vendidos";
     return await APIClient.get(`/reportes/${endpoint}?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`);
   },
+
+  async getReporteInventario() {
+    return await APIClient.get("/reportes/inventario");
+  },
 };
 
 window.ReportesAPI = ReportesAPI;

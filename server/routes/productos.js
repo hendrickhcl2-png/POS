@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../database/pool");
+const { requireAdmin } = require("../middleware/auth-middleware");
 
 // ==================== OBTENER TODOS LOS PRODUCTOS ====================
 router.get("/", async (req, res) => {
@@ -87,7 +88,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // ==================== CREAR PRODUCTO ====================
-router.post("/", async (req, res) => {
+router.post("/", requireAdmin, async (req, res) => {
   try {
     const {
       // Identificadores
@@ -203,6 +204,24 @@ router.post("/", async (req, res) => {
     res.status(201).json(producto);
   } catch (error) {
     console.error("❌ Error al crear producto:", error);
+
+    if (error.code === "23505") {
+      const esImei = error.constraint && error.constraint.includes("imei");
+      const campo = esImei ? "IMEI" : "código de barras";
+      const valor = esImei ? imei : codigo_barras;
+      let mensaje = `El ${campo} "${valor}" ya está registrado`;
+      try {
+        const existing = await pool.query(
+          `SELECT nombre FROM productos WHERE (codigo_barras = $1 AND $1 IS NOT NULL) OR (imei = $2 AND $2 IS NOT NULL) LIMIT 1`,
+          [codigo_barras || null, imei || null],
+        );
+        if (existing.rows.length > 0) {
+          mensaje += ` — pertenece a: "${existing.rows[0].nombre}"`;
+        }
+      } catch (_) {}
+      return res.status(409).json({ error: mensaje });
+    }
+
     res.status(500).json({
       error: error.message,
       detail: error.detail || "Sin detalles adicionales",
@@ -211,7 +230,7 @@ router.post("/", async (req, res) => {
 });
 
 // ==================== ACTUALIZAR PRODUCTO ====================
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const {
@@ -291,12 +310,30 @@ router.put("/:id", async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error("❌ Error al actualizar producto:", error);
+
+    if (error.code === "23505") {
+      const esImei = error.constraint && error.constraint.includes("imei");
+      const campo = esImei ? "IMEI" : "código de barras";
+      const valor = esImei ? imei : codigo_barras;
+      let mensaje = `El ${campo} "${valor}" ya está en uso`;
+      try {
+        const existing = await pool.query(
+          `SELECT nombre FROM productos WHERE ((codigo_barras = $1 AND $1 IS NOT NULL) OR (imei = $2 AND $2 IS NOT NULL)) AND id != $3 LIMIT 1`,
+          [codigo_barras || null, imei || null, id],
+        );
+        if (existing.rows.length > 0) {
+          mensaje += ` — pertenece a: "${existing.rows[0].nombre}"`;
+        }
+      } catch (_) {}
+      return res.status(409).json({ error: mensaje });
+    }
+
     res.status(500).json({ error: error.message });
   }
 });
 
 // ==================== ELIMINAR PRODUCTO (SOFT DELETE) ====================
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 

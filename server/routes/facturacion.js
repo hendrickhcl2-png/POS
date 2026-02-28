@@ -6,7 +6,7 @@ const pool = require("../database/pool");
 // ==================== OBTENER TODAS LAS FACTURAS ====================
 router.get("/", async (req, res) => {
   try {
-    const { fecha_inicio, fecha_fin, cliente_id, estado_pago, tipo_factura } =
+    const { fecha_inicio, fecha_fin, cliente_id, estado_pago, tipo_factura, codigo_producto } =
       req.query;
 
     let query = `
@@ -58,6 +58,20 @@ router.get("/", async (req, res) => {
     if (tipo_factura) {
       query += ` AND f.tipo_factura = $${paramCount}`;
       params.push(tipo_factura);
+      paramCount++;
+    }
+
+    if (codigo_producto) {
+      query += ` AND EXISTS (
+        SELECT 1 FROM detalle_factura df
+        LEFT JOIN productos p ON df.producto_id = p.id
+        WHERE df.factura_id = f.id
+          AND (
+            df.codigo_producto ILIKE $${paramCount}
+            OR COALESCE(p.imei, '') ILIKE $${paramCount}
+          )
+      )`;
+      params.push(`%${codigo_producto}%`);
       paramCount++;
     }
 

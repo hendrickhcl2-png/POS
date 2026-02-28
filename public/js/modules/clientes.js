@@ -139,8 +139,8 @@ const ClientesModule = {
       <td style="text-align:center;">
         <div style="display:flex;gap:6px;justify-content:center;">
           <button class="btn btn-secondary btn-small" onclick="ClientesModule.verDetalleCliente(${c.id})">Ver</button>
-          <button class="btn btn-primary btn-small" onclick="ClientesModule.editarCliente(${c.id})">Editar</button>
-          <button class="btn btn-danger btn-small" onclick="ClientesModule.confirmarEliminar(${c.id})">Eliminar</button>
+          ${window.Auth?.isAdmin() ? `<button class="btn btn-primary btn-small" onclick="ClientesModule.editarCliente(${c.id})">Editar</button>` : ""}
+          ${window.Auth?.isAdmin() ? `<button class="btn btn-danger btn-small" onclick="ClientesModule.confirmarEliminar(${c.id})">Eliminar</button>` : ""}
         </div>
       </td>
     </tr>`;

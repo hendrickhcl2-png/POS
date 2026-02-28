@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const asyncHandler = require("../middleware/async-handler");
 const pool = require("../database/pool");
+const { requireAdmin } = require("../middleware/auth-middleware");
 
 // ==================== OBTENER TODOS LOS CLIENTES ====================
 router.get(
@@ -292,6 +293,36 @@ router.get(
   }),
 );
 
+// ==================== CRÉDITOS PAGADOS ====================
+// ⚠️ IMPORTANTE: Esta ruta DEBE ir ANTES de /:id
+router.get(
+  "/creditos-pagados",
+  asyncHandler(async (req, res) => {
+    const result = await pool.query(`
+      SELECT
+        f.id,
+        f.numero_factura,
+        f.total,
+        f.monto_pagado,
+        f.fecha,
+        f.updated_at AS fecha_pago,
+        c.id AS cliente_id,
+        c.nombre,
+        c.apellido,
+        c.cedula,
+        c.telefono,
+        (SELECT MAX(pf.fecha) FROM pagos_factura pf WHERE pf.factura_id = f.id) AS ultimo_pago
+      FROM facturas f
+      JOIN clientes c ON f.cliente_id = c.id
+      WHERE f.tipo_factura = 'credito'
+        AND f.estado = 'pagada'
+      ORDER BY f.updated_at DESC
+      LIMIT 200
+    `);
+    res.json({ success: true, data: result.rows });
+  }),
+);
+
 // ==================== OBTENER CLIENTE POR ID ====================
 // ⚠️ IMPORTANTE: Esta ruta DEBE ir DESPUÉS de todas las rutas específicas
 router.get(
@@ -355,6 +386,7 @@ router.post(
 // ==================== ACTUALIZAR CLIENTE ====================
 router.put(
   "/:id",
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { nombre, apellido, cedula, rnc, telefono, email, direccion, notas } =
@@ -385,6 +417,7 @@ router.put(
 // ==================== ELIMINAR CLIENTE ====================
 router.delete(
   "/:id",
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const { id } = req.params;
 

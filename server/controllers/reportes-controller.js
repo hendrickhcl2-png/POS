@@ -494,6 +494,52 @@ const ReportesController = {
       next(error);
     }
   },
+
+  async getReporteInventario(req, res, next) {
+    try {
+      const result = await pool.query(`
+        SELECT
+          p.id,
+          p.codigo_barras,
+          p.imei,
+          p.nombre,
+          c.nombre AS categoria,
+          CASE
+            WHEN p.costos IS NOT NULL AND jsonb_array_length(p.costos) > 0
+            THEN (
+              SELECT COALESCE(SUM((elem->>'monto')::numeric), 0)
+              FROM jsonb_array_elements(p.costos) AS elem
+              WHERE (elem->>'monto') ~ '^[0-9]+(\\.[0-9]+)?$'
+            )
+            ELSE p.precio_costo
+          END AS costo_total,
+          CASE
+            WHEN p.precio_con_descuento IS NOT NULL
+              AND p.precio_con_descuento > 0
+              AND (p.descuento_porcentaje > 0 OR p.descuento_monto > 0)
+            THEN p.precio_con_descuento
+            ELSE p.precio_venta
+          END AS precio_efectivo,
+          p.descuento_porcentaje,
+          p.descuento_monto,
+          p.disponible,
+          p.stock_actual,
+          p.stock_minimo
+        FROM productos p
+        LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE p.activo = true
+        ORDER BY p.nombre ASC
+      `);
+
+      res.json({
+        success: true,
+        data: result.rows,
+        count: result.rows.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };
 
 module.exports = ReportesController;

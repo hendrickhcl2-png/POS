@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../database/pool");
+const { requireAdmin } = require("../middleware/auth-middleware");
 
 // Obtener todos los proveedores
 router.get("/", async (req, res) => {
@@ -69,7 +70,7 @@ router.get("/:id/productos", async (req, res) => {
 });
 
 // Crear proveedor
-router.post("/", async (req, res) => {
+router.post("/", requireAdmin, async (req, res) => {
   try {
     const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas } =
       req.body;
@@ -103,7 +104,7 @@ router.post("/", async (req, res) => {
 });
 
 // Actualizar proveedor
-router.put("/:id", async (req, res) => {
+router.put("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas } =
@@ -134,7 +135,7 @@ router.put("/:id", async (req, res) => {
 });
 
 // Eliminar proveedor
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 

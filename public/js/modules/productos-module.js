@@ -399,7 +399,7 @@ async function guardarProducto(e) {
         productos[index] = producto;
       }
 
-      mostrarAlerta("Producto actualizado exitosamente", "success");
+      mostrarAlerta(`"${nombre}" actualizado exitosamente`, "success");
       cancelarEdicion();
     } else {
       producto = await window.API.Productos.create(productoData);
@@ -421,7 +421,7 @@ async function guardarProducto(e) {
       agregarLineaCosto();
       agregarCaracteristica();
 
-      mostrarAlerta("Producto guardado exitosamente", "success");
+      mostrarAlerta(`"${nombre}" guardado exitosamente`, "success");
     }
 
     actualizarTablaProductos();

@@ -3,6 +3,7 @@
 const CreditosModule = {
   _clientes: [],
   _initialized: false,
+  _tabActivo: "pendientes",
 
   // ==================== INIT ====================
 
@@ -11,6 +12,112 @@ const CreditosModule = {
       this._initialized = true;
     }
     this.cargarClientes();
+  },
+
+  // ==================== TABS ====================
+
+  switchTab(tab) {
+    this._tabActivo = tab;
+
+    const btnPendientes = document.getElementById("tabCuentasCobrar");
+    const btnPagados = document.getElementById("tabHistorialPagados");
+    const contentPendientes = document.getElementById("tabContentPendientes");
+    const contentPagados = document.getElementById("tabContentPagados");
+    const filtroCreditosWrapper = document.getElementById("filtroCreditos");
+
+    if (tab === "pendientes") {
+      btnPendientes?.classList.add("active");
+      btnPagados?.classList.remove("active");
+      contentPendientes?.classList.add("active");
+      contentPagados?.classList.remove("active");
+      if (filtroCreditosWrapper) filtroCreditosWrapper.style.display = "";
+      this.cargarClientes();
+    } else {
+      btnPagados?.classList.add("active");
+      btnPendientes?.classList.remove("active");
+      contentPagados?.classList.add("active");
+      contentPendientes?.classList.remove("active");
+      if (filtroCreditosWrapper) filtroCreditosWrapper.style.display = "none";
+      this.cargarHistorialPagados();
+    }
+  },
+
+  actualizarTabActivo() {
+    if (this._tabActivo === "pagados") {
+      this.cargarHistorialPagados();
+    } else {
+      this.cargarClientes();
+    }
+  },
+
+  // ==================== CARGAR HISTORIAL PAGADOS ====================
+
+  async cargarHistorialPagados() {
+    const tbody = document.getElementById("tablaHistorialPagados");
+    if (!tbody) return;
+
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center tabla-vacia-mensaje">Cargando...</td></tr>`;
+
+    try {
+      const data = await API.Clientes.getCreditosPagados();
+      this._renderStatsPagados(data);
+      this._renderHistorialPagados(data);
+    } catch (err) {
+      console.error("Error cargando historial pagados:", err);
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center tabla-vacia-mensaje" style="color:var(--clr-danger);">Error al cargar los datos.</td></tr>`;
+    }
+  },
+
+  _renderStatsPagados(pagados) {
+    const container = document.getElementById("creditosPagadosStats");
+    if (!container) return;
+
+    const totalCobrado = pagados.reduce(
+      (s, r) => s + parseFloat(r.monto_pagado || r.total || 0),
+      0,
+    );
+
+    container.innerHTML = `
+      <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:1;min-width:160px;">
+        <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Facturas saldadas</div>
+        <div style="font-size:28px;font-weight:700;color:var(--clr-dark);">${pagados.length}</div>
+      </div>
+      <div style="background:var(--clr-bg-surface);border:1px solid var(--clr-border);border-radius:10px;padding:16px 24px;flex:2;min-width:200px;">
+        <div style="font-size:12px;color:var(--clr-muted);margin-bottom:4px;">Total cobrado</div>
+        <div style="font-size:28px;font-weight:700;color:var(--clr-success);">${this._fmt(totalCobrado)}</div>
+      </div>`;
+  },
+
+  _renderHistorialPagados(pagados) {
+    const tbody = document.getElementById("tablaHistorialPagados");
+    if (!tbody) return;
+
+    if (!pagados || pagados.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center tabla-vacia-mensaje">No hay cuentas pagadas registradas.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = pagados
+      .map(
+        (r) => `
+      <tr>
+        <td>
+          <strong>${r.nombre} ${r.apellido || ""}</strong>
+          ${r.cedula ? `<br><small style="color:var(--clr-muted);">${r.cedula}</small>` : ""}
+        </td>
+        <td>${r.telefono || "—"}</td>
+        <td style="font-size:13px;color:var(--clr-muted);">${r.numero_factura}</td>
+        <td style="text-align:right;font-weight:700;color:var(--clr-success);">${this._fmt(r.total)}</td>
+        <td style="text-align:center;font-size:13px;">${this._formatFecha(r.ultimo_pago || r.fecha_pago)}</td>
+        <td style="text-align:center;">
+          <button
+            class="btn btn-secondary btn-small"
+            onclick="CreditosModule.abrirModalHistorial(${r.cliente_id}, '${(r.nombre + " " + (r.apellido || "")).trim().replace(/'/g, "\\'")}')"
+          >Ver Pagos</button>
+        </td>
+      </tr>`,
+      )
+      .join("");
   },
 
   // ==================== CARGAR CLIENTES CON SALDO ====================

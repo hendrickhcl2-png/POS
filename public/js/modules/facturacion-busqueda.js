@@ -7,6 +7,7 @@ const FacturacionModule = {
   fecha_hasta: null,
   cliente_id: null,
   estado: null,
+  codigo_producto: null,
   },
 
   // ==================== INICIALIZACIÓN ====================
@@ -88,6 +89,7 @@ const FacturacionModule = {
   filtros.fecha_fin = this.filtros.fecha_hasta;
   if (this.filtros.cliente_id) filtros.cliente_id = this.filtros.cliente_id;
   if (this.filtros.estado) filtros.estado_pago = this.filtros.estado;
+  if (this.filtros.codigo_producto) filtros.codigo_producto = this.filtros.codigo_producto;
 
   const response = await FacturacionAPI.getAll(filtros);
   this.facturas = response.data || response;
@@ -269,6 +271,8 @@ const FacturacionModule = {
   document.getElementById("filtroCliente")?.value || null;
   this.filtros.estado =
   document.getElementById("filtroEstado")?.value || null;
+  this.filtros.codigo_producto =
+  document.getElementById("filtroCodigoProducto")?.value.trim() || null;
 
   this.cargarFacturas();
   },
@@ -279,6 +283,7 @@ const FacturacionModule = {
   fecha_hasta: null,
   cliente_id: null,
   estado: null,
+  codigo_producto: null,
   };
 
   // Limpiar UI

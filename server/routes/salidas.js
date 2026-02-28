@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../database/pool");
 const asyncHandler = require("../middleware/async-handler");
+const { requireAdmin } = require("../middleware/auth-middleware");
 
 // ==================== OBTENER TODAS LAS SALIDAS ====================
 router.get(
@@ -17,6 +18,7 @@ router.get(
 // ==================== CREAR SALIDA ====================
 router.post(
   "/",
+  requireAdmin,
   asyncHandler(async (req, res) => {
     const {
       fecha,

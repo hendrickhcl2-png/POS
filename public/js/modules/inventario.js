@@ -7,6 +7,7 @@ const InventarioModule = {
   categorias: [],
   filtroActual: {},
   productoActual: null,
+  nombreProductoActual: null,
 
   // Inicializar módulo
   init() {
@@ -245,6 +246,9 @@ const InventarioModule = {
   btnGuardar.className = "btn btn-warning";
   }
 
+  // Guardar nombre para usarlo en mensajes
+  this.nombreProductoActual = producto.nombre;
+
   // Mostrar información del producto
   document.getElementById("movimientoProductoInfo").innerHTML = `
   <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
@@ -270,6 +274,7 @@ const InventarioModule = {
   if (modal) {
   modal.classList.remove("active");
   this.productoActual = null;
+  this.nombreProductoActual = null;
   }
   },
 
@@ -291,10 +296,11 @@ const InventarioModule = {
   motivo,
   );
 
+  const nombre = this.nombreProductoActual || "producto";
   const mensaje =
   tipo === "entrada"
-  ? ` Se agregaron ${cantidad} unidades al stock`
-: ` Se quitaron ${cantidad} unidades del stock`;
+  ? ` Se agregaron ${cantidad} unidades a "${nombre}"`
+: ` Se quitaron ${cantidad} unidades de "${nombre}"`;
 
   mostrarAlerta(mensaje, "success");
 
@@ -303,7 +309,8 @@ const InventarioModule = {
   await this.cargarEstadisticas();
   } catch (error) {
   console.error(" Error al guardar movimiento:", error);
-  mostrarAlerta("Error al guardar movimiento: " + error.message, "danger");
+  const nombre = this.nombreProductoActual || "producto";
+  mostrarAlerta(`Error en "${nombre}": ${error.message}`, "danger");
   }
   },
 
@@ -320,6 +327,9 @@ const InventarioModule = {
   console.error(" Modal de ajuste no encontrado");
   return;
   }
+
+  // Guardar nombre para usarlo en mensajes
+  this.nombreProductoActual = producto.nombre;
 
   // Mostrar información del producto
   document.getElementById("ajusteProductoInfo").innerHTML = `
@@ -344,6 +354,7 @@ const InventarioModule = {
   if (modal) {
   modal.classList.remove("active");
   this.productoActual = null;
+  this.nombreProductoActual = null;
   }
   },
 
@@ -368,8 +379,9 @@ const InventarioModule = {
   motivo,
   );
 
+  const nombre = this.nombreProductoActual || "producto";
   mostrarAlerta(
-  ` Inventario ajustado a ${nuevaCantidad} unidades`,
+  ` "${nombre}" ajustado a ${nuevaCantidad} unidades`,
   "success",
   );
 
@@ -378,7 +390,8 @@ const InventarioModule = {
   await this.cargarEstadisticas();
   } catch (error) {
   console.error(" Error al ajustar inventario:", error);
-  mostrarAlerta("Error al ajustar inventario: " + error.message, "danger");
+  const nombre = this.nombreProductoActual || "producto";
+  mostrarAlerta(`Error al ajustar "${nombre}": ${error.message}`, "danger");
   }
   },
 

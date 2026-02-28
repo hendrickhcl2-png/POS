@@ -70,6 +70,11 @@ const ClientesAPI = {
   async getEstadisticas(clienteId) {
     return await APIClient.get(`/clientes/${clienteId}/estadisticas`);
   },
+
+  // Obtener facturas de crédito ya pagadas
+  async getCreditosPagados() {
+    return await APIClient.request("/clientes/creditos-pagados");
+  },
 };
 
 // Exportar

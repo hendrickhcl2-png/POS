@@ -273,6 +273,9 @@ const FacturaImpresion = {
   <p style="margin:3px 0;color:#7f8c8d;font-size:12px;">Gracias por su compra en ${config.nombre}</p>
   <p style="margin:3px 0;color:#7f8c8d;font-size:11px;">Este recibo es válido como comprobante de compra</p>
   <p style="margin:3px 0;color:#7f8c8d;font-size:11px;">No se aceptan devoluciones sin este recibo</p>
+  <p style="margin:8px 0 3px;color:#2c3e50;font-size:11px;font-weight:bold;">GARANTÍA</p>
+  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">✓ 2 meses de garantía en todos los equipos</p>
+  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">✗ No aplica: pantalla, mojado, caída, destapado</p>
   </div>
   </div>
   </div>
@@ -526,6 +529,9 @@ ${sep()}
   <div style="margin-top:8px;">Gracias por su compra en</div>
   <div style="font-weight:bold;">${config.nombre}</div>
   <div style="margin-top:4px;font-size:9px;">Conserve este recibo para cualquier reclamacion</div>
+  <div style="margin-top:6px;font-weight:bold;font-size:10px;">GARANTIA</div>
+  <div style="font-size:9px;">2 meses - No aplica: pantalla,</div>
+  <div style="font-size:9px;">mojado, caida, destapado</div>
 </div>
 
 <div style="margin-top:12px;"></div>

@@ -19,6 +19,8 @@ const FacturacionAPI = {
     if (filtros.fecha_inicio)
       params.push(`fecha_inicio=${filtros.fecha_inicio}`);
     if (filtros.fecha_fin) params.push(`fecha_fin=${filtros.fecha_fin}`);
+    if (filtros.codigo_producto)
+      params.push(`codigo_producto=${encodeURIComponent(filtros.codigo_producto)}`);
 
     if (params.length > 0) {
       url += "?" + params.join("&");

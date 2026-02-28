@@ -3,27 +3,43 @@
 async function guardarConfiguracion(e) {
   e.preventDefault();
 
+  const nombre_negocio = getValue("configNombre");
+  if (!nombre_negocio.trim()) {
+    mostrarAlerta("El nombre del negocio es obligatorio", "warning");
+    return;
+  }
+
   const configData = {
-    nombre_negocio: getValue("configNombre"),
+    nombre_negocio,
     rnc: getValue("configRNC"),
     telefono: getValue("configTelefono"),
     email: getValue("configEmail"),
     direccion: getValue("configDireccion"),
-    serie_ticket: getValue("configSerie"),
-    porcentaje_itbis: parseFloat(getValue("configITBIS")),
   };
 
   try {
     await window.API.Configuracion.update(configData);
-    mostrarAlerta("Configuración guardada", "success");
+    // Actualizar variable global para que el resto de la app vea el cambio
+    Object.assign(configuracion, configData);
+    mostrarAlerta("Información del negocio guardada", "success");
   } catch (error) {
     mostrarAlerta("Error al guardar configuración", "danger");
   }
 }
 
+function precargarInfoNegocio() {
+  if (!configuracion) return;
+  setValueIfExists("configNombre", configuracion.nombre_negocio || "");
+  setValueIfExists("configRNC", configuracion.rnc || "");
+  setValueIfExists("configTelefono", configuracion.telefono || "");
+  setValueIfExists("configEmail", configuracion.email || "");
+  setValueIfExists("configDireccion", configuracion.direccion || "");
+}
+
 // ==================== CONFIGURACIÓN — SERVICIOS Y CATEGORÍAS ====================
 
 async function cargarConfiguracion() {
+  precargarInfoNegocio();
   await Promise.all([cargarServiciosConfig(), cargarCategoriasConfig()]);
 }
 

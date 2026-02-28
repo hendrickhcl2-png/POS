@@ -21,6 +21,18 @@ document.addEventListener("DOMContentLoaded", async function () {
     return;
   }
 
+  const autenticado = await Auth.init();
+  if (!autenticado) return;
+
+  await inicializarApp();
+
+});
+
+// Expuesta globalmente para que Auth.login() la llame después del login
+window.inicializarApp = async function inicializarApp() {
+  if (window._appInitialized) return;
+  window._appInitialized = true;
+
   await cargarDatosIniciales();
 
   const hoy = new Date().toISOString().split("T")[0];
@@ -36,11 +48,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Inicializar sección activa
   const activeSection = document.querySelector(".section.active");
   if (activeSection) {
-    const sectionId = activeSection.id;
-    initializeModule(sectionId);
+    initializeModule(activeSection.id);
   }
-
-});
+};
 
 // ==================== CARGAR DATOS INICIALES ====================
 async function cargarDatosIniciales() {
@@ -169,6 +179,11 @@ function addKeyPressListener(elementId, handler) {
 // ==================== NAVEGACIÓN ====================
 window.showSection = function (sectionId) {
 
+  if (!Auth.canAccess(sectionId)) {
+    Toast.error("No tienes permisos para acceder a esta sección");
+    return;
+  }
+
   document
     .querySelectorAll(".section")
     .forEach((s) => s.classList.remove("active"));
@@ -222,6 +237,14 @@ case "proveedores":
       break;
     case "configuracion":
       cargarConfiguracion();
+      if (Auth.isAdmin()) {
+        UsuariosModule.cargar();
+      }
+      break;
+    case "reporte-inventario":
+      if (window.ReporteInventarioModule) {
+        ReporteInventarioModule.init();
+      }
       break;
   }
 

@@ -297,6 +297,8 @@ body {
 
 .btn-success:hover {
   background: var(--clr-success-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
 }
 
 .btn-danger {
@@ -793,18 +795,6 @@ tbody tr:hover {
   outline: none;
 }
 
-/* Botón de agregar costo */
-.btn-success {
-  background: var(--clr-success);
-  transition: all 0.3s ease;
-}
-
-.btn-success:hover {
-  background: var(--clr-success-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
-}
-
 /* Mensaje cuando no hay costos */
 .costos-vacio {
   text-align: center;
@@ -915,14 +905,20 @@ tbody tr:hover {
 
 /* ==================== VENTAS - FACTURACIÓN OPTIONS ==================== */
 
-/* Panel de opciones de facturación (azul claro) */
-.panel-opciones-facturacion {
+/* Panel de opciones de facturación (azul claro) — comparte base con .caja-info-azul, .caja-nota-stock */
+.panel-opciones-facturacion,
+.caja-info-azul,
+.caja-nota-stock {
   background: var(--clr-primary-tint);
   padding: 15px;
   border-radius: 5px;
-  margin: 20px 0;
   border-left: 4px solid var(--clr-primary);
 }
+
+.panel-opciones-facturacion,
+.caja-nota-stock { margin: 20px 0; }
+
+.caja-info-azul { margin-bottom: 20px; }
 
 /* Título del panel de opciones de facturación */
 .panel-opciones-facturacion-titulo {
@@ -992,16 +988,8 @@ tbody tr:hover {
   font-weight: 600;
 }
 
-/* Select de plazo de crédito */
-.credito-select {
-  width: 100%;
-  padding: 10px;
-  border: 2px solid var(--clr-muted-subtle);
-  border-radius: 5px;
-  font-size: 14px;
-}
-
-/* Input de pago inicial de crédito */
+/* Select e input de crédito */
+.credito-select,
 .credito-input {
   width: 100%;
   padding: 10px;
@@ -1055,8 +1043,9 @@ tbody tr:hover {
   color: var(--clr-muted-light);
 }
 
-/* Ícono grande dentro de celda de carga */
-.tabla-cargando-icono {
+/* Ícono grande en celda vacía/cargando */
+.tabla-cargando-icono,
+.td-tabla-vacia-icono {
   font-size: 48px;
   margin-bottom: 10px;
 }
@@ -1115,15 +1104,6 @@ tbody tr:hover {
 /* Contenedor de características del producto */
 .caracteristicas-contenedor {
   margin-bottom: 20px;
-}
-
-/* Caja de información azul genérica (ejemplos, notas) */
-.caja-info-azul {
-  background: var(--clr-primary-tint);
-  padding: 15px;
-  border-radius: 5px;
-  margin-bottom: 20px;
-  border-left: 4px solid var(--clr-primary);
 }
 
 /* Texto dentro de caja de información azul */
@@ -1244,15 +1224,6 @@ tbody tr:hover {
   font-size: 14px;
 }
 
-/* Caja de nota azul de disponibilidad/stock */
-.caja-nota-stock {
-  background: var(--clr-primary-tint);
-  padding: 15px;
-  border-radius: 5px;
-  margin: 20px 0;
-  border-left: 4px solid var(--clr-primary);
-}
-
 /* ==================== INVENTARIO - STATS ==================== */
 
 /* Valor de productos bajo stock (resaltado en rojo) */
@@ -1270,32 +1241,44 @@ tbody tr:hover {
   margin-bottom: 25px;
 }
 
-/* Tarjeta de stat: Total Facturas (count — azul) */
-.stat-card-total-facturas {
-  background: linear-gradient(135deg, var(--stat-count-a) 0%, var(--stat-count-b) 100%);
+/* Stat cards — shared base */
+.stat-card-total-facturas,
+.stat-card-monto-total,
+.stat-card-pendientes,
+.stat-card-pagadas,
+.stat-card-ventas,
+.stat-card-ganancias,
+.stat-card-costos-mercancia,
+.stat-card-costos-operativos,
+.stat-card-cantidad-ventas,
+.stat-card-margen,
+.stat-card-itbis {
   color: white;
   border: none;
 }
 
-/* Tarjeta de stat: Monto Total (revenue — azul marino) */
+/* count — azul (Total Facturas, Total Ventas, Cantidad Ventas) */
+.stat-card-total-facturas,
+.stat-card-ventas,
+.stat-card-cantidad-ventas {
+  background: linear-gradient(135deg, var(--stat-count-a) 0%, var(--stat-count-b) 100%);
+}
+
+/* revenue — azul marino (Monto Total) */
 .stat-card-monto-total {
   background: linear-gradient(135deg, var(--stat-revenue-a) 0%, var(--stat-revenue-b) 100%);
-  color: white;
-  border: none;
 }
 
-/* Tarjeta de stat: Pendientes (pending — ámbar) */
+/* pending — ámbar (Pendientes) */
 .stat-card-pendientes {
   background: linear-gradient(135deg, var(--stat-pending-a) 0%, var(--stat-pending-b) 100%);
-  color: white;
-  border: none;
 }
 
-/* Tarjeta de stat: Pagadas (positive — verde) */
-.stat-card-pagadas {
+/* positive — verde (Pagadas, Ganancias, Margen) */
+.stat-card-pagadas,
+.stat-card-ganancias,
+.stat-card-margen {
   background: linear-gradient(135deg, var(--stat-positive-a) 0%, var(--stat-positive-b) 100%);
-  color: white;
-  border: none;
 }
 
 /* Fila interior de cada stat card (ícono + texto) */
@@ -1312,17 +1295,16 @@ tbody tr:hover {
   opacity: 0.9;
 }
 
-/* Valor numérico principal en stat card - tamaño grande */
-.stat-card-valor-grande {
+/* Valores numéricos de stat cards — margen compartido */
+.stat-card-valor-grande,
+.stat-card-valor-mediano,
+.stat-card-valor-reportes,
+.stat-card-valor-itbis {
   margin: 10px 0 0 0;
-  font-size: 36px;
 }
 
-/* Valor numérico en stat card - tamaño mediano (montos) */
-.stat-card-valor-mediano {
-  margin: 10px 0 0 0;
-  font-size: 32px;
-}
+.stat-card-valor-grande   { font-size: 36px; }
+.stat-card-valor-mediano  { font-size: 32px; }
 
 /* Ícono decorativo de stat card (grande, semitransparente) */
 .stat-card-icono {
@@ -1377,8 +1359,9 @@ tbody tr:hover {
   margin: 0;
 }
 
-/* Loader de facturas (oculto por defecto, JS lo muestra) */
-.loader-facturas {
+/* Loaders (ocultos por defecto, JS los muestra) */
+.loader-facturas,
+.loader-reportes {
   display: none;
 }
 
@@ -1388,47 +1371,21 @@ tbody tr:hover {
   font-size: 14px;
 }
 
-/* Tabla completa de facturas */
-.tabla-facturas {
-  width: 100%;
-  border-collapse: collapse;
-}
-
 /* Fila de encabezado de tabla de facturas/reportes */
 .tabla-header-oscuro {
   background: var(--clr-dark);
   color: white;
 }
 
-/* Celda de encabezado de tabla alineada a la izquierda */
-.th-tabla-izquierda {
-  padding: 12px;
-  text-align: left;
-}
-
-/* Celda de encabezado de tabla alineada a la derecha */
-.th-tabla-derecha {
-  padding: 12px;
-  text-align: right;
-}
-
-/* Celda de encabezado de tabla centrada */
-.th-tabla-centro {
-  padding: 12px;
-  text-align: center;
-}
+/* Alineación de celdas de encabezado (.th-tabla-izquierda omitida: es el default) */
+.th-tabla-derecha { text-align: right; }
+.th-tabla-centro  { text-align: center; }
 
 /* Celda de cuerpo de tabla: estado vacío centrado */
 .td-tabla-vacia {
   text-align: center;
   padding: 40px;
   color: var(--clr-muted);
-}
-
-/* Ícono grande en celda vacía de tabla */
-.td-tabla-vacia-icono {
-  font-size: 48px;
-  margin-bottom: 10px;
 }
 
 /* Texto descriptivo en celda vacía de tabla */
@@ -1462,16 +1419,9 @@ tbody tr:hover {
 }
 
 /* Botón de descarga Excel principal */
-.btn-excel-principal {
-  font-size: 15px;
-  padding: 10px 20px;
-}
+.btn-excel-principal { font-size: 15px; }
 
-/* Loader de reportes (oculto por defecto, JS lo muestra) */
-.loader-reportes {
-  display: none;
-  margin-top: 10px;
-}
+.loader-reportes { margin-top: 10px; }
 
 /* Texto de estado del loader de reportes */
 .loader-reportes-texto {
@@ -1517,11 +1467,6 @@ tbody tr:hover {
   border-radius: 5px;
 }
 
-/* Botón de descarga dentro del exportador personalizado */
-.btn-excel-personalizado {
-  padding: 10px 20px;
-}
-
 /* Nota informativa del exportador de Excel */
 .exportar-excel-hint {
   color: var(--clr-muted);
@@ -1539,66 +1484,19 @@ tbody tr:hover {
   margin-bottom: 25px;
 }
 
-/* Tarjeta de stat: Total Ventas (count — azul) */
-.stat-card-ventas {
-  background: linear-gradient(135deg, var(--stat-count-a) 0%, var(--stat-count-b) 100%);
-  color: white;
-  border: none;
-}
-
-/* Tarjeta de stat: Ganancias (positive — verde) */
-.stat-card-ganancias {
-  background: linear-gradient(135deg, var(--stat-positive-a) 0%, var(--stat-positive-b) 100%);
-  color: white;
-  border: none;
-}
-
-/* Tarjeta de stat: Costos Mercancía (cost — rojo) */
-.stat-card-costos-mercancia {
-  background: linear-gradient(135deg, var(--stat-cost-a) 0%, var(--stat-cost-b) 100%);
-  color: white;
-  border: none;
-}
-
-/* Tarjeta de stat: Costos Operativos (cost — rojo) */
+/* cost — rojo (Costos Mercancía, Costos Operativos) */
+.stat-card-costos-mercancia,
 .stat-card-costos-operativos {
   background: linear-gradient(135deg, var(--stat-cost-a) 0%, var(--stat-cost-b) 100%);
-  color: white;
-  border: none;
 }
 
-/* Tarjeta de stat: Cantidad Ventas (count — azul) */
-.stat-card-cantidad-ventas {
-  background: linear-gradient(135deg, var(--stat-count-a) 0%, var(--stat-count-b) 100%);
-  color: white;
-  border: none;
-}
-
-/* Tarjeta de stat: Margen (positive — verde) */
-.stat-card-margen {
-  background: linear-gradient(135deg, var(--stat-positive-a) 0%, var(--stat-positive-b) 100%);
-  color: white;
-  border: none;
-}
-
-/* Tarjeta de stat: ITBIS Recaudado (indigo) */
+/* indigo (ITBIS Recaudado) */
 .stat-card-itbis {
   background: linear-gradient(135deg, var(--stat-itbis-a) 0%, var(--stat-itbis-b) 100%);
-  color: white;
-  border: none;
 }
 
-/* Valor numérico de stat card: tamaño medio-grande (para montos RD$) */
-.stat-card-valor-reportes {
-  margin: 10px 0 0 0;
-  font-size: 26px;
-}
-
-/* Valor de ITBIS (más pequeño por el texto largo) */
-.stat-card-valor-itbis {
-  margin: 10px 0 0 0;
-  font-size: 22px;
-}
+.stat-card-valor-reportes { font-size: 26px; }
+.stat-card-valor-itbis    { font-size: 22px; }
 
 /* ==================== REPORTES - GRÁFICOS Y TABLA ==================== */
 
@@ -1649,6 +1547,36 @@ tbody tr:hover {
   background: var(--clr-bg-surface);
 }
 
+.config-info-tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.config-info-tabla th,
+.config-info-tabla td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--clr-bg-page);
+  vertical-align: middle;
+}
+
+.config-info-tabla th {
+  width: 160px;
+  font-weight: 600;
+  color: var(--clr-muted);
+  font-size: 13px;
+  white-space: nowrap;
+  background: var(--clr-bg-surface);
+}
+
+.config-info-tabla td {
+  width: auto;
+}
+
+.config-info-tabla .form-control {
+  margin: 0;
+  width: 100%;
+}
+
 .config-lista-vacia {
   text-align: center;
   color: var(--clr-muted-light);
@@ -1695,3 +1623,233 @@ tbody tr:hover {
 .toast-error   { background: var(--clr-danger); }
 .toast-warning { background: var(--clr-warning); }
 .toast-info    { background: var(--clr-primary); }
+
+/* ==================== REPORTE INVENTARIO ==================== */
+.inv-codigo {
+  font-family: monospace;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.inv-codigo--imei {
+  color: var(--clr-primary);
+  font-weight: 600;
+}
+.inv-badge-imei,
+.inv-badge-desc {
+  display: inline-block;
+  border-radius: 4px;
+  vertical-align: middle;
+  font-weight: 700;
+}
+.inv-badge-imei {
+  font-size: 0.65rem;
+  padding: 1px 5px;
+  background: var(--clr-primary);
+  color: #fff;
+  margin-left: 4px;
+  letter-spacing: 0.03em;
+}
+.inv-badge-desc {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  background: #fff3cd;
+  color: #856404;
+  margin-left: 6px;
+}
+.inv-nombre {
+  font-weight: 500;
+}
+.inv-categoria {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-weight: 400;
+}
+.inv-monto {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.inv-disponible {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+.inv-disponible--si {
+  background: #d1fae5;
+  color: #065f46;
+}
+.inv-disponible--no {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.inv-stock {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.inv-stock--bajo {
+  color: var(--clr-warning);
+}
+.inv-stock--cero {
+  color: var(--clr-danger);
+}
+
+.inv-resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.inv-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.1rem 1.25rem;
+}
+.inv-stat-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.inv-stat-valor {
+  font-size: 1.55rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #111);
+}
+
+/* ==================== LOGIN OVERLAY ==================== */
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+}
+
+.login-overlay.hidden {
+  display: none;
+}
+
+.login-card {
+  background: var(--clr-bg-surface, #fff);
+  border-radius: 16px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.login-logo h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--clr-primary, #2563eb);
+}
+
+.login-logo p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--clr-muted, #6b7280);
+}
+
+.login-error {
+  color: var(--clr-danger, #dc2626);
+  font-size: 13px;
+  text-align: center;
+  min-height: 18px;
+  margin: 0;
+}
+
+/* ==================== USUARIO SIDEBAR ==================== */
+.usuario-sidebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin: 4px 8px 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.1);
+  gap: 8px;
+}
+
+.usuario-sidebar-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.usuario-sidebar-nombre {
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.usuario-sidebar-rol {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  text-transform: capitalize;
+}
+
+.btn-logout {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: rgba(255,255,255,0.7);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.btn-logout:hover {
+  background: rgba(220,38,38,0.5);
+  color: #fff;
+}
+
+/* ==================== TABLA SIMPLE ====================  */
+.tabla-simple {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla-simple th,
+.tabla-simple td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--clr-border, #e5e7eb);
+}
+
+.tabla-simple th {
+  font-weight: 600;
+  color: var(--clr-muted, #6b7280);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
