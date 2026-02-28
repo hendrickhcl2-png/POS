@@ -37,17 +37,16 @@ $startAction   = New-ScheduledTaskAction `
     -Argument "resurrect" `
     -WorkingDirectory $projectDir
 
-$startTrigger  = New-ScheduledTaskTrigger -AtStartup
-$startSettings = New-ScheduledTaskSettingsSet `
-    -ExecutionTimeLimit (New-TimeSpan -Minutes 5) `
-    -StartWhenAvailable
+$startTrigger    = New-ScheduledTaskTrigger -AtStartup
+$startSettings   = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 5)
+$startPrincipal  = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 
 Register-ScheduledTask `
-    -TaskName "FiftyTech POS - Inicio" `
-    -Action   $startAction `
-    -Trigger  $startTrigger `
-    -Settings $startSettings `
-    -RunLevel Highest `
+    -TaskName  "FiftyTech POS - Inicio" `
+    -Action    $startAction `
+    -Trigger   $startTrigger `
+    -Settings  $startSettings `
+    -Principal $startPrincipal `
     -Force | Out-Null
 
 Write-Host "   Tarea creada: el servidor arranca solo al encender la PC." -ForegroundColor Green
@@ -61,17 +60,18 @@ $updateAction  = New-ScheduledTaskAction `
     -Argument "-ExecutionPolicy Bypass -NonInteractive -File `"$updateScript`"" `
     -WorkingDirectory $projectDir
 
-$updateTrigger = New-ScheduledTaskTrigger -Daily -At "09:00"
-$updateSettings = New-ScheduledTaskSettingsSet `
+$updateTrigger    = New-ScheduledTaskTrigger -Daily -At "09:00"
+$updateSettings   = New-ScheduledTaskSettingsSet `
     -ExecutionTimeLimit (New-TimeSpan -Minutes 10) `
     -StartWhenAvailable
+$updatePrincipal  = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 
 Register-ScheduledTask `
-    -TaskName "FiftyTech POS - Actualizacion" `
-    -Action   $updateAction `
-    -Trigger  $updateTrigger `
-    -Settings $updateSettings `
-    -RunLevel Highest `
+    -TaskName  "FiftyTech POS - Actualizacion" `
+    -Action    $updateAction `
+    -Trigger   $updateTrigger `
+    -Settings  $updateSettings `
+    -Principal $updatePrincipal `
     -Force | Out-Null
 
 Write-Host "   Tarea creada: actualizacion todos los dias a las 9:00am." -ForegroundColor Green
