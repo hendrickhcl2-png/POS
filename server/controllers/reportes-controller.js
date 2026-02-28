@@ -76,6 +76,7 @@ const ReportesController = {
         ) dev ON dev.venta_id = v.id
         WHERE v.fecha >= $1 AND v.fecha <= $2
           AND COALESCE(f.tipo_factura, 'contado') != 'credito'
+          AND COALESCE(f.estado, 'pagada') != 'anulada'
         ORDER BY v.fecha DESC, v.hora DESC`,
         [fechaInicio, fechaFin],
       );
@@ -98,6 +99,7 @@ const ReportesController = {
         LEFT JOIN ventas v ON f.venta_id = v.id
         LEFT JOIN clientes c ON f.cliente_id = c.id
         WHERE pf.fecha >= $1 AND pf.fecha <= $2
+          AND f.estado != 'anulada'
         ORDER BY pf.fecha DESC, pf.hora DESC`,
         [fechaInicio, fechaFin],
       );
@@ -192,12 +194,14 @@ const ReportesController = {
           LEFT JOIN facturas f ON v.id = f.venta_id
           WHERE v.fecha >= $1 AND v.fecha <= $2
             AND COALESCE(f.tipo_factura, 'contado') != 'credito'
+            AND COALESCE(f.estado, 'pagada') != 'anulada'
           GROUP BY metodo_pago
           UNION ALL
           SELECT pf.metodo_pago, COUNT(*) AS cantidad, SUM(pf.monto) AS total_ventas
           FROM pagos_factura pf
           JOIN facturas f ON pf.factura_id = f.id
           WHERE pf.fecha >= $1 AND pf.fecha <= $2
+            AND f.estado != 'anulada'
           GROUP BY pf.metodo_pago
         ) combined
         GROUP BY metodo_pago
@@ -216,12 +220,14 @@ const ReportesController = {
           LEFT JOIN facturas f ON v.id = f.venta_id
           WHERE v.fecha >= $1 AND v.fecha <= $2
             AND COALESCE(f.tipo_factura, 'contado') != 'credito'
+            AND COALESCE(f.estado, 'pagada') != 'anulada'
           GROUP BY v.fecha
           UNION ALL
           SELECT pf.fecha, COUNT(*) AS cantidad, SUM(pf.monto) AS total_ventas
           FROM pagos_factura pf
           JOIN facturas f ON pf.factura_id = f.id
           WHERE pf.fecha >= $1 AND pf.fecha <= $2
+            AND f.estado != 'anulada'
           GROUP BY pf.fecha
         ) combined
         GROUP BY fecha
@@ -320,8 +326,10 @@ const ReportesController = {
         FROM detalle_venta dv
         JOIN productos p ON dv.producto_id = p.id
         JOIN ventas v ON dv.venta_id = v.id
+        LEFT JOIN facturas f ON v.id = f.venta_id
         LEFT JOIN categorias c ON p.categoria_id = c.id
         WHERE v.fecha >= $1 AND v.fecha <= $2
+          AND COALESCE(f.estado, 'pagada') != 'anulada'
         GROUP BY p.id, p.codigo_barras, p.imei, p.nombre, p.costo, p.precio_venta, c.nombre
         ORDER BY cantidad_vendida DESC`,
         [fechaInicio, fechaFin],
@@ -340,8 +348,10 @@ const ReportesController = {
         FROM detalle_venta dv
         JOIN productos p ON dv.producto_id = p.id
         JOIN ventas v ON dv.venta_id = v.id
+        LEFT JOIN facturas f ON v.id = f.venta_id
         LEFT JOIN categorias c ON p.categoria_id = c.id
         WHERE v.fecha >= $1 AND v.fecha <= $2
+          AND COALESCE(f.estado, 'pagada') != 'anulada'
         GROUP BY c.nombre
         ORDER BY total_ventas DESC`,
         [fechaInicio, fechaFin],
@@ -475,7 +485,9 @@ const ReportesController = {
         FROM ventas v
         JOIN detalle_venta dv ON v.id = dv.venta_id
         JOIN productos p ON dv.producto_id = p.id
+        LEFT JOIN facturas f ON v.id = f.venta_id
         WHERE v.fecha >= $1 AND v.fecha <= $2
+          AND COALESCE(f.estado, 'pagada') != 'anulada'
         GROUP BY v.fecha
         ORDER BY v.fecha ASC`,
         [fechaInicio, fechaFin],

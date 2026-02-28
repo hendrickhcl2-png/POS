@@ -79,7 +79,8 @@ const ReportesExportController = {
           GROUP BY dd.producto_id, dev.venta_id
         ) dr ON dr.producto_id = dtv.producto_id AND dr.venta_id = v.id
 
-        WHERE v.fecha >= $1 AND v.fecha <= $2`,
+        WHERE v.fecha >= $1 AND v.fecha <= $2
+          AND (f.estado IS NULL OR f.estado != 'anulada')`,
         [fechaInicio, fechaFin],
       );
 
@@ -111,7 +112,8 @@ const ReportesExportController = {
         LEFT JOIN clientes c ON v.cliente_id = c.id
 
         WHERE v.fecha >= $1 AND v.fecha <= $2
-          AND sv.es_gratis = false`,
+          AND sv.es_gratis = false
+          AND (f.estado IS NULL OR f.estado != 'anulada')`,
         [fechaInicio, fechaFin],
       );
 
