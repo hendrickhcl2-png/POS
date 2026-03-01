@@ -15,6 +15,7 @@ async function guardarConfiguracion(e) {
     telefono: getValue("configTelefono"),
     email: getValue("configEmail"),
     direccion: getValue("configDireccion"),
+    nombre_impresora: getValue("configImpresora"),
   };
 
   try {
@@ -34,7 +35,50 @@ function precargarInfoNegocio() {
   setValueIfExists("configTelefono", configuracion.telefono || "");
   setValueIfExists("configEmail", configuracion.email || "");
   setValueIfExists("configDireccion", configuracion.direccion || "");
+  setValueIfExists("configImpresora", configuracion.nombre_impresora || "");
 }
+
+window.detectarImpresoras = async function () {
+  const btn = document.querySelector('[onclick="detectarImpresoras()"]');
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch("/api/imprimir/impresoras");
+    const data = await res.json();
+    const impresoras = data.impresoras || [];
+    if (impresoras.length === 0) {
+      mostrarAlerta("No se encontraron impresoras en el sistema", "warning");
+      return;
+    }
+    // Si solo hay una, seleccionarla automáticamente
+    if (impresoras.length === 1) {
+      setValueIfExists("configImpresora", impresoras[0]);
+      mostrarAlerta(`Impresora detectada: ${impresoras[0]}`, "success");
+      return;
+    }
+    // Si hay varias, mostrar select temporal
+    const input = document.getElementById("configImpresora");
+    if (!input) return;
+    const select = document.createElement("select");
+    select.className = "form-control";
+    select.style.flex = "1";
+    impresoras.forEach((nombre) => {
+      const opt = document.createElement("option");
+      opt.value = nombre;
+      opt.textContent = nombre;
+      select.appendChild(opt);
+    });
+    select.onchange = () => {
+      input.value = select.value;
+      select.replaceWith(input);
+    };
+    input.replaceWith(select);
+    select.focus();
+  } catch (e) {
+    mostrarAlerta("Error al detectar impresoras", "danger");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+};
 
 // ==================== CONFIGURACIÓN — SERVICIOS Y CATEGORÍAS ====================
 

@@ -378,7 +378,7 @@ const FacturaImpresion = {
     fetch("/api/imprimir", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ factura, config, impresora: "Termica" }),
+      body: JSON.stringify({ factura, config, impresora: config?.nombre_impresora || "Termica" }),
     })
       .then((r) => r.json())
       .then((data) => {

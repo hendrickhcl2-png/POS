@@ -127,6 +127,10 @@ async function initAuth() {
     await pool.query(`
       ALTER TABLE productos ADD COLUMN IF NOT EXISTS creado_por VARCHAR(100)
     `);
+    // Migración: columna nombre_impresora en configuracion
+    await pool.query(`
+      ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS nombre_impresora VARCHAR(255)
+    `);
 
     console.log("✅ Auth inicializado");
   } catch (error) {

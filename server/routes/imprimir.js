@@ -137,6 +137,25 @@ function generarTextoRecibo(data) {
   return lines.join("\n");
 }
 
+// GET /api/imprimir/impresoras — lista impresoras disponibles en el sistema
+router.get("/impresoras", (req, res) => {
+  const isWindows = os.platform() === "win32";
+  const cmd = isWindows
+    ? `powershell -NoProfile -Command "Get-Printer | Select-Object -ExpandProperty Name"`
+    : `lpstat -a | awk '{print $1}'`;
+
+  exec(cmd, (err, stdout) => {
+    if (err) {
+      return res.json({ success: true, impresoras: [] });
+    }
+    const impresoras = stdout
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    res.json({ success: true, impresoras });
+  });
+});
+
 // POST /api/imprimir
 router.post("/", (req, res) => {
   const { factura, config, impresora } = req.body;
@@ -145,7 +164,7 @@ router.post("/", (req, res) => {
     return res.status(400).json({ success: false, message: "Datos de factura requeridos" });
   }
 
-  const nombreImpresora = /^[\w\-]+$/.test(impresora) ? impresora : "Termica";
+  const nombreImpresora = /^[\w\s\-\.()\u00C0-\u024F]+$/.test(impresora || "") ? impresora : "Termica";
   const texto = generarTextoRecibo({ factura, config: config || {} });
   const tmpFile = path.join(os.tmpdir(), `recibo_${Date.now()}.txt`);
 

@@ -1620,6 +1620,13 @@
   <th>Dirección</th>
   <td><textarea id="configDireccion" class="form-control" rows="2" placeholder="Dirección del negocio..."></textarea></td>
   </tr>
+  <tr>
+  <th>Impresora Térmica</th>
+  <td style="display:flex;gap:8px;align-items:center;">
+    <input type="text" id="configImpresora" class="form-control" placeholder="Nombre exacto de la impresora" style="flex:1;" />
+    <button type="button" class="btn btn-secondary" onclick="detectarImpresoras()" style="white-space:nowrap;">Detectar</button>
+  </td>
+  </tr>
   </tbody>
   </table>
   <div style="margin-top:16px;">

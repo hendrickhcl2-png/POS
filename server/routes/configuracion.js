@@ -35,7 +35,7 @@ router.get("/", async (req, res) => {
 // Actualizar configuración
 router.put("/", requireAdmin, async (req, res) => {
   try {
-    const { nombre_negocio, rnc, telefono, email, direccion } = req.body;
+    const { nombre_negocio, rnc, telefono, email, direccion, nombre_impresora } = req.body;
 
     if (!nombre_negocio || nombre_negocio.trim() === "") {
       return res.status(400).json({ error: "El nombre del negocio es obligatorio" });
@@ -49,18 +49,18 @@ router.put("/", requireAdmin, async (req, res) => {
     let result;
     if (current.rows.length === 0) {
       result = await pool.query(
-        `INSERT INTO configuracion (nombre_negocio, rnc, telefono, email, direccion)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO configuracion (nombre_negocio, rnc, telefono, email, direccion, nombre_impresora)
+         VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING *`,
-        [nombre_negocio, rnc || "", telefono || "", email || "", direccion || ""],
+        [nombre_negocio, rnc || "", telefono || "", email || "", direccion || "", nombre_impresora || ""],
       );
     } else {
       result = await pool.query(
         `UPDATE configuracion
-         SET nombre_negocio = $1, rnc = $2, telefono = $3, email = $4, direccion = $5
-         WHERE id = $6
+         SET nombre_negocio = $1, rnc = $2, telefono = $3, email = $4, direccion = $5, nombre_impresora = $6
+         WHERE id = $7
          RETURNING *`,
-        [nombre_negocio, rnc || "", telefono || "", email || "", direccion || "", current.rows[0].id],
+        [nombre_negocio, rnc || "", telefono || "", email || "", direccion || "", nombre_impresora || "", current.rows[0].id],
       );
     }
 
