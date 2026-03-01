@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const ANCHO = 42; // caracteres por línea en 80mm
+const ANCHO = 38; // caracteres por línea en 80mm (reducido para márgenes de Windows GDI)
 
 function linea(char = "-") {
   return char.repeat(ANCHO);
@@ -31,8 +31,16 @@ function fmt(n) {
 
 function fmtFecha(f) {
   if (!f) return "";
-  const d = new Date(f + "T12:00:00");
+  // Extraer solo la parte de fecha (YYYY-MM-DD) en caso de que llegue como ISO completo
+  const datePart = String(f).split("T")[0].split(" ")[0];
+  const d = new Date(datePart + "T12:00:00");
   return d.toLocaleDateString("es-DO", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function fmtHora(h) {
+  if (!h) return "";
+  // Truncar a HH:MM:SS quitando microsegundos PostgreSQL
+  return String(h).substring(0, 8);
 }
 
 function generarTextoRecibo(data) {
@@ -49,7 +57,7 @@ function generarTextoRecibo(data) {
   // Número de documento y fecha
   const tipoDoc = factura.esFacturaElectronica ? "FACTURA" : "RECIBO";
   lines.push(centrar(`${tipoDoc} ${factura.numeroDocumento || ""}`));
-  lines.push(centrar(`${fmtFecha(factura.fecha)}  ${factura.hora || ""}`));
+  lines.push(centrar(`${fmtFecha(factura.fecha)}  ${fmtHora(factura.hora)}`));
 
   // NCF
   if (factura.ncf) {

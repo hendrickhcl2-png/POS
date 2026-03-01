@@ -306,7 +306,7 @@ const FacturaImpresion = {
 
       // Fechas
       fecha: data.fecha,
-      hora: data.hora || new Date().toTimeString().split(" ")[0],
+      hora: String(data.hora || new Date().toTimeString().split(" ")[0]).substring(0, 8),
 
       // Cliente
       cliente_nombre: data.cliente_nombre || "Cliente General",
