@@ -156,7 +156,7 @@ router.post("/", (req, res) => {
 
     const isWindows = os.platform() === "win32";
     const cmd = isWindows
-      ? `print /D:"${nombreImpresora}" "${tmpFile}"`
+      ? `powershell -NoProfile -Command "Get-Content -Raw '${tmpFile.replace(/'/g, "''")}' | Out-Printer -Name '${nombreImpresora.replace(/'/g, "''")}'"`
       : `lp -d "${nombreImpresora}" -o raw "${tmpFile}"`;
 
     exec(cmd, (err, stdout, stderr) => {
