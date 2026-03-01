@@ -231,6 +231,9 @@ case "proveedores":
       break;
     case "ventas":
       actualizarHistorialVentas();
+      if (window.VentasModule?._initialized) {
+        VentasModule.cargarHistorialHoy();
+      }
       break;
     case "salidas":
       cargarSalidas();
@@ -696,7 +699,7 @@ async function actualizarHistorialVentas() {
         return `
           <tr>
             <td>${v.numero_ticket}</td>
-            <td>${v.hora || new Date(v.created_at).toLocaleTimeString("es-DO", { hour: "2-digit", minute: "2-digit" })}</td>
+            <td>${v.hora ? String(v.hora).substring(0, 8) : new Date(v.created_at).toLocaleTimeString("es-DO", { hour: "2-digit", minute: "2-digit" })}</td>
             <td>${nombreCliente}</td>
             <td>$${parseFloat(v.total).toFixed(2)}</td>
             <td>${formatearMetodoPago(v.metodo_pago)}</td>
@@ -725,7 +728,9 @@ function formatearMetodoPago(metodo) {
 window.verDetalleVenta = async function (ventaId) {
   try {
     const venta = await window.API.Ventas.getById(ventaId);
-    Toast.info(`Venta #${venta.numero_ticket} — Total: $${venta.total}`);
+    if (window.FacturaImpresion) {
+      FacturaImpresion.mostrarFactura(venta);
+    }
   } catch (error) {
     mostrarAlerta("Error al cargar detalle de venta", "danger");
   }
