@@ -154,7 +154,12 @@ router.post("/", (req, res) => {
       return res.status(500).json({ success: false, message: "Error al crear archivo temporal" });
     }
 
-    exec(`lp -d "${nombreImpresora}" -o raw "${tmpFile}"`, (err, stdout, stderr) => {
+    const isWindows = os.platform() === "win32";
+    const cmd = isWindows
+      ? `print /D:"${nombreImpresora}" "${tmpFile}"`
+      : `lp -d "${nombreImpresora}" -o raw "${tmpFile}"`;
+
+    exec(cmd, (err, stdout, stderr) => {
       fs.unlink(tmpFile, () => {});
 
       if (err) {
