@@ -5,62 +5,6 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const LOGO_PATH = path.join(__dirname, "../../public/images/Logotipo.webp");
-
-// Caché del logo ya procesado (se genera una sola vez)
-let _logoBytes = null;
-
-async function obtenerBytesLogo() {
-  if (_logoBytes !== null) return _logoBytes;
-
-  try {
-    const sharp = require("sharp");
-    if (!fs.existsSync(LOGO_PATH)) {
-      _logoBytes = Buffer.alloc(0);
-      return _logoBytes;
-    }
-
-    // Redimensionar: máx 384px ancho, máx 120px alto, sin upscale
-    const { data, info } = await sharp(LOGO_PATH)
-      .resize(384, 120, { fit: "inside", withoutEnlargement: true })
-      .flatten({ background: "#ffffff" })
-      .grayscale()
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-
-    const { width, height } = info;
-    const bytesPerRow = Math.ceil(width / 8);
-
-    // Convertir píxeles grises a bitmap 1-bit (umbral en 180)
-    const bitmap = Buffer.alloc(bytesPerRow * height, 0);
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        if (data[y * width + x] < 180) {
-          const byteIdx = y * bytesPerRow + Math.floor(x / 8);
-          bitmap[byteIdx] |= 1 << (7 - (x % 8));
-        }
-      }
-    }
-
-    // ESC/POS: centrar → GS v 0 (imagen raster) → restaurar alineación izquierda
-    const xL = bytesPerRow & 0xff;
-    const xH = (bytesPerRow >> 8) & 0xff;
-    const yL = height & 0xff;
-    const yH = (height >> 8) & 0xff;
-
-    _logoBytes = Buffer.concat([
-      Buffer.from([0x1b, 0x61, 0x01]),                      // ESC a 1: centrar
-      Buffer.from([0x1d, 0x76, 0x30, 0x00, xL, xH, yL, yH]), // GS v 0: raster
-      bitmap,
-      Buffer.from([0x0a]),                                   // avance de línea
-      Buffer.from([0x1b, 0x61, 0x00]),                       // ESC a 0: izquierda
-    ]);
-  } catch {
-    _logoBytes = Buffer.alloc(0);
-  }
-
-  return _logoBytes;
-}
 
 const ANCHO = 42; // caracteres por línea en 80mm (raw mode, fuente fija de la impresora)
 
@@ -275,7 +219,7 @@ router.get("/impresoras", (req, res) => {
 });
 
 // POST /api/imprimir
-router.post("/", async (req, res) => {
+router.post("/", (req, res) => {
   const { factura, config, impresora } = req.body;
 
   if (!factura) {
@@ -286,11 +230,7 @@ router.post("/", async (req, res) => {
   const texto = generarTextoRecibo({ factura, config: config || {} });
   const tmpFile = path.join(os.tmpdir(), `recibo_${Date.now()}.txt`);
 
-  const logoBytes = await obtenerBytesLogo();
-  const textBytes = Buffer.from(texto, "utf8");
-  const contenido = logoBytes.length > 0 ? Buffer.concat([logoBytes, textBytes]) : textBytes;
-
-  fs.writeFile(tmpFile, contenido, (writeErr) => {
+  fs.writeFile(tmpFile, texto, (writeErr) => {
     if (writeErr) {
       return res.status(500).json({ success: false, message: "Error al crear archivo temporal" });
     }
