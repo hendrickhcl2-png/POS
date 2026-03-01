@@ -1,4 +1,0 @@
-Posibilidad de ventas con comprobantes y sin comprobantes ****
-Apartado visual para los productos en la factura
-Combinar la seccion de gastos con la seccion de productos para asignar "gastos a dichos productos en especifico"
-Agregar un apartado de cotizaciones en base a la imagen de referencia
