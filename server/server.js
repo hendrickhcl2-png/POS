@@ -41,6 +41,7 @@ const reportesRoutes = require("./routes/reportes");
 const devolucionesRoutes = require("./routes/devoluciones-routes");
 const pagosRoutes = require("./routes/pagos-routes");
 const salidasRoutes = require("./routes/salidas");
+const imprimirRoutes = require("./routes/imprimir");
 
 const { requireAuth } = require("./middleware/auth-middleware");
 
@@ -59,6 +60,7 @@ app.use("/api/reportes", requireAuth, reportesRoutes);
 app.use("/api/devoluciones", requireAuth, devolucionesRoutes);
 app.use("/api/pagos", requireAuth, pagosRoutes);
 app.use("/api/salidas", requireAuth, salidasRoutes);
+app.use("/api/imprimir", requireAuth, imprimirRoutes);
 
 // ==================== RUTA RAÍZ ====================
 app.get("/", (req, res) => {
