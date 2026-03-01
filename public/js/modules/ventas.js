@@ -1087,7 +1087,7 @@ const VentasModule = {
   <tr>
   <td>#${venta.numero_ticket}</td>
   <td>${venta.hora ? String(venta.hora).substring(0, 8) : new Date(venta.fecha).toLocaleTimeString("es-DO")}</td>
-  <td>${venta.cliente_nombre || "Cliente General"}</td>
+  <td>${venta.cliente_nombre?.trim() ? venta.cliente_nombre.trim() : '<span style="background:#ecf0f1;color:#7f8c8d;padding:2px 8px;border-radius:10px;font-size:12px;">Cliente General</span>'}</td>
   <td style="font-weight: bold; color: #27ae60;">${this.formatCurrency(venta.total)}</td>
   <td>${this.formatMetodoPago(venta.metodo_pago)}</td>
   <td>

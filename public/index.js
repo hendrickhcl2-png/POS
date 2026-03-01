@@ -691,16 +691,16 @@ async function actualizarHistorialVentas() {
 
     tbody.innerHTML = ventas
       .map((v) => {
-        const cliente = clientes.find((c) => c.id == v.cliente_id);
-        const nombreCliente = cliente
-          ? `${cliente.nombre} ${cliente.apellido || ""}`.trim()
-          : "Cliente General";
+        const nombreCliente = v.cliente_nombre?.trim() || null;
+        const clienteHTML = nombreCliente
+          ? nombreCliente
+          : `<span style="background:#ecf0f1;color:#7f8c8d;padding:2px 8px;border-radius:10px;font-size:12px;">Cliente General</span>`;
 
         return `
           <tr>
             <td>${v.numero_ticket}</td>
             <td>${v.hora ? String(v.hora).substring(0, 8) : new Date(v.created_at).toLocaleTimeString("es-DO", { hour: "2-digit", minute: "2-digit" })}</td>
-            <td>${nombreCliente}</td>
+            <td>${clienteHTML}</td>
             <td>$${parseFloat(v.total).toFixed(2)}</td>
             <td>${formatearMetodoPago(v.metodo_pago)}</td>
             <td class="actions">
