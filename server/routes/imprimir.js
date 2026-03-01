@@ -59,17 +59,10 @@ function generarTextoRecibo(data) {
   lines.push(centrar(`${tipoDoc} ${factura.numeroDocumento || ""}`));
   lines.push(centrar(`${fmtFecha(factura.fecha)}  ${fmtHora(factura.hora)}`));
 
-  // NCF
-  if (factura.ncf) {
-    lines.push(linea("-"));
-    lines.push(centrar("NCF: " + factura.ncf));
-    lines.push(centrar((factura.tipo_comprobante || "B02") + " - Consumidor Final"));
-  }
-
   lines.push(linea("-"));
 
   // Cliente
-  lines.push("Cliente: " + (factura.cliente_nombre || "Consumidor Final"));
+  lines.push("Cliente: " + (factura.cliente_nombre || "Cliente General"));
   if (factura.cliente_cedula) lines.push("Cedula:  " + factura.cliente_cedula);
   if (factura.cliente_rnc)    lines.push("RNC:     " + factura.cliente_rnc);
   lines.push(linea("-"));

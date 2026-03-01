@@ -51,6 +51,7 @@ const FacturaImpresion = {
   <!-- HEADER -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:15px;border-bottom:3px solid #2c3e50;">
   <div>
+  <img src="/images/Logotipo.webp" alt="Logo" style="height:64px;width:auto;margin-bottom:6px;display:block;" />
   <h1 style="margin:0;font-size:28px;color:#2c3e50;">${config.nombre}</h1>
   <p style="margin:3px 0;color:#7f8c8d;font-size:13px;">${config.direccion}</p>
   <p style="margin:3px 0;color:#7f8c8d;font-size:13px;"> ${config.telefono}</p>
@@ -66,17 +67,6 @@ const FacturaImpresion = {
   </div>
   </div>
 
-  <!-- NCF (si es factura electrónica) -->
-  ${factura.ncf
-        ? `
-  <div style="margin-bottom:12px;padding:8px 14px;border-left:4px solid #2c3e50;">
-  <span style="color:#7f8c8d;font-size:12px;">NCF:</span>
-  <strong style="color:#2c3e50;font-size:14px;letter-spacing:1px;margin-left:8px;">${factura.ncf}</strong>
-  <span style="color:#7f8c8d;font-size:12px;margin-left:12px;">${factura.tipo_comprobante || "B02"} - Consumidor Final</span>
-  </div>
-  `
-        : ""
-      }
 
   <!-- DATOS DEL CLIENTE -->
   <div style="background:#f8f9fa;border-radius:8px;padding:12px 18px;margin-bottom:18px;">
