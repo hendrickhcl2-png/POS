@@ -63,6 +63,7 @@ async function cargarDatosIniciales() {
         window.API.Proveedores.getAll().catch(() => []),
         window.API.Configuracion.get().catch(() => []),
       ]);
+    window.configuracion = configuracion;
 
     await cargarServicios();
 
