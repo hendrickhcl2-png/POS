@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const ANCHO = 38; // caracteres por línea en 80mm (reducido para márgenes de Windows GDI)
+const ANCHO = 42; // caracteres por línea en 80mm (raw mode, fuente fija de la impresora)
 
 function linea(char = "-") {
   return char.repeat(ANCHO);
@@ -13,7 +13,7 @@ function linea(char = "-") {
 
 function centrar(texto) {
   const t = String(texto).substring(0, ANCHO);
-  const pad = Math.floor((ANCHO - t.length) / 2);
+  const pad = Math.max(0, Math.floor((ANCHO - t.length) / 2));
   return " ".repeat(pad) + t;
 }
 
@@ -63,7 +63,7 @@ function generarTextoRecibo(data) {
   if (factura.ncf) {
     lines.push(linea("-"));
     lines.push(centrar("NCF: " + factura.ncf));
-    lines.push(centrar(factura.tipo_comprobante || "B02") + " - Consumidor Final");
+    lines.push(centrar((factura.tipo_comprobante || "B02") + " - Consumidor Final"));
   }
 
   lines.push(linea("-"));
@@ -120,7 +120,7 @@ function generarTextoRecibo(data) {
     lines.push(columnas("  Recibido:", fmt(factura.monto_recibido || factura.total)));
     lines.push(columnas("  Cambio:", fmt(factura.cambio || 0)));
   }
-  if (factura.banco)     lines.push("Banco: " + factura.banco);
+  if (factura.banco)      lines.push("Banco: " + factura.banco);
   if (factura.referencia) lines.push("Ref:   " + factura.referencia);
 
   lines.push(linea("-"));
@@ -142,7 +142,67 @@ function generarTextoRecibo(data) {
   lines.push("");
   lines.push("");
 
-  return lines.join("\n");
+  // Usar \r\n en Windows para que la impresora térmica avance correctamente
+  const sep = os.platform() === "win32" ? "\r\n" : "\n";
+  return lines.join(sep);
+}
+
+// Impresión raw en Windows vía Windows Spooler API (bypasa GDI, fuente fija de la impresora)
+function imprimirRawWindows(txtFile, printerName, callback) {
+  const safePrinter = printerName.replace(/'/g, "''");
+  const safeFile = txtFile.replace(/'/g, "''");
+
+  const psContent = `Add-Type -TypeDefinition @'
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
+public class RawPrint {
+    [StructLayout(LayoutKind.Sequential, CharSet=CharSet.Ansi)]
+    public class DOCINFOA {
+        [MarshalAs(UnmanagedType.LPStr)] public string pDocName;
+        [MarshalAs(UnmanagedType.LPStr)] public string pOutputFile;
+        [MarshalAs(UnmanagedType.LPStr)] public string pDataType;
+    }
+    [DllImport("winspool.Drv", CharSet=CharSet.Ansi)] public static extern bool OpenPrinter(string n, out IntPtr h, IntPtr d);
+    [DllImport("winspool.Drv")] public static extern bool ClosePrinter(IntPtr h);
+    [DllImport("winspool.Drv")] public static extern bool StartDocPrinter(IntPtr h, int l, [In, MarshalAs(UnmanagedType.LPStruct)] DOCINFOA di);
+    [DllImport("winspool.Drv")] public static extern bool EndDocPrinter(IntPtr h);
+    [DllImport("winspool.Drv")] public static extern bool StartPagePrinter(IntPtr h);
+    [DllImport("winspool.Drv")] public static extern bool EndPagePrinter(IntPtr h);
+    [DllImport("winspool.Drv")] public static extern bool WritePrinter(IntPtr h, IntPtr b, int c, out int w);
+    public static bool Print(string printer, string file) {
+        byte[] bytes = File.ReadAllBytes(file);
+        IntPtr hP;
+        DOCINFOA di = new DOCINFOA { pDocName = "Recibo", pDataType = "RAW" };
+        if (!OpenPrinter(printer, out hP, IntPtr.Zero)) return false;
+        if (StartDocPrinter(hP, 1, di)) {
+            StartPagePrinter(hP);
+            IntPtr p = Marshal.AllocCoTaskMem(bytes.Length);
+            Marshal.Copy(bytes, 0, p, bytes.Length);
+            int w; WritePrinter(hP, p, bytes.Length, out w);
+            Marshal.FreeCoTaskMem(p);
+            EndPagePrinter(hP);
+            EndDocPrinter(hP);
+        }
+        ClosePrinter(hP);
+        return true;
+    }
+}
+'@ -Language CSharp
+[RawPrint]::Print('${safePrinter}', '${safeFile}')
+`;
+
+  const psFile = path.join(os.tmpdir(), `rawprint_${Date.now()}.ps1`);
+  fs.writeFile(psFile, psContent, "utf8", (writeErr) => {
+    if (writeErr) return callback(writeErr);
+    exec(
+      `powershell -NoProfile -ExecutionPolicy Bypass -File "${psFile}"`,
+      (err, stdout, stderr) => {
+        fs.unlink(psFile, () => {});
+        callback(err, stdout, stderr);
+      }
+    );
+  });
 }
 
 // GET /api/imprimir/impresoras — lista impresoras disponibles en el sistema
@@ -182,22 +242,23 @@ router.post("/", (req, res) => {
     }
 
     const isWindows = os.platform() === "win32";
-    const cmd = isWindows
-      ? `powershell -NoProfile -Command "Get-Content -Raw '${tmpFile.replace(/'/g, "''")}' | Out-Printer -Name '${nombreImpresora.replace(/'/g, "''")}'"`
-      : `lp -d "${nombreImpresora}" -o raw "${tmpFile}"`;
 
-    exec(cmd, (err, stdout, stderr) => {
+    const done = (err, stdout, stderr) => {
       fs.unlink(tmpFile, () => {});
-
       if (err) {
         return res.status(500).json({
           success: false,
           message: stderr || err.message || "Error al imprimir",
         });
       }
-
       res.json({ success: true, message: "Impresion enviada a " + nombreImpresora });
-    });
+    };
+
+    if (isWindows) {
+      imprimirRawWindows(tmpFile, nombreImpresora, done);
+    } else {
+      exec(`lp -d "${nombreImpresora}" -o raw "${tmpFile}"`, done);
+    }
   });
 });
 
