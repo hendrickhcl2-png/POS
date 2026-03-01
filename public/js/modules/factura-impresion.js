@@ -11,13 +11,15 @@ const FacturaImpresion = {
     // Detectar si es venta o factura y normalizar datos
     const factura = this.normalizarDatos(data);
 
-    // Obtener configuración del negocio
+    // Obtener configuración del negocio desde el global cargado al inicio
+    const cfg = window.configuracion || {};
     const config = {
-      nombre: "FIFTY TECH SRL",
-      rnc: "133-57701-1",
-      direccion: "Santiago de los Caballeros, RD",
-      telefono: "849-878-1113",
-      email: "info@fiftytech.com",
+      nombre: cfg.nombre_negocio || "FIFTY TECH SRL",
+      rnc: cfg.rnc || "",
+      direccion: cfg.direccion || "",
+      telefono: cfg.telefono || "",
+      email: cfg.email || "",
+      nombre_impresora: cfg.nombre_impresora || "",
     };
 
     // Guardar datos actuales para impresión térmica
