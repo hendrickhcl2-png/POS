@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const LOGO_PATH = path.join(__dirname, "../../public/images/Logotipo.webp");
+const LOGO_PATH = path.join(__dirname, "../../public/images/Logotipo.jpeg");
 let _logoBytes = null; // caché: se procesa solo una vez
 
 async function obtenerBytesLogo() {
@@ -101,8 +101,8 @@ function generarTextoRecibo(data) {
   // Encabezado
   lines.push(centrar(config.nombre || "FIFTY TECH SRL"));
   if (config.direccion) lines.push(centrar(config.direccion));
-  if (config.telefono)  lines.push(centrar("Tel: " + config.telefono));
-  if (config.rnc)       lines.push(centrar("RNC: " + config.rnc));
+  if (config.telefono) lines.push(centrar("Tel: " + config.telefono));
+  if (config.rnc) lines.push(centrar("RNC: " + config.rnc));
   lines.push(linea("="));
 
   // Número de documento y fecha
@@ -115,7 +115,7 @@ function generarTextoRecibo(data) {
   // Cliente
   lines.push("Cliente: " + (factura.cliente_nombre || "Cliente General"));
   if (factura.cliente_cedula) lines.push("Cedula:  " + factura.cliente_cedula);
-  if (factura.cliente_rnc)    lines.push("RNC:     " + factura.cliente_rnc);
+  if (factura.cliente_rnc) lines.push("RNC:     " + factura.cliente_rnc);
   lines.push(linea("-"));
 
   // Productos
@@ -164,7 +164,7 @@ function generarTextoRecibo(data) {
     lines.push(columnas("  Recibido:", fmt(factura.monto_recibido || factura.total)));
     lines.push(columnas("  Cambio:", fmt(factura.cambio || 0)));
   }
-  if (factura.banco)      lines.push("Banco: " + factura.banco);
+  if (factura.banco) lines.push("Banco: " + factura.banco);
   if (factura.referencia) lines.push("Ref:   " + factura.referencia);
 
   lines.push(linea("-"));
@@ -242,7 +242,7 @@ public class RawPrint {
     exec(
       `powershell -NoProfile -ExecutionPolicy Bypass -File "${psFile}"`,
       (err, stdout, stderr) => {
-        fs.unlink(psFile, () => {});
+        fs.unlink(psFile, () => { });
         callback(err, stdout, stderr);
       }
     );
@@ -292,7 +292,7 @@ router.post("/", async (req, res) => {
     const isWindows = os.platform() === "win32";
 
     const done = (err, stdout, stderr) => {
-      fs.unlink(tmpFile, () => {});
+      fs.unlink(tmpFile, () => { });
       if (err) {
         return res.status(500).json({
           success: false,

@@ -51,7 +51,7 @@ const FacturaImpresion = {
   <!-- HEADER -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:15px;border-bottom:3px solid #2c3e50;">
   <div>
-  <img src="/images/Logotipo.webp" alt="Logo" style="height:64px;width:auto;margin-bottom:6px;display:block;" />
+  <img src="/images/Logotipo.jpeg" alt="Logo" style="height:64px;width:auto;margin-bottom:6px;display:block;" />
   <h1 style="margin:0;font-size:28px;color:#2c3e50;">${config.nombre}</h1>
   <p style="margin:3px 0;color:#7f8c8d;font-size:13px;">${config.direccion}</p>
   <p style="margin:3px 0;color:#7f8c8d;font-size:13px;"> ${config.telefono}</p>
