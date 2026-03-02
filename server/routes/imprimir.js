@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const LOGO_PATH = path.join(__dirname, "../../public/images/Logotipo.jpeg");
+const LOGO_PATH = path.join(__dirname, "../../public/images/Logotipo.png");
 let _logoBytes = null; // caché: se procesa solo una vez
 
 async function obtenerBytesLogo() {
@@ -15,7 +15,6 @@ async function obtenerBytesLogo() {
     const sharp = require("sharp");
     if (!fs.existsSync(LOGO_PATH)) { _logoBytes = Buffer.alloc(0); return _logoBytes; }
 
-    // Obtener píxeles RGB crudos (sin convertir a gris — el logo es amarillo sobre blanco)
     const { data, info } = await sharp(LOGO_PATH)
       .resize(384, 100, { fit: "inside", withoutEnlargement: true })
       .flatten({ background: "#ffffff" })
@@ -56,7 +55,7 @@ async function obtenerBytesLogo() {
   return _logoBytes;
 }
 
-const ANCHO = 42; // caracteres por línea en 80mm (raw mode, fuente fija de la impresora)
+const ANCHO = 47; // caracteres por línea en 80mm (raw mode, fuente fija de la impresora)
 
 function linea(char = "-") {
   return char.repeat(ANCHO);
@@ -73,6 +72,11 @@ function columnas(izq, der) {
   const izqStr = String(izq).substring(0, ANCHO - derStr.length - 1);
   const spaces = ANCHO - izqStr.length - derStr.length;
   return izqStr + " ".repeat(Math.max(1, spaces)) + derStr;
+}
+
+function derecha(texto) {
+  const t = String(texto);
+  return " ".repeat(Math.max(0, ANCHO - t.length)) + t;
 }
 
 function fmt(n) {
@@ -110,78 +114,90 @@ function generarTextoRecibo(data) {
   lines.push(centrar(`${tipoDoc} ${factura.numeroDocumento || ""}`));
   lines.push(centrar(`${fmtFecha(factura.fecha)}  ${fmtHora(factura.hora)}`));
 
-  lines.push(linea("-"));
 
   // Cliente
   lines.push("Cliente: " + (factura.cliente_nombre || "Cliente General"));
   if (factura.cliente_cedula) lines.push("Cedula:  " + factura.cliente_cedula);
   if (factura.cliente_rnc) lines.push("RNC:     " + factura.cliente_rnc);
-  lines.push(linea("-"));
+  if (factura.vendedor_nombre) lines.push("Vendedor: " + factura.vendedor_nombre);
 
+  lines.push("");
   // Productos
-  lines.push("PRODUCTOS:");
-  (factura.items || []).forEach((item) => {
-    const nombre = String(item.nombre_producto).substring(0, ANCHO);
-    lines.push(nombre);
-    lines.push(columnas(`  ${item.cantidad} x ${fmt(item.precio_unitario)}`, fmt(item.subtotal)));
-  });
+  const tieneItems = factura.items && factura.items.length > 0;
+  if (tieneItems) {
+    lines.push("PRODUCTOS:");
+    factura.items.forEach((item) => {
+      const nombre = String(item.nombre_producto).substring(0, ANCHO);
+      lines.push(nombre);
+      if (item.imei) lines.push("  IMEI: " + item.imei);
+      lines.push(columnas(`  ${item.cantidad} x ${fmt(item.precio_unitario)}`, fmt(item.subtotal)));
+    });
+  }
 
+  lines.push("");
   // Servicios
   if (factura.servicios && factura.servicios.length > 0) {
-    lines.push(linea("-"));
+    if (tieneItems) lines.push(linea("-"));
     lines.push("SERVICIOS:");
     factura.servicios.forEach((s) => {
       lines.push(columnas(String(s.nombre_servicio).substring(0, ANCHO - 8), s.es_gratuito ? "GRATIS" : fmt(s.precio)));
     });
   }
 
-  lines.push(linea("="));
-
+  lines.push("");
   // Totales
-  lines.push(columnas("Subtotal:", fmt(factura.subtotal)));
+  lines.push(derecha("Subtotal: " + fmt(factura.subtotal)));
   if (factura.descuento > 0) {
-    lines.push(columnas("Descuento:", "-" + fmt(factura.descuento)));
+    lines.push(derecha("Descuento: -" + fmt(factura.descuento)));
   }
-  lines.push(columnas("ITBIS (18%):", fmt(factura.itbis)));
-  lines.push(linea("-"));
-  const labelTotal = factura.total_devuelto > 0 ? "TOTAL BRUTO:" : "TOTAL:";
-  lines.push(columnas(labelTotal, fmt(factura.total)));
+  if (factura.itbis > 0) {
+    lines.push(derecha("ITBIS (18%): " + fmt(factura.itbis)));
+  }
+  lines.push("");
+  const labelTotal = factura.total_devuelto > 0 ? "TOTAL BRUTO: " : "TOTAL: ";
+  lines.push(derecha(labelTotal + fmt(factura.total)));
+  lines.push("");
   if (factura.total_devuelto > 0) {
-    lines.push(columnas("Monto devuelto:", "-" + fmt(factura.total_devuelto)));
-    lines.push(linea("-"));
-    lines.push(columnas("TOTAL NETO:", fmt(factura.total_neto)));
+    lines.push(derecha("Monto devuelto: -" + fmt(factura.total_devuelto)));
+    lines.push(derecha("TOTAL NETO: " + fmt(factura.total_neto)));
   }
-
-  lines.push(linea("="));
 
   // Pago
   const metodosMap = {
     efectivo: "Efectivo", tarjeta: "Tarjeta", transferencia: "Transferencia",
     cheque: "Cheque", credito: "Credito", mixto: "Mixto",
   };
-  lines.push("Pago: " + (metodosMap[factura.metodo_pago] || factura.metodo_pago || ""));
-  if (factura.metodo_pago === "efectivo" || factura.metodo_pago === "mixto") {
-    lines.push(columnas("  Recibido:", fmt(factura.monto_recibido || factura.total)));
-    lines.push(columnas("  Cambio:", fmt(factura.cambio || 0)));
+  lines.push(derecha("Pago: " + (metodosMap[factura.metodo_pago] || factura.metodo_pago || "")));
+  if (factura.metodo_pago === "efectivo") {
+    lines.push(derecha("Recibido: " + fmt(factura.monto_recibido || factura.total)));
+    lines.push(derecha("Cambio: " + fmt(factura.cambio || 0)));
   }
-  if (factura.banco) lines.push("Banco: " + factura.banco);
-  if (factura.referencia) lines.push("Ref:   " + factura.referencia);
+  if (factura.metodo_pago === "mixto") {
+    if (parseFloat(factura.monto_efectivo) > 0) lines.push(derecha("Efectivo: " + fmt(factura.monto_efectivo)));
+    if (parseFloat(factura.monto_tarjeta) > 0) lines.push(derecha("Tarjeta: " + fmt(factura.monto_tarjeta)));
+    if (parseFloat(factura.monto_transferencia) > 0) lines.push(derecha("Transferencia: " + fmt(factura.monto_transferencia)));
+    if (parseFloat(factura.cambio) > 0) lines.push(derecha("Cambio: " + fmt(factura.cambio)));
+  }
+  if (factura.banco) lines.push(derecha("Banco: " + factura.banco));
+  if (factura.referencia) lines.push(derecha("Ref: " + factura.referencia));
 
   lines.push(linea("-"));
-
   // Estado y pie
-  const estado = factura.total_devuelto > 0 ? "*** CON DEVOLUCIONES ***" : "*** COMPLETADO ***";
-  lines.push(centrar(estado));
+  if (factura.total_devuelto > 0) {
+    lines.push(centrar("*** CON DEVOLUCIONES ***"));
+  }
   lines.push("");
   lines.push(centrar("Gracias por su compra en"));
-  lines.push(centrar(config.nombre || "FIFTY TECH SRL"));
+  lines.push(centrar("FIFTY TECH SRL"));
   lines.push("");
+  lines.push(centrar("2 MESES DE GARANTIA"));
+  lines.push(centrar("NO APLICA: "));
+  lines.push(centrar("PANTALLA"));
+  lines.push(centrar("MOJADO"));
+  lines.push(centrar("CAIDA"));
+  lines.push(centrar("DESTAPADO"));
   lines.push(centrar("Conserve este recibo para"));
   lines.push(centrar("cualquier reclamacion"));
-  lines.push("");
-  lines.push(centrar("--- GARANTIA ---"));
-  lines.push(centrar("2 meses - No aplica:"));
-  lines.push(centrar("pantalla, mojado, caida, destapado"));
   lines.push("");
   lines.push("");
   lines.push("");
@@ -249,6 +265,140 @@ public class RawPrint {
   });
 }
 
+function generarTextoCuadre(c) {
+  const lines = [];
+  const config = c.config || {};
+
+  const fmtFecha = (f) => {
+    if (!f) return "";
+    const d = new Date(f + "T12:00:00");
+    return d.toLocaleDateString("es-DO", { day: "2-digit", month: "2-digit", year: "numeric" });
+  };
+
+  // Encabezado
+  lines.push(centrar(config.nombre_negocio || "FITY TECH"));
+  if (config.direccion) lines.push(centrar(config.direccion));
+  if (config.telefono) lines.push(centrar(config.telefono));
+  lines.push(centrar("CORTE DE TURNO"));
+  lines.push(centrar("TURNO #" + (c.turno || "")));
+  lines.push(linea("-"));
+  lines.push(columnas("REALIZADO:", fmtFecha(c.fecha)));
+  lines.push(columnas("CAJERO:", (c.cajero || "").toUpperCase()));
+  lines.push(columnas("VENTAS TOTALES:", fmt(c.ventas_neto)));
+  lines.push(columnas("GANANCIA:", fmt(c.ganancia)));
+  lines.push(columnas(c.cantidad_ventas + " VENTAS EN EL TURNO.", ""));
+  lines.push(linea("-"));
+
+  // Dinero en caja
+  lines.push(centrar("== DINERO EN CAJA =="));
+  lines.push(columnas("FONDO DE CAJA:", fmt(c.fondo_caja)));
+  lines.push(columnas("VENTAS EN EFECTIVO:", "+ " + fmt(c.ventas_efectivo)));
+  lines.push(columnas("ABONOS EN EFECTIVO:", "+ " + fmt(c.pagos_efectivo)));
+  lines.push(columnas("SALIDAS:", "- " + fmt(c.salidas_efectivo)));
+  lines.push(columnas("DEV. EN EFECTIVO:", "- " + fmt(c.dev_efectivo)));
+  lines.push(linea("-"));
+  lines.push(columnas("EFECTIVO EN CAJA", "= " + fmt(c.efectivo_en_caja)));
+  lines.push(linea("-"));
+
+  // Salidas
+  lines.push(centrar("== SALIDAS EFECTIVO =="));
+  (c.salidas || []).forEach((s) => {
+    lines.push(columnas(
+      String(s.concepto || s.descripcion || "Salida").substring(0, ANCHO - 10),
+      fmt(s.monto)
+    ));
+  });
+  lines.push(columnas("TOTAL SALIDAS", "= " + fmt(c.total_salidas)));
+  lines.push(linea("-"));
+
+  // Ventas
+  lines.push(centrar("== VENTAS =="));
+  lines.push(columnas("EN EFECTIVO:", fmt(c.ventas_efectivo)));
+  lines.push(columnas("CON TARJETA:", fmt(c.ventas_tarjeta)));
+  lines.push(columnas("A CREDITO:", fmt(c.ventas_credito)));
+  lines.push(columnas("TRANSFERENCIA:", fmt(c.ventas_transferencia)));
+  lines.push(columnas("CHEQUE:", fmt(c.ventas_cheque)));
+  lines.push(columnas("DEV. DE VENTAS:", "- " + fmt(c.devoluciones_total)));
+  lines.push(linea("-"));
+  lines.push(columnas("TOTAL VENTAS", "= " + fmt(c.ventas_neto)));
+  lines.push(linea("-"));
+
+  // Ventas por depto
+  if ((c.por_categoria || []).length > 0) {
+    lines.push(centrar("== VENTAS POR DEPTO =="));
+    (c.por_categoria || []).forEach((cat) => {
+      lines.push(columnas(
+        String(cat.categoria).toUpperCase().substring(0, ANCHO - 10),
+        fmt(cat.total)
+      ));
+    });
+    lines.push(linea("-"));
+  }
+
+  // Ingresos contado
+  lines.push(centrar("== INGRESOS CONTADO =="));
+  lines.push(columnas("VENTAS EFECTIVO:", fmt(c.ventas_efectivo)));
+  lines.push(columnas("PAGOS CLIENTES:", fmt(c.pagos_clientes)));
+  lines.push(columnas("VENTAS TRANSFERENCIA:", fmt(c.ventas_transferencia)));
+  lines.push(columnas("ABONOS:", "- " + fmt(c.dev_efectivo)));
+  lines.push(columnas("DEV. TRANSFERENCIA:", "- " + fmt(c.dev_transferencia)));
+  lines.push(linea("-"));
+  lines.push(columnas("TOTAL INGRESOS", "= " + fmt(c.total_ingresos)));
+  lines.push(linea("-"));
+
+  // Pagos de crédito
+  if ((c.pagos_credito || []).length > 0) {
+    lines.push(centrar("== PAGOS DE CREDITOS =="));
+    (c.pagos_credito || []).forEach((p) => {
+      const metodo = p.metodo_pago === "transferencia" ? "TRA" : (p.metodo_pago || "").substring(0, 3).toUpperCase();
+      const nombre = String(p.cliente_nombre || "—").substring(0, ANCHO - 12);
+      lines.push(columnas(`${nombre} (${metodo})`, fmt(p.monto)));
+    });
+    lines.push(linea("-"));
+  }
+
+  // Devoluciones
+  const devEf = c.devoluciones_efectivo || [];
+  const devCr = c.devoluciones_credito || [];
+  if (devEf.length > 0 || devCr.length > 0) {
+    lines.push(centrar("== DEVOLUCIONES =="));
+
+    if (devEf.length > 0) {
+      lines.push(centrar("=== EN EFECTIVO ==="));
+      devEf.forEach((d) => {
+        const items = (d.items || []).map(i => i.nombre_producto).join(", ");
+        const desc = items
+          ? String(items).substring(0, ANCHO - 2)
+          : `Dev ${d.numero_devolucion}`;
+        const ticket = d.numero_ticket ? ` T#${d.numero_ticket}` : "";
+        lines.push("() " + String(desc + ticket).substring(0, ANCHO - 4));
+        lines.push(derecha(fmt(d.total)));
+      });
+    }
+
+    if (devCr.length > 0) {
+      lines.push(centrar("=== POR VENTAS A CREDITO ==="));
+      devCr.forEach((d) => {
+        const items = (d.items || []).map(i => i.nombre_producto).join(", ");
+        const desc = items
+          ? String(items).substring(0, ANCHO - 2)
+          : `Dev ${d.numero_devolucion}`;
+        const ticket = d.numero_ticket ? ` T#${d.numero_ticket}` : "";
+        lines.push(String(desc + ticket).substring(0, ANCHO));
+        lines.push(derecha(fmt(d.total)));
+      });
+    }
+    lines.push(linea("-"));
+  }
+
+  lines.push("");
+  lines.push("");
+  lines.push("");
+
+  const sep = os.platform() === "win32" ? "\r\n" : "\n";
+  return lines.join(sep);
+}
+
 // GET /api/imprimir/impresoras — lista impresoras disponibles en el sistema
 router.get("/impresoras", (req, res) => {
   const isWindows = os.platform() === "win32";
@@ -307,6 +457,35 @@ router.post("/", async (req, res) => {
     } else {
       exec(`lp -d "${nombreImpresora}" -o raw "${tmpFile}"`, done);
     }
+  });
+});
+
+// POST /api/imprimir/cuadre
+router.post("/cuadre", async (req, res) => {
+  const { cuadre, impresora } = req.body;
+  if (!cuadre) {
+    return res.status(400).json({ success: false, message: "Datos de cuadre requeridos" });
+  }
+
+  const nombreImpresora = /^[\w\s\-\.()\u00C0-\u024F]+$/.test(impresora || "") ? impresora : "Termica";
+  const texto = generarTextoCuadre(cuadre);
+  const tmpFile = path.join(os.tmpdir(), `cuadre_${Date.now()}.txt`);
+  const contenido = Buffer.from(texto, "utf8");
+
+  fs.writeFile(tmpFile, contenido, (writeErr) => {
+    if (writeErr) {
+      return res.status(500).json({ success: false, message: "Error al crear archivo temporal" });
+    }
+    const isWindows = os.platform() === "win32";
+    const done = (err, stdout, stderr) => {
+      fs.unlink(tmpFile, () => {});
+      if (err) {
+        return res.status(500).json({ success: false, message: stderr || err.message || "Error al imprimir" });
+      }
+      res.json({ success: true, message: "Cuadre enviado a " + nombreImpresora });
+    };
+    if (isWindows) imprimirRawWindows(tmpFile, nombreImpresora, done);
+    else exec(`lp -d "${nombreImpresora}" -o raw "${tmpFile}"`, done);
   });
 });
 

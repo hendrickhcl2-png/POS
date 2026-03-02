@@ -4,10 +4,6 @@ async function guardarConfiguracion(e) {
   e.preventDefault();
 
   const nombre_negocio = getValue("configNombre");
-  if (!nombre_negocio.trim()) {
-    mostrarAlerta("El nombre del negocio es obligatorio", "warning");
-    return;
-  }
 
   const configData = {
     nombre_negocio,
@@ -108,8 +104,8 @@ async function cargarServiciosConfig() {
         </tr></thead>
         <tbody>
           ${servicios
-            .map(
-              (s) => `
+        .map(
+          (s) => `
             <tr>
               <td>${s.nombre}</td>
               <td>${s.es_gratuito ? "—" : "RD$ " + parseFloat(s.precio).toFixed(2)}</td>
@@ -119,8 +115,8 @@ async function cargarServiciosConfig() {
               </td>
             </tr>
           `,
-            )
-            .join("")}
+        )
+        .join("")}
         </tbody>
       </table>`;
   } catch (e) {
@@ -191,8 +187,8 @@ async function cargarCategoriasConfig() {
         </tr></thead>
         <tbody>
           ${cats
-            .map(
-              (c) => `
+        .map(
+          (c) => `
             <tr>
               <td><strong>${c.nombre}</strong></td>
               <td>${c.descripcion || "—"}</td>
@@ -202,8 +198,8 @@ async function cargarCategoriasConfig() {
               </td>
             </tr>
           `,
-            )
-            .join("")}
+        )
+        .join("")}
         </tbody>
       </table>`;
   } catch (e) {

@@ -508,6 +508,184 @@ const ReportesModule = {
   mostrarError(mensaje) {
   Toast.error(mensaje);
   },
+
+  // ==================== CUADRE DE TURNO ====================
+
+  abrirCuadre() {
+  const hoy = new Date().toISOString().split("T")[0];
+  const input = document.getElementById("cuadreFecha");
+  if (input && !input.value) input.value = hoy;
+  document.getElementById("cuadreContenido").style.display = "none";
+  document.getElementById("btnCuadreExcel").style.display = "none";
+  document.getElementById("btnCuadrePrint").style.display = "none";
+  abrirModal("modalCuadre");
+  },
+
+  async cargarCuadre() {
+  const fecha = document.getElementById("cuadreFecha").value;
+  const fondo = document.getElementById("cuadreFondo").value || 0;
+  if (!fecha) { Toast.warning("Selecciona una fecha"); return; }
+
+  document.getElementById("cuadreLoader").style.display = "block";
+  document.getElementById("cuadreContenido").style.display = "none";
+
+  try {
+  const data = await ReportesAPI.getCuadreTurno(fecha, fondo);
+  this._cuadreActual = data.cuadre;
+  this.renderizarCuadre(data.cuadre);
+  document.getElementById("cuadreContenido").style.display = "block";
+  document.getElementById("btnCuadreExcel").style.display = "inline-block";
+  document.getElementById("btnCuadrePrint").style.display = "inline-block";
+  } catch (e) {
+  Toast.error("Error al cargar cuadre: " + e.message);
+  } finally {
+  document.getElementById("cuadreLoader").style.display = "none";
+  }
+  },
+
+  renderizarCuadre(c) {
+  const f = (n) => this.formatCurrency(n || 0);
+  const neg = (n) => "-" + f(Math.abs(n || 0));
+
+  document.getElementById("cVentasNeto").textContent = f(c.ventas_neto);
+  document.getElementById("cGanancia").textContent = f(c.ganancia);
+  document.getElementById("cGanancia").style.color = c.ganancia < 0 ? "var(--clr-danger)" : "var(--clr-success)";
+  document.getElementById("cEfectivoCaja").textContent = f(c.efectivo_en_caja);
+  document.getElementById("cCantidadVentas").textContent = c.cantidad_ventas;
+
+  // Dinero en caja
+  document.getElementById("cFondoCaja").textContent = f(c.fondo_caja);
+  document.getElementById("cVentasEfectivo").textContent = f(c.ventas_efectivo);
+  document.getElementById("cAbonos").textContent = f(c.pagos_efectivo);
+  document.getElementById("cSalidas").textContent = neg(c.salidas_efectivo);
+  document.getElementById("cDevEfectivo").textContent = neg(c.dev_efectivo);
+  document.getElementById("cEfectivoCaja2").textContent = f(c.efectivo_en_caja);
+
+  // Métodos de pago
+  document.getElementById("cMetEfectivo").textContent = f(c.ventas_efectivo);
+  document.getElementById("cMetTarjeta").textContent = f(c.ventas_tarjeta);
+  document.getElementById("cMetTransferencia").textContent = f(c.ventas_transferencia);
+  document.getElementById("cMetCredito").textContent = f(c.ventas_credito);
+  document.getElementById("cMetCheque").textContent = f(c.ventas_cheque);
+  document.getElementById("cDevoluciones").textContent = neg(c.devoluciones_total);
+  document.getElementById("cTotalVentas").textContent = f(c.ventas_neto);
+
+  // Ingresos contado
+  document.getElementById("cIngEfectivo").textContent = f(c.ventas_efectivo);
+  document.getElementById("cIngPagos").textContent = f(c.pagos_clientes);
+  document.getElementById("cIngTransferencia").textContent = f(c.ventas_transferencia);
+  document.getElementById("cIngDevEf").textContent = neg(c.dev_efectivo);
+  document.getElementById("cIngDevTra").textContent = neg(c.dev_transferencia);
+  document.getElementById("cTotalIngresos").textContent = f(c.total_ingresos);
+
+  // Categorías
+  const catTabla = document.getElementById("cuadreCategorias");
+  catTabla.innerHTML = (c.por_categoria || []).map(cat =>
+  `<tr><td>${cat.categoria}</td><td style="text-align:right;">${f(cat.total)}</td></tr>`
+  ).join("") || "<tr><td colspan='2' style='color:var(--clr-muted);'>Sin datos</td></tr>";
+
+  // Salidas
+  const salidasTabla = document.getElementById("cuadreSalidasTabla");
+  salidasTabla.innerHTML = (c.salidas || []).map(s =>
+  `<tr><td>${s.concepto || s.descripcion || "Salida"}</td><td style="text-align:right;color:var(--clr-danger);">${f(s.monto)}</td></tr>`
+  ).join("") || "<tr><td colspan='2' style='color:var(--clr-muted);'>Sin salidas</td></tr>";
+  if ((c.salidas || []).length > 0) {
+  salidasTabla.innerHTML += `<tr style="font-weight:700;border-top:2px solid #ccc;">
+  <td>Total Salidas</td><td style="text-align:right;">${f(c.total_salidas)}</td>
+  </tr>`;
+  }
+
+  // Pagos de crédito
+  const pagosTabla = document.getElementById("cuadrePagosTabla");
+  pagosTabla.innerHTML = (c.pagos_credito || []).map(p => {
+  const metodo = p.metodo_pago === "transferencia" ? "TRA" : (p.metodo_pago || "").substring(0, 3).toUpperCase();
+  return `<tr><td>${p.cliente_nombre || "—"} (${metodo})</td><td style="text-align:right;">${f(p.monto)}</td></tr>`;
+  }).join("") || "<tr><td colspan='2' style='color:var(--clr-muted);'>Sin pagos de crédito</td></tr>";
+
+  // Devoluciones
+  const devDiv = document.getElementById("cuadreDevoluciones");
+  const devEf = c.devoluciones_efectivo || [];
+  const devCr = c.devoluciones_credito || [];
+  let devHtml = "";
+
+  if (devEf.length > 0) {
+  devHtml += `<div style="font-weight:700;margin-bottom:4px;">En Efectivo:</div>`;
+  devHtml += devEf.map(d => {
+  const desc = (d.items || []).map(i => i.nombre_producto).join(", ");
+  return `<div style="display:flex;justify-content:space-between;padding:3px 0;">
+  <span>${desc || d.numero_devolucion}${d.numero_ticket ? ` · T#${d.numero_ticket}` : ""}</span>
+  <span style="color:var(--clr-danger);">-${f(d.total)}</span>
+  </div>`;
+  }).join("");
+  }
+
+  if (devCr.length > 0) {
+  devHtml += `<div style="font-weight:700;margin-top:8px;margin-bottom:4px;">Por Ventas a Crédito:</div>`;
+  devHtml += devCr.map(d => {
+  const desc = (d.items || []).map(i => i.nombre_producto).join(", ");
+  return `<div style="display:flex;justify-content:space-between;padding:3px 0;">
+  <span>${desc || d.numero_devolucion}${d.numero_ticket ? ` · T#${d.numero_ticket}` : ""}</span>
+  <span style="color:var(--clr-danger);">-${f(d.total)}</span>
+  </div>`;
+  }).join("");
+  }
+
+  devDiv.innerHTML = devHtml || "<span style='color:var(--clr-muted);'>Sin devoluciones</span>";
+  },
+
+  async descargarCuadreExcel() {
+  const fecha = document.getElementById("cuadreFecha").value;
+  const fondo = document.getElementById("cuadreFondo").value || 0;
+  if (!fecha) { Toast.warning("Selecciona una fecha"); return; }
+
+  const btn = document.getElementById("btnCuadreExcel");
+  btn.disabled = true;
+  btn.textContent = "Generando...";
+  try {
+  const baseURL = window.API_URL || "http://localhost:3000/api";
+  const url = `${baseURL}/reportes/cuadre/excel?fecha=${fecha}&fondo_caja=${fondo}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Error al generar Excel");
+  const blob = await response.blob();
+  const a = document.createElement("a");
+  a.href = window.URL.createObjectURL(blob);
+  a.download = `cuadre_${fecha}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  } catch (e) {
+  Toast.error("Error al descargar Excel: " + e.message);
+  } finally {
+  btn.disabled = false;
+  btn.textContent = "Descargar Excel";
+  }
+  },
+
+  async imprimirCuadre() {
+  if (!this._cuadreActual) { Toast.warning("Carga el cuadre primero"); return; }
+
+  const btn = document.getElementById("btnCuadrePrint");
+  btn.disabled = true;
+  btn.textContent = "Imprimiendo...";
+  try {
+  const config = window.configuracion || {};
+  const impresora = config.nombre_impresora || "Termica";
+  const baseURL = window.API_URL || "http://localhost:3000/api";
+  const response = await fetch(`${baseURL}/imprimir/cuadre`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ cuadre: this._cuadreActual, impresora }),
+  });
+  const data = await response.json();
+  if (data.success) Toast.success("Cuadre enviado a impresora");
+  else Toast.error(data.message || "Error al imprimir");
+  } catch (e) {
+  Toast.error("Error al imprimir: " + e.message);
+  } finally {
+  btn.disabled = false;
+  btn.textContent = "Imprimir Térmica";
+  }
+  },
 };
 
 // Exportar

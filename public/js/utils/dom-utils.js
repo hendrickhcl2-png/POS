@@ -49,4 +49,5 @@ window.setValueIfExists = DOMUtils.setValueIfExists;
 window.setTextIfExists = DOMUtils.setTextIfExists;
 window.mostrarAlerta = DOMUtils.mostrarAlerta;
 window.cerrarModal = DOMUtils.cerrarModal;
+window.abrirModal = DOMUtils.abrirModal;
 

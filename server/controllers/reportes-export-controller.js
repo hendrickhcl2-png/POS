@@ -327,6 +327,182 @@ const ReportesExportController = {
       next(error);
     }
   },
+
+  // ==================== EXCEL CUADRE DE TURNO ====================
+
+  async exportarCuadreExcel(req, res, next) {
+    try {
+      const pool = require("../database/pool");
+      const ReportesController = require("./reportes-controller");
+
+      // Reusar el endpoint de cuadre para obtener los datos
+      let cuadreData;
+      await new Promise((resolve, reject) => {
+        ReportesController.getCuadreTurno(
+          { query: req.query, session: req.session },
+          {
+            json(data) { cuadreData = data; resolve(); },
+            status() { return this; },
+          },
+          reject,
+        );
+      });
+
+      const c = cuadreData.cuadre;
+      const fmt = (n) => parseFloat(parseFloat(n || 0).toFixed(2));
+      const fmtFecha = (f) => {
+        if (!f) return "";
+        const d = new Date(f + "T12:00:00");
+        return d.toLocaleDateString("es-DO", { day: "2-digit", month: "2-digit", year: "numeric" });
+      };
+
+      const ExcelJS = require("exceljs");
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Cuadre de Turno");
+
+      // Colores
+      const CLR_HEADER  = "FF2C3E50";
+      const CLR_WHITE   = "FFFFFFFF";
+      const CLR_SECTION = "FF3498DB";
+      const CLR_ALT     = "FFF0F4F8";
+      const CLR_TOTAL   = "FF27AE60";
+      const CLR_NEG     = "FFE74C3C";
+
+      sheet.columns = [
+        { width: 36 }, // A: descripción
+        { width: 20 }, // B: monto
+      ];
+
+      const addTitle = (text, color = CLR_HEADER) => {
+        sheet.mergeCells(`A${sheet.lastRow ? sheet.lastRow.number + 1 : 1}:B${sheet.lastRow ? sheet.lastRow.number + 1 : 1}`);
+        const r = sheet.lastRow;
+        r.getCell(1).value = text;
+        r.getCell(1).font = { bold: true, size: 12, color: { argb: CLR_WHITE } };
+        r.getCell(1).alignment = { horizontal: "center", vertical: "middle" };
+        r.getCell(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
+        r.height = 22;
+      };
+
+      const addSection = (text) => {
+        sheet.addRow([]);
+        addTitle(`== ${text} ==`, CLR_SECTION);
+      };
+
+      const addRow = (label, value, isNeg = false, bold = false) => {
+        const r = sheet.addRow([label, value]);
+        r.getCell(1).font = { bold };
+        r.getCell(2).value = value;
+        r.getCell(2).numFmt = "#,##0.00";
+        r.getCell(2).alignment = { horizontal: "right" };
+        if (isNeg) r.getCell(2).font = { color: { argb: CLR_NEG }, bold };
+        else if (bold) r.getCell(2).font = { bold, color: { argb: CLR_TOTAL } };
+      };
+
+      const addTotalRow = (label, value) => {
+        const r = sheet.addRow([label, value]);
+        r.getCell(1).font = { bold: true, color: { argb: CLR_WHITE } };
+        r.getCell(2).value = value;
+        r.getCell(2).numFmt = "#,##0.00";
+        r.getCell(2).alignment = { horizontal: "right" };
+        r.getCell(2).font = { bold: true, color: { argb: CLR_WHITE } };
+        r.eachCell(cell => {
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: CLR_TOTAL } };
+        });
+        r.height = 18;
+      };
+
+      // ---- ENCABEZADO ----
+      addTitle(`CUADRE DE TURNO — ${fmtFecha(c.fecha)}`, CLR_HEADER);
+      sheet.addRow(["Cajero:", c.cajero]);
+      sheet.addRow(["Turno #:", c.turno]);
+      sheet.addRow(["Cantidad de ventas:", c.cantidad_ventas]);
+      sheet.addRow([]);
+
+      // ---- RESUMEN ----
+      addTitle("RESUMEN DEL DÍA", CLR_HEADER);
+      addRow("Ventas Totales (neto)", fmt(c.ventas_neto), false, true);
+      addRow("Ganancia", fmt(c.ganancia), c.ganancia < 0, true);
+      sheet.addRow([]);
+
+      // ---- DINERO EN CAJA ----
+      addTitle("DINERO EN CAJA", CLR_HEADER);
+      addRow("Fondo de Caja", fmt(c.fondo_caja));
+      addRow("Ventas en Efectivo", fmt(c.ventas_efectivo));
+      addRow("Abonos en Efectivo", fmt(c.pagos_efectivo));
+      addRow("Salidas", fmt(c.salidas_efectivo), true);
+      addRow("Dev. en Efectivo", fmt(c.dev_efectivo), true);
+      addTotalRow("EFECTIVO EN CAJA", fmt(c.efectivo_en_caja));
+      sheet.addRow([]);
+
+      // ---- SALIDAS ----
+      addSection("SALIDAS EFECTIVO");
+      for (const s of (c.salidas || [])) {
+        addRow(s.concepto || s.descripcion || "Salida", fmt(s.monto));
+      }
+      addTotalRow("TOTAL SALIDAS", fmt(c.total_salidas));
+      sheet.addRow([]);
+
+      // ---- VENTAS POR MÉTODO ----
+      addSection("VENTAS");
+      addRow("Efectivo", fmt(c.ventas_efectivo));
+      addRow("Tarjeta", fmt(c.ventas_tarjeta));
+      addRow("A Crédito", fmt(c.ventas_credito));
+      addRow("Transferencia", fmt(c.ventas_transferencia));
+      addRow("Cheque", fmt(c.ventas_cheque));
+      addRow("Dev. de Ventas", fmt(c.devoluciones_total), true);
+      addTotalRow("TOTAL VENTAS", fmt(c.ventas_neto));
+      sheet.addRow([]);
+
+      // ---- VENTAS POR CATEGORÍA ----
+      addSection("VENTAS POR DEPTO");
+      for (const cat of (c.por_categoria || [])) {
+        addRow(cat.categoria.toUpperCase(), fmt(cat.total));
+      }
+      sheet.addRow([]);
+
+      // ---- INGRESOS CONTADO ----
+      addSection("INGRESOS CONTADO");
+      addRow("Ventas Efectivo", fmt(c.ventas_efectivo));
+      addRow("Pagos Clientes", fmt(c.pagos_clientes));
+      addRow("Ventas Transferencia", fmt(c.ventas_transferencia));
+      addRow("Abonos (Dev. Efectivo)", fmt(c.dev_efectivo), true);
+      addRow("Dev. Transferencia", fmt(c.dev_transferencia), true);
+      addTotalRow("TOTAL INGRESOS", fmt(c.total_ingresos));
+      sheet.addRow([]);
+
+      // ---- PAGOS DE CRÉDITOS ----
+      addSection("PAGOS DE CRÉDITOS");
+      for (const p of (c.pagos_credito || [])) {
+        const metodoAbr = p.metodo_pago === "transferencia" ? "TRA" : p.metodo_pago?.substring(0, 3).toUpperCase();
+        addRow(`${p.cliente_nombre || "—"} (${metodoAbr})`, fmt(p.monto));
+      }
+      sheet.addRow([]);
+
+      // ---- DEVOLUCIONES EN EFECTIVO ----
+      addSection("DEVOLUCIONES EN EFECTIVO");
+      for (const d of (c.devoluciones_efectivo || [])) {
+        const desc = (d.items || []).map(i => i.nombre_producto).join(", ");
+        addRow(desc ? `${desc} - Ticket ${d.numero_ticket || "—"}` : `Devolución ${d.numero_devolucion}`, fmt(d.total), true);
+      }
+      sheet.addRow([]);
+
+      // ---- DEVOLUCIONES POR VENTAS A CRÉDITO ----
+      addSection("DEVOLUCIONES POR VENTAS A CRÉDITO");
+      for (const d of (c.devoluciones_credito || [])) {
+        const desc = (d.items || []).map(i => i.nombre_producto).join(", ");
+        addRow(desc ? `${desc} - Ticket ${d.numero_ticket || "—"}` : `Devolución ${d.numero_devolucion}`, fmt(d.total), true);
+      }
+
+      const nombreArchivo = `cuadre_${c.fecha}.xlsx`;
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="${nombreArchivo}"`);
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error) {
+      console.error("❌ Error al exportar cuadre Excel:", error);
+      next(error);
+    }
+  },
 };
 
 module.exports = ReportesExportController;

@@ -51,7 +51,7 @@ const FacturaImpresion = {
   <!-- HEADER -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:15px;border-bottom:3px solid #2c3e50;">
   <div>
-  <img src="/images/Logotipo.jpeg" alt="Logo" style="height:64px;width:auto;margin-bottom:6px;display:block;" />
+  <img src="/images/Logotipo.png" alt="Logo" style="height:64px;width:auto;margin-bottom:6px;display:block;" />
   <h1 style="margin:0;font-size:28px;color:#2c3e50;">${config.nombre}</h1>
   <p style="margin:3px 0;color:#7f8c8d;font-size:13px;">${config.direccion}</p>
   <p style="margin:3px 0;color:#7f8c8d;font-size:13px;"> ${config.telefono}</p>
@@ -70,10 +70,13 @@ const FacturaImpresion = {
 
   <!-- DATOS DEL CLIENTE -->
   <div style="background:#f8f9fa;border-radius:8px;padding:12px 18px;margin-bottom:18px;">
+  <div>
   <strong style="color:#2c3e50;font-size:14px;"> Cliente:</strong>
   <span style="color:#2c3e50;font-size:14px;margin-left:10px;">${factura.cliente_nombre || "Cliente General"}</span>
   ${factura.cliente_cedula ? `<span style="color:#7f8c8d;font-size:12px;margin-left:15px;">Cédula: ${factura.cliente_cedula}</span>` : ""}
   ${factura.cliente_rnc ? `<span style="color:#7f8c8d;font-size:12px;margin-left:15px;">RNC: ${factura.cliente_rnc}</span>` : ""}
+  </div>
+  ${factura.vendedor_nombre ? `<div style="margin-top:6px;"><strong style="color:#2c3e50;font-size:13px;">Atendido por:</strong> <span style="color:#7f8c8d;font-size:13px;">${factura.vendedor_nombre}</span></div>` : ""}
   </div>
 
   <!-- TABLA DE PRODUCTOS -->
@@ -94,7 +97,10 @@ const FacturaImpresion = {
           (item, i) => `
   <tr style="border-bottom:1px solid #ecf0f1;background:${i % 2 === 0 ? "white" : "#f8f9fa"};">
   <td style="padding:10px;font-size:13px;color:#7f8c8d;">${i + 1}</td>
-  <td style="padding:10px;font-size:13px;font-weight:500;">${item.nombre_producto}</td>
+  <td style="padding:10px;font-size:13px;font-weight:500;">
+    ${item.nombre_producto}
+    ${item.imei ? `<br><span style="font-size:11px;color:#7f8c8d;">IMEI: ${item.imei}</span>` : ""}
+  </td>
   <td style="padding:10px;font-size:12px;color:#7f8c8d;">${item.codigo_producto || ""}</td>
   <td style="padding:10px;text-align:center;font-size:13px;">${item.cantidad}</td>
   <td style="padding:10px;text-align:right;font-size:13px;">${this.formatCurrency(item.precio_unitario)}</td>
@@ -233,22 +239,24 @@ const FacturaImpresion = {
   <div style="margin-top:20px;background:#f0faf5;border:1px solid #27ae60;border-radius:8px;padding:15px 18px;">
   <strong style="color:#27ae60;font-size:14px;"> Método de Pago: ${this.formatMetodoPago(factura.metodo_pago)}</strong>
   <div style="margin-top:8px;display:flex;gap:30px;flex-wrap:wrap;">
-  ${factura.metodo_pago === "efectivo" ||
-        factura.metodo_pago === "mixto"
-        ? `
+
+  ${factura.metodo_pago === "efectivo" ? `
   <div><span style="color:#7f8c8d;font-size:13px;">Monto Recibido:</span> <strong style="font-size:14px;">${this.formatCurrency(factura.monto_recibido || factura.total)}</strong></div>
   <div><span style="color:#7f8c8d;font-size:13px;">Cambio:</span> <strong style="font-size:14px;color:#27ae60;">${this.formatCurrency(factura.cambio || 0)}</strong></div>
-  `
-        : ""
-      }
-  ${factura.metodo_pago === "tarjeta" ||
-        factura.metodo_pago === "transferencia"
-        ? `
+  ` : ""}
+
+  ${factura.metodo_pago === "mixto" ? `
+  ${factura.monto_efectivo > 0 ? `<div><span style="color:#7f8c8d;font-size:13px;">Efectivo:</span> <strong style="font-size:14px;">${this.formatCurrency(factura.monto_efectivo)}</strong></div>` : ""}
+  ${factura.monto_tarjeta > 0 ? `<div><span style="color:#7f8c8d;font-size:13px;">Tarjeta:</span> <strong style="font-size:14px;">${this.formatCurrency(factura.monto_tarjeta)}</strong></div>` : ""}
+  ${factura.monto_transferencia > 0 ? `<div><span style="color:#7f8c8d;font-size:13px;">Transferencia:</span> <strong style="font-size:14px;">${this.formatCurrency(factura.monto_transferencia)}</strong></div>` : ""}
+  ${factura.cambio > 0 ? `<div><span style="color:#7f8c8d;font-size:13px;">Cambio:</span> <strong style="font-size:14px;color:#27ae60;">${this.formatCurrency(factura.cambio)}</strong></div>` : ""}
+  ` : ""}
+
+  ${factura.metodo_pago === "tarjeta" || factura.metodo_pago === "transferencia" ? `
   ${factura.banco ? `<div><span style="color:#7f8c8d;font-size:13px;">Banco:</span> <strong style="font-size:14px;">${factura.banco}</strong></div>` : ""}
   ${factura.referencia ? `<div><span style="color:#7f8c8d;font-size:13px;">Referencia:</span> <strong style="font-size:14px;">${factura.referencia}</strong></div>` : ""}
-  `
-        : ""
-      }
+  ` : ""}
+
   </div>
   </div>
 
@@ -262,11 +270,14 @@ const FacturaImpresion = {
   <!-- FOOTER -->
   <div style="margin-top:25px;padding-top:15px;border-top:1px dashed #bdc3c7;text-align:center;">
   <p style="margin:3px 0;color:#7f8c8d;font-size:12px;">Gracias por su compra en ${config.nombre}</p>
-  <p style="margin:3px 0;color:#7f8c8d;font-size:11px;">Este recibo es válido como comprobante de compra</p>
   <p style="margin:3px 0;color:#7f8c8d;font-size:11px;">No se aceptan devoluciones sin este recibo</p>
   <p style="margin:8px 0 3px;color:#2c3e50;font-size:11px;font-weight:bold;">GARANTÍA</p>
-  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">✓ 2 meses de garantía en todos los equipos</p>
-  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">✗ No aplica: pantalla, mojado, caída, destapado</p>
+  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">2 MESES DE GARANTIA</p>
+  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">NO APLICA:</p>
+  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">PANTALLA</p>
+  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">MOJADO</p>
+  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">CAIDA</p>
+  <p style="margin:2px 0;color:#7f8c8d;font-size:10px;">DESTAPADO</p>
   </div>
   </div>
   </div>
@@ -315,6 +326,12 @@ const FacturaImpresion = {
       cambio: parseFloat(data.cambio || 0),
       banco: data.banco || null,
       referencia: data.referencia || null,
+      monto_efectivo: parseFloat(data.monto_efectivo || 0),
+      monto_tarjeta: parseFloat(data.monto_tarjeta || 0),
+      monto_transferencia: parseFloat(data.monto_transferencia || 0),
+
+      // Vendedor
+      vendedor_nombre: data.vendedor_nombre || data.usuario_nombre || null,
 
       // Items
       items: data.items || [],

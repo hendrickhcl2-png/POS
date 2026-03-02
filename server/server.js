@@ -131,6 +131,17 @@ async function initAuth() {
     await pool.query(`
       ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS nombre_impresora VARCHAR(255)
     `);
+    // Migración: columnas de usuario en ventas
+    await pool.query(`
+      ALTER TABLE ventas ADD COLUMN IF NOT EXISTS usuario_id INTEGER
+    `);
+    await pool.query(`
+      ALTER TABLE ventas ADD COLUMN IF NOT EXISTS usuario_nombre VARCHAR(100)
+    `);
+    // Migración: columna imei en detalle_venta
+    await pool.query(`
+      ALTER TABLE detalle_venta ADD COLUMN IF NOT EXISTS imei VARCHAR(50)
+    `);
 
     console.log("✅ Auth inicializado");
   } catch (error) {

@@ -321,25 +321,25 @@
   <div class="payment-methods">
   <div
   class="payment-method active"
-  onclick="selectPaymentMethod('efectivo')"
+  onclick="selectPaymentMethod('efectivo', this)"
   >
   <h4>Efectivo</h4>
   </div>
   <div
   class="payment-method"
-  onclick="selectPaymentMethod('tarjeta')"
+  onclick="selectPaymentMethod('tarjeta', this)"
   >
   <h4>Tarjeta</h4>
   </div>
   <div
   class="payment-method"
-  onclick="selectPaymentMethod('transferencia')"
+  onclick="selectPaymentMethod('transferencia', this)"
   >
   <h4>Transferencia</h4>
   </div>
   <div
   class="payment-method"
-  onclick="selectPaymentMethod('mixto')"
+  onclick="selectPaymentMethod('mixto', this)"
   >
   <h4>Mixto</h4>
   </div>
@@ -1301,6 +1301,13 @@
   >
   Descargar Excel
   </button>
+  <button
+  class="btn btn-primary"
+  onclick="ReportesModule.abrirCuadre()"
+  style="margin-left:8px;"
+  >
+  Cuadre de Turno
+  </button>
   </div>
   <div id="loaderReportes" class="loader-reportes">
   <span class="loader-reportes-texto"> Cargando reporte...</span>
@@ -1748,6 +1755,136 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick="cerrarModal('modalUsuario')">Cancelar</button>
         <button class="btn btn-primary" onclick="UsuariosModule.guardar()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Cuadre de Turno -->
+  <div class="modal" id="modalCuadre">
+    <div class="modal-content" style="max-width:900px;max-height:90vh;overflow-y:auto;">
+      <div class="modal-header">
+        <h2>Cuadre de Turno</h2>
+        <span class="close-modal" onclick="cerrarModal('modalCuadre')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+          <div class="form-group" style="margin:0;">
+            <label>Fecha</label>
+            <input type="date" id="cuadreFecha" style="width:160px;" />
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Fondo de Caja (RD$)</label>
+            <input type="number" id="cuadreFondo" value="0" min="0" style="width:140px;" />
+          </div>
+          <button class="btn btn-primary" onclick="ReportesModule.cargarCuadre()">Consultar</button>
+          <button class="btn btn-success" id="btnCuadreExcel" onclick="ReportesModule.descargarCuadreExcel()" style="display:none;">
+            Descargar Excel
+          </button>
+          <button class="btn btn-secondary" id="btnCuadrePrint" onclick="ReportesModule.imprimirCuadre()" style="display:none;">
+            Imprimir Térmica
+          </button>
+        </div>
+        <div id="cuadreLoader" style="display:none;text-align:center;padding:20px;color:var(--clr-muted);">Cargando cuadre...</div>
+        <div id="cuadreContenido" style="display:none;">
+
+          <!-- Resumen superior -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+            <div class="card" style="padding:14px;text-align:center;">
+              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;">Ventas (neto)</div>
+              <div id="cVentasNeto" style="font-size:22px;font-weight:700;color:var(--clr-primary);">RD$0</div>
+            </div>
+            <div class="card" style="padding:14px;text-align:center;">
+              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;">Ganancia</div>
+              <div id="cGanancia" style="font-size:22px;font-weight:700;color:var(--clr-success);">RD$0</div>
+            </div>
+            <div class="card" style="padding:14px;text-align:center;">
+              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;">Efectivo en Caja</div>
+              <div id="cEfectivoCaja" style="font-size:22px;font-weight:700;color:var(--clr-warning);">RD$0</div>
+            </div>
+            <div class="card" style="padding:14px;text-align:center;">
+              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;">Ventas</div>
+              <div id="cCantidadVentas" style="font-size:22px;font-weight:700;">0</div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <!-- Dinero en caja -->
+            <div class="card" style="padding:14px;">
+              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Dinero en Caja</h4>
+              <table style="width:100%;font-size:13px;">
+                <tr><td>Fondo de Caja</td><td id="cFondoCaja" style="text-align:right;"></td></tr>
+                <tr><td>+ Ventas Efectivo</td><td id="cVentasEfectivo" style="text-align:right;color:var(--clr-success);"></td></tr>
+                <tr><td>+ Abonos Efectivo</td><td id="cAbonos" style="text-align:right;color:var(--clr-success);"></td></tr>
+                <tr><td>- Salidas</td><td id="cSalidas" style="text-align:right;color:var(--clr-danger);"></td></tr>
+                <tr><td>- Dev. Efectivo</td><td id="cDevEfectivo" style="text-align:right;color:var(--clr-danger);"></td></tr>
+                <tr style="font-weight:700;border-top:2px solid #ccc;">
+                  <td>= Efectivo en Caja</td>
+                  <td id="cEfectivoCaja2" style="text-align:right;color:var(--clr-warning);"></td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- Ventas por método -->
+            <div class="card" style="padding:14px;">
+              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Ventas por Método</h4>
+              <table style="width:100%;font-size:13px;">
+                <tr><td>Efectivo</td><td id="cMetEfectivo" style="text-align:right;"></td></tr>
+                <tr><td>Tarjeta</td><td id="cMetTarjeta" style="text-align:right;"></td></tr>
+                <tr><td>Transferencia</td><td id="cMetTransferencia" style="text-align:right;"></td></tr>
+                <tr><td>Crédito</td><td id="cMetCredito" style="text-align:right;"></td></tr>
+                <tr><td>Cheque</td><td id="cMetCheque" style="text-align:right;"></td></tr>
+                <tr><td style="color:var(--clr-danger);">Dev. de Ventas</td><td id="cDevoluciones" style="text-align:right;color:var(--clr-danger);"></td></tr>
+                <tr style="font-weight:700;border-top:2px solid #ccc;">
+                  <td>Total Ventas</td>
+                  <td id="cTotalVentas" style="text-align:right;"></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <!-- Ventas por categoría -->
+            <div class="card" style="padding:14px;">
+              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Ventas por Depto</h4>
+              <table style="width:100%;font-size:13px;" id="cuadreCategorias"></table>
+            </div>
+
+            <!-- Ingresos contado -->
+            <div class="card" style="padding:14px;">
+              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Ingresos Contado</h4>
+              <table style="width:100%;font-size:13px;">
+                <tr><td>Ventas Efectivo</td><td id="cIngEfectivo" style="text-align:right;"></td></tr>
+                <tr><td>Pagos Clientes</td><td id="cIngPagos" style="text-align:right;"></td></tr>
+                <tr><td>Ventas Transferencia</td><td id="cIngTransferencia" style="text-align:right;"></td></tr>
+                <tr><td style="color:var(--clr-danger);">Abonos (Dev. ef.)</td><td id="cIngDevEf" style="text-align:right;color:var(--clr-danger);"></td></tr>
+                <tr><td style="color:var(--clr-danger);">Dev. Transferencia</td><td id="cIngDevTra" style="text-align:right;color:var(--clr-danger);"></td></tr>
+                <tr style="font-weight:700;border-top:2px solid #ccc;">
+                  <td>Total Ingresos</td>
+                  <td id="cTotalIngresos" style="text-align:right;"></td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- Salidas -->
+          <div class="card" style="padding:14px;margin-bottom:16px;" id="cuadreSalidasCard">
+            <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Salidas</h4>
+            <table style="width:100%;font-size:13px;" id="cuadreSalidasTabla"></table>
+          </div>
+
+          <!-- Pagos de crédito -->
+          <div class="card" style="padding:14px;margin-bottom:16px;" id="cuadrePagosCard">
+            <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Pagos de Créditos</h4>
+            <table style="width:100%;font-size:13px;" id="cuadrePagosTabla"></table>
+          </div>
+
+          <!-- Devoluciones -->
+          <div class="card" style="padding:14px;" id="cuadreDevCard">
+            <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Devoluciones</h4>
+            <div id="cuadreDevoluciones" style="font-size:13px;"></div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>

@@ -797,13 +797,14 @@ const VentasModule = {
 
   // ==================== MÉTODOS DE PAGO ====================
 
-  seleccionarMetodoPago(metodo) {
+  seleccionarMetodoPago(metodo, el) {
   this.metodoPagoActual = metodo;
 
-  document.querySelectorAll(".payment-method").forEach((el) => {
-  el.classList.remove("active");
+  document.querySelectorAll(".payment-method").forEach((btn) => {
+  btn.classList.remove("active");
   });
-  event.target.closest(".payment-method").classList.add("active");
+  const boton = el?.closest?.(".payment-method") || el;
+  if (boton) boton.classList.add("active");
 
   document.getElementById("pagoEfectivo").style.display =
   metodo === "efectivo" ? "block": "none";
@@ -863,6 +864,17 @@ const VentasModule = {
   },
 
   validarPago(totalVenta) {
+  // Sincronizar método desde el DOM (fuente de verdad visual)
+  if (document.getElementById("pagoMixto")?.style.display === "block") {
+  this.metodoPagoActual = "mixto";
+  } else if (document.getElementById("pagoTarjeta")?.style.display === "block") {
+  this.metodoPagoActual = "tarjeta";
+  } else if (document.getElementById("pagoTransferencia")?.style.display === "block") {
+  this.metodoPagoActual = "transferencia";
+  } else {
+  this.metodoPagoActual = "efectivo";
+  }
+
   const esCredito = document.getElementById("ventaCredito")?.checked || false;
 
   if (esCredito) {
@@ -943,6 +955,17 @@ const VentasModule = {
   },
 
   prepararDatosVenta(totales) {
+  // Sincronizar método desde el DOM antes de preparar datos
+  if (document.getElementById("pagoMixto")?.style.display === "block") {
+  this.metodoPagoActual = "mixto";
+  } else if (document.getElementById("pagoTarjeta")?.style.display === "block") {
+  this.metodoPagoActual = "tarjeta";
+  } else if (document.getElementById("pagoTransferencia")?.style.display === "block") {
+  this.metodoPagoActual = "transferencia";
+  } else {
+  this.metodoPagoActual = "efectivo";
+  }
+
   const clienteId = document.getElementById("ventaCliente").value || null;
   const esCredito = document.getElementById("ventaCredito")?.checked || false;
 
@@ -1041,6 +1064,10 @@ const VentasModule = {
   document.querySelectorAll(".payment-method").forEach((el, index) => {
   el.classList.toggle("active", index === 0);
   });
+  document.getElementById("pagoEfectivo").style.display = "block";
+  document.getElementById("pagoTarjeta").style.display = "none";
+  document.getElementById("pagoTransferencia").style.display = "none";
+  document.getElementById("pagoMixto").style.display = "none";
 
   this.renderizarCarrito();
   this.renderizarServiciosEnVenta();
@@ -1145,8 +1172,8 @@ const VentasModule = {
 window.VentasModule = VentasModule;
 window.buscarProductoVenta = () => VentasModule.buscarProducto();
 window.escanearProductoVenta = () => VentasModule.escanearYAgregarProducto();
-window.selectPaymentMethod = (metodo) =>
-  VentasModule.seleccionarMetodoPago(metodo);
+window.selectPaymentMethod = (metodo, el) =>
+  VentasModule.seleccionarMetodoPago(metodo, el);
 window.cancelarVenta = () => VentasModule.limpiarVenta();
 window.agregarServicioAVenta = () => VentasModule.mostrarModalAgregarManual();
 

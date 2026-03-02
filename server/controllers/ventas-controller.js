@@ -69,6 +69,8 @@ const VentasController = {
       const numeroTicket =
         "A" + String(resultTicket.rows[0].siguiente_ticket).padStart(8, "0");
 
+      const usuarioSesion = req.session?.usuario || null;
+
       // Insertar venta
       const ventaResult = await client.query(
         `INSERT INTO ventas (
@@ -91,8 +93,10 @@ const VentasController = {
           estado,
           notas,
           incluir_itbis,
-          generar_factura_electronica
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_DATE, CURRENT_TIME, 'completada', $15, $16, $17)
+          generar_factura_electronica,
+          usuario_id,
+          usuario_nombre
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_DATE, CURRENT_TIME, 'completada', $15, $16, $17, $18, $19)
         RETURNING *`,
         [
           numeroTicket,
@@ -118,6 +122,8 @@ const VentasController = {
           notas || null,
           incluir_itbis !== false,
           generar_factura_electronica || false,
+          usuarioSesion?.id || null,
+          usuarioSesion?.nombre || null,
         ],
       );
 
@@ -151,6 +157,7 @@ const VentasController = {
             producto_id,
             codigo_producto,
             nombre_producto,
+            imei,
             cantidad,
             precio_unitario,
             precio_costo_unitario,
@@ -158,12 +165,13 @@ const VentasController = {
             subtotal,
             itbis,
             total
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
           [
             venta.id,
             item.producto_id,
             producto.codigo_barras || producto.codigo,
             producto.nombre,
+            producto.imei || null,
             item.cantidad,
             item.precio_unitario,
             producto.precio_costo || 0,
@@ -529,10 +537,12 @@ const VentasController = {
           f.ncf,
           f.tipo_comprobante,
           f.tipo_factura,
-          f.estado as estado_factura
+          f.estado as estado_factura,
+          COALESCE(v.usuario_nombre, u.nombre) as vendedor_nombre
         FROM ventas v
         LEFT JOIN clientes c ON v.cliente_id = c.id
         LEFT JOIN facturas f ON f.venta_id = v.id
+        LEFT JOIN usuarios u ON v.usuario_id = u.id
         WHERE v.id = $1`,
         [ventaId],
       );

@@ -507,6 +507,238 @@ const ReportesController = {
     }
   },
 
+  // ==================== CUADRE DE TURNO ====================
+
+  async getCuadreTurno(req, res, next) {
+    try {
+      const { fecha, fondo_caja = 0 } = req.query;
+      const cajero = req.session?.usuario?.nombre || "Sistema";
+
+      const hoy = new Date();
+      const fechaDia = fecha || hoy.toISOString().split("T")[0];
+      const fondoCaja = parseFloat(fondo_caja) || 0;
+
+      // 1. Ventas contado del día (desglose por método)
+      const ventasResult = await pool.query(
+        `SELECT
+          v.id, v.numero_ticket, v.metodo_pago, v.total,
+          COALESCE(v.monto_efectivo, 0) AS monto_efectivo,
+          COALESCE(v.monto_tarjeta, 0) AS monto_tarjeta,
+          COALESCE(v.monto_transferencia, 0) AS monto_transferencia,
+          TRIM(CONCAT(c.nombre, ' ', COALESCE(c.apellido, ''))) AS cliente_nombre
+        FROM ventas v
+        LEFT JOIN clientes c ON v.cliente_id = c.id
+        LEFT JOIN facturas f ON v.id = f.venta_id
+        WHERE v.fecha = $1
+          AND COALESCE(f.tipo_factura, 'contado') != 'credito'
+          AND COALESCE(f.estado, 'pagada') != 'anulada'`,
+        [fechaDia],
+      );
+
+      // 2. Costos del día (para ganancia)
+      const costosResult = await pool.query(
+        `SELECT
+          COALESCE(SUM(dv.cantidad * COALESCE(p.precio_costo, 0)), 0) AS total_costos
+        FROM detalle_venta dv
+        JOIN productos p ON dv.producto_id = p.id
+        JOIN ventas v ON dv.venta_id = v.id
+        LEFT JOIN facturas f ON v.id = f.venta_id
+        WHERE v.fecha = $1
+          AND COALESCE(f.tipo_factura, 'contado') != 'credito'
+          AND COALESCE(f.estado, 'pagada') != 'anulada'`,
+        [fechaDia],
+      );
+
+      // 3. Salidas del día
+      const salidasResult = await pool.query(
+        `SELECT concepto, descripcion, monto, metodo_pago, beneficiario
+        FROM salidas
+        WHERE fecha = $1
+        ORDER BY id ASC`,
+        [fechaDia],
+      );
+
+      // 4. Pagos de crédito del día
+      const pagosResult = await pool.query(
+        `SELECT
+          pf.monto, pf.metodo_pago,
+          TRIM(CONCAT(c.nombre, ' ', COALESCE(c.apellido, ''))) AS cliente_nombre,
+          f.numero_factura
+        FROM pagos_factura pf
+        JOIN facturas f ON pf.factura_id = f.id
+        LEFT JOIN clientes c ON f.cliente_id = c.id
+        WHERE pf.fecha = $1 AND f.estado != 'anulada'
+        ORDER BY pf.id ASC`,
+        [fechaDia],
+      );
+
+      // 5. Devoluciones del día
+      const devolucionesResult = await pool.query(
+        `SELECT
+          d.id, d.numero_devolucion, d.total, d.tipo, d.motivo,
+          v.numero_ticket, v.metodo_pago AS venta_metodo,
+          json_agg(
+            json_build_object(
+              'nombre_producto', dd.nombre_producto,
+              'cantidad_devuelta', dd.cantidad_devuelta,
+              'total', dd.total
+            )
+          ) AS items
+        FROM devoluciones d
+        LEFT JOIN ventas v ON d.venta_id = v.id
+        JOIN detalle_devolucion dd ON dd.devolucion_id = d.id
+        WHERE d.fecha = $1 AND d.estado = 'procesada'
+        GROUP BY d.id, d.numero_devolucion, d.total, d.tipo, d.motivo,
+                 v.numero_ticket, v.metodo_pago
+        ORDER BY d.id ASC`,
+        [fechaDia],
+      );
+
+      // 6. Ventas por categoría
+      const porCategoriaResult = await pool.query(
+        `SELECT
+          COALESCE(cat.nombre, 'Sin categoría') AS categoria,
+          COALESCE(SUM(dv.subtotal), 0) AS total
+        FROM detalle_venta dv
+        JOIN ventas v ON dv.venta_id = v.id
+        LEFT JOIN productos p ON dv.producto_id = p.id
+        LEFT JOIN categorias cat ON p.categoria_id = cat.id
+        LEFT JOIN facturas f ON v.id = f.venta_id
+        WHERE v.fecha = $1
+          AND COALESCE(f.tipo_factura, 'contado') != 'credito'
+          AND COALESCE(f.estado, 'pagada') != 'anulada'
+          AND dv.producto_id IS NOT NULL
+        GROUP BY cat.nombre
+        ORDER BY total DESC`,
+        [fechaDia],
+      );
+
+      // 7. Configuración del negocio
+      const configResult = await pool.query(
+        "SELECT nombre_negocio, direccion, telefono FROM configuracion ORDER BY id DESC LIMIT 1",
+      );
+      const config = configResult.rows[0] || {};
+
+      // ---- Calcular totales ----
+      const ventas = ventasResult.rows;
+      const salidas = salidasResult.rows;
+      const pagos = pagosResult.rows;
+      const devoluciones = devolucionesResult.rows;
+
+      // Ventas por método (desglosando mixto)
+      let totalEfectivo = 0, totalTarjeta = 0, totalTransferencia = 0;
+      let totalCheque = 0, totalCredito = 0;
+      let totalVentasBruto = 0;
+
+      for (const v of ventas) {
+        const t = parseFloat(v.total);
+        totalVentasBruto += t;
+        if (v.metodo_pago === "mixto") {
+          totalEfectivo     += parseFloat(v.monto_efectivo);
+          totalTarjeta      += parseFloat(v.monto_tarjeta);
+          totalTransferencia += parseFloat(v.monto_transferencia);
+        } else if (v.metodo_pago === "efectivo")       totalEfectivo      += t;
+        else if (v.metodo_pago === "tarjeta")          totalTarjeta       += t;
+        else if (v.metodo_pago === "transferencia")    totalTransferencia += t;
+        else if (v.metodo_pago === "cheque")           totalCheque        += t;
+        else if (v.metodo_pago === "credito")          totalCredito       += t;
+      }
+
+      // Devoluciones agrupadas por método original
+      let devEfectivo = 0, devTransferencia = 0, devTotal = 0;
+      const devEfectivoList = [], devCreditoList = [];
+      for (const d of devoluciones) {
+        const monto = parseFloat(d.total);
+        devTotal += monto;
+        const metodo = d.venta_metodo || "";
+        if (metodo === "efectivo" || metodo === "mixto") devEfectivo += monto;
+        else if (metodo === "transferencia")              devTransferencia += monto;
+
+        if (d.tipo === "credito") devCreditoList.push(d);
+        else                      devEfectivoList.push(d);
+      }
+
+      const totalVentasNeto = totalVentasBruto - devTotal;
+
+      // Salidas efectivo
+      const totalSalidasEfectivo = salidas
+        .filter(s => !s.metodo_pago || s.metodo_pago === "efectivo")
+        .reduce((sum, s) => sum + parseFloat(s.monto), 0);
+      const totalSalidas = salidas.reduce((sum, s) => sum + parseFloat(s.monto), 0);
+
+      // Pagos de crédito en efectivo (para calcular efectivo en caja)
+      const pagosEfectivo = pagos
+        .filter(p => p.metodo_pago === "efectivo")
+        .reduce((sum, p) => sum + parseFloat(p.monto), 0);
+      const pagosTransferencia = pagos
+        .filter(p => p.metodo_pago === "transferencia")
+        .reduce((sum, p) => sum + parseFloat(p.monto), 0);
+      const totalPagos = pagos.reduce((sum, p) => sum + parseFloat(p.monto), 0);
+
+      // Efectivo en caja
+      const efectivoEnCaja = fondoCaja + totalEfectivo + pagosEfectivo - totalSalidasEfectivo - devEfectivo;
+
+      // Ganancia bruta
+      const totalCostos = parseFloat(costosResult.rows[0]?.total_costos || 0);
+      const ganancia = totalVentasNeto - totalCostos;
+
+      // Total ingresos contado
+      const totalIngresos = totalEfectivo + totalPagos + totalTransferencia - devEfectivo - devTransferencia;
+
+      // Número de turno (número de ventas acumuladas hasta hoy)
+      const turnoResult = await pool.query(
+        `SELECT COUNT(*) AS total FROM ventas WHERE fecha <= $1`,
+        [fechaDia],
+      );
+      const turnoNum = parseInt(turnoResult.rows[0]?.total || 0);
+
+      res.json({
+        success: true,
+        cuadre: {
+          fecha: fechaDia,
+          cajero,
+          turno: turnoNum,
+          config,
+          fondo_caja: fondoCaja,
+          cantidad_ventas: ventas.length,
+
+          // Ventas por método
+          ventas_efectivo: totalEfectivo,
+          ventas_tarjeta: totalTarjeta,
+          ventas_transferencia: totalTransferencia,
+          ventas_cheque: totalCheque,
+          ventas_credito: totalCredito,
+          ventas_bruto: totalVentasBruto,
+          devoluciones_total: devTotal,
+          ventas_neto: totalVentasNeto,
+          ganancia,
+
+          // Dinero en caja
+          pagos_efectivo: pagosEfectivo,
+          salidas_efectivo: totalSalidasEfectivo,
+          dev_efectivo: devEfectivo,
+          efectivo_en_caja: efectivoEnCaja,
+
+          // Ingresos contado
+          pagos_clientes: totalPagos,
+          pagos_transferencia: pagosTransferencia,
+          dev_transferencia: devTransferencia,
+          total_ingresos: totalIngresos,
+
+          // Listas
+          salidas,
+          total_salidas: totalSalidas,
+          pagos_credito: pagos,
+          devoluciones_efectivo: devEfectivoList,
+          devoluciones_credito: devCreditoList,
+          por_categoria: porCategoriaResult.rows,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async getReporteInventario(req, res, next) {
     try {
       const result = await pool.query(`
