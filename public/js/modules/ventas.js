@@ -1165,6 +1165,54 @@ const VentasModule = {
   const tipoToast = tipo === "danger" ? "error" : tipo;
   Toast.show(mensaje, tipoToast);
   },
+
+  // ==================== MODAL SELECTOR DE SERVICIOS ====================
+
+  async mostrarModalServicios() {
+  let servicios = [];
+  try {
+  servicios = await API.Servicios.getAll();
+  } catch (e) {
+  Toast.error("Error al cargar servicios");
+  return;
+  }
+
+  const filas = servicios.map((s) => {
+  const precioLabel = s.es_gratuito
+    ? `<span style="color:#4caf50;font-weight:bold;">GRATIS</span>`
+    : `<span style="color:#f57c00;font-weight:bold;">RD$ ${parseFloat(s.precio).toFixed(2)}</span>`;
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #eee;">
+    <div>
+    <strong>${s.nombre}</strong>
+    ${s.descripcion ? `<br><small style="color:#7f8c8d;">${s.descripcion}</small>` : ""}
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+    ${precioLabel}
+    <button type="button" class="btn btn-success btn-small"
+      onclick="VentasModule.agregarServicioRapido(${s.id}); document.getElementById('modalServicios').remove();">
+      Agregar
+    </button>
+    </div>
+    </div>
+  `;
+  }).join("");
+
+  const html = `
+  <div id="modalServicios" class="js-overlay">
+  <div class="js-modal js-modal--md" style="padding:30px;">
+  <h3 style="margin:0 0 20px 0;">Agregar Servicio</h3>
+  <div style="max-height:400px;overflow-y:auto;">
+  ${filas || '<p style="text-align:center;color:#7f8c8d;">No hay servicios disponibles</p>'}
+  </div>
+  <div class="flex-end" style="margin-top:20px;">
+  <button type="button" class="btn btn-secondary" onclick="document.getElementById('modalServicios').remove();">Cerrar</button>
+  </div>
+  </div>
+  </div>
+  `;
+  document.body.insertAdjacentHTML("beforeend", html);
+  },
 };
 
 // ==================== FUNCIONES GLOBALES ====================
@@ -1175,5 +1223,5 @@ window.escanearProductoVenta = () => VentasModule.escanearYAgregarProducto();
 window.selectPaymentMethod = (metodo, el) =>
   VentasModule.seleccionarMetodoPago(metodo, el);
 window.cancelarVenta = () => VentasModule.limpiarVenta();
-window.agregarServicioAVenta = () => VentasModule.mostrarModalAgregarManual();
+window.agregarServicioAVenta = () => VentasModule.mostrarModalServicios();
 

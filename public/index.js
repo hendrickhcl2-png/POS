@@ -10,8 +10,6 @@ let contadorCostos = 0;
 let contadorCaracteristicas = 0;
 let productoEnEdicion = null;
 let ventas = [];
-let serviciosDisponibles = [];
-let serviciosEnVenta = [];
 
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener("DOMContentLoaded", async function () {
@@ -65,13 +63,10 @@ async function cargarDatosIniciales() {
       ]);
     window.configuracion = configuracion;
 
-    await cargarServicios();
-
     actualizarSelectClientes();
     actualizarSelectCategorias();
     actualizarSelectProveedores();
     actualizarSelectProductos();
-    mostrarServiciosRapidos();
   } catch (error) {
     mostrarAlerta("Error al cargar datos del servidor", "danger");
   }
@@ -475,127 +470,6 @@ window.actualizarPrecioItem = function (select) {
   calcularTotalesVenta();
 };
 
-// ==================== MÓDULO DE SERVICIOS EN VENTAS ====================
-
-async function cargarServicios() {
-  try {
-    serviciosDisponibles = await window.API.Servicios.getAll();
-  } catch (error) {
-    serviciosDisponibles = [];
-  }
-}
-
-window.agregarServicioAVenta = function (servicioId = null) {
-  const container = document.getElementById("serviciosEnVenta");
-  if (!container) return;
-
-  const servicioDiv = document.createElement("div");
-  servicioDiv.className = "servicio-item";
-
-  const opcionesServicios = serviciosDisponibles
-    .map((s) => {
-      const precio = s.es_gratuito
-        ? "GRATIS"
-        : `$${parseFloat(s.precio).toFixed(2)}`;
-      const badge = s.es_gratuito ? " " : "";
-      return `<option value="${s.id}" data-precio="${s.precio}" data-gratuito="${s.es_gratuito}" data-nombre="${s.nombre}">${s.nombre} - ${precio}${badge}</option>`;
-    })
-    .join("");
-
-  servicioDiv.innerHTML = `
-    <select class="servicio-select" onchange="actualizarPrecioServicio(this)">
-      <option value="">Seleccione servicio...</option>
-      ${opcionesServicios}
-    </select>
-    <input
-      type="number"
-      class="servicio-cantidad"
-      placeholder="Cant"
-      min="1"
-      value="1"
-      onchange="calcularTotalesVenta()"
-    />
-    <input
-      type="number"
-      class="servicio-precio"
-      placeholder="Precio"
-      readonly
-    />
-    <button
-      type="button"
-      class="btn btn-danger btn-small"
-      onclick="this.parentElement.remove(); calcularTotalesVenta();"
-    >
-      Eliminar
-    </button>
-  `;
-
-  container.appendChild(servicioDiv);
-
-  if (servicioId) {
-    const select = servicioDiv.querySelector(".servicio-select");
-    select.value = servicioId;
-    actualizarPrecioServicio(select);
-  }
-};
-
-window.actualizarPrecioServicio = function (select) {
-  const servicioItem = select.closest(".servicio-item");
-  const servicioId = select.value;
-
-  if (!servicioId) {
-    servicioItem.querySelector(".servicio-precio").value = "";
-    calcularTotalesVenta();
-    return;
-  }
-
-  const option = select.options[select.selectedIndex];
-  const precio = parseFloat(option.dataset.precio) || 0;
-  const esGratuito = option.dataset.gratuito === "true";
-
-  const precioInput = servicioItem.querySelector(".servicio-precio");
-  precioInput.value = esGratuito ? "0.00 (GRATIS)" : precio.toFixed(2);
-
-  if (esGratuito) {
-    servicioItem.style.borderLeftColor = "#4CAF50";
-    precioInput.style.color = "#4CAF50";
-  } else {
-    servicioItem.style.borderLeftColor = "#2196F3";
-    precioInput.style.color = "#333";
-  }
-
-  calcularTotalesVenta();
-};
-
-function mostrarServiciosRapidos() {
-  const container = document.getElementById("serviciosRapidos");
-  if (!container) return;
-
-  const serviciosComunes = serviciosDisponibles.filter(
-    (s) =>
-      s.nombre.toLowerCase().includes("protector") ||
-      s.nombre.toLowerCase().includes("configuración") ||
-      s.nombre.toLowerCase().includes("configuracion") ||
-      s.nombre.toLowerCase().includes("gratis"),
-  );
-
-  container.innerHTML = serviciosComunes
-    .slice(0, 6)
-    .map((s) => {
-      const badge = s.es_gratuito ? "" : `$${s.precio}`;
-      return `
-        <button
-          type="button"
-          class="btn btn-small ${s.es_gratuito ? "btn-success" : "btn-info"}"
-          onclick="agregarServicioAVenta(${s.id})"
-          style="margin: 5px; padding: 8px 12px; white-space: nowrap;"
-        >
-          ${s.nombre.substring(0, 25)}... ${badge}
-        </button>
-      `;
-    })
-    .join("");
-}
 
 function calcularTotalesVenta() {
   const items = document.querySelectorAll("#ventaItems.invoice-item");
@@ -608,23 +482,6 @@ function calcularTotalesVenta() {
     const total = cantidad * precio;
     item.querySelector(".item-total").value = total.toFixed(2);
     subtotal += total;
-  });
-
-  const servicios = document.querySelectorAll(
-    "#serviciosEnVenta.servicio-item",
-  );
-  servicios.forEach((servicio) => {
-    const select = servicio.querySelector(".servicio-select");
-    if (!select.value) return;
-
-    const cantidad =
-      parseFloat(servicio.querySelector(".servicio-cantidad").value) || 0;
-    const option = select.options[select.selectedIndex];
-    const precio = parseFloat(option.dataset.precio) || 0;
-    const esGratuito = option.dataset.gratuito === "true";
-
-    const totalServicio = esGratuito ? 0 : cantidad * precio;
-    subtotal += totalServicio;
   });
 
   const itbis = subtotal * 0.18;
