@@ -503,6 +503,106 @@ const ReportesExportController = {
       next(error);
     }
   },
+
+  // ==================== EXPORTAR SALIDAS EXCEL ====================
+
+  async exportarSalidasExcel(req, res, next) {
+    try {
+      const { fecha_inicio, fecha_fin } = req.query;
+
+      if (!fecha_inicio || !fecha_fin) {
+        return res.status(400).json({ success: false, message: "Debe especificar fecha_inicio y fecha_fin" });
+      }
+
+      const result = await pool.query(
+        `SELECT numero_salida, fecha, concepto, descripcion, monto,
+                COALESCE(categoria_gasto, 'Sin categoría') AS categoria_gasto,
+                COALESCE(metodo_pago, 'No especificado') AS metodo_pago,
+                COALESCE(beneficiario, '') AS beneficiario,
+                COALESCE(numero_referencia, '') AS numero_referencia
+         FROM salidas
+         WHERE fecha >= $1 AND fecha <= $2
+         ORDER BY fecha DESC, id DESC`,
+        [fecha_inicio, fecha_fin],
+      );
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Fifty Tech POS";
+      workbook.created = new Date();
+
+      const sheet = workbook.addWorksheet("Salidas");
+
+      // Título
+      sheet.mergeCells("A1:I1");
+      sheet.getCell("A1").value = `Reporte de Salidas — ${fecha_inicio} al ${fecha_fin}`;
+      sheet.getCell("A1").font = { bold: true, size: 14 };
+      sheet.getCell("A1").alignment = { horizontal: "center" };
+      sheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2c3e50" } };
+      sheet.getCell("A1").font = { bold: true, size: 14, color: { argb: "FFFFFFFF" } };
+      sheet.addRow([]);
+
+      // Cabeceras
+      const header = sheet.addRow([
+        "N° Salida", "Fecha", "Concepto", "Descripción",
+        "Monto", "Categoría", "Método Pago", "Beneficiario", "Referencia",
+      ]);
+      header.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF3498db" } };
+        cell.alignment = { horizontal: "center" };
+      });
+
+      sheet.columns = [
+        { key: "numero_salida",    width: 16 },
+        { key: "fecha",            width: 14 },
+        { key: "concepto",         width: 30 },
+        { key: "descripcion",      width: 30 },
+        { key: "monto",            width: 14 },
+        { key: "categoria_gasto",  width: 20 },
+        { key: "metodo_pago",      width: 18 },
+        { key: "beneficiario",     width: 22 },
+        { key: "numero_referencia",width: 18 },
+      ];
+
+      let totalMonto = 0;
+      result.rows.forEach((s, i) => {
+        const row = sheet.addRow({
+          numero_salida:    s.numero_salida,
+          fecha:            s.fecha,
+          concepto:         s.concepto,
+          descripcion:      s.descripcion || "",
+          monto:            parseFloat(s.monto),
+          categoria_gasto:  s.categoria_gasto,
+          metodo_pago:      s.metodo_pago,
+          beneficiario:     s.beneficiario,
+          numero_referencia:s.numero_referencia,
+        });
+        row.getCell("monto").numFmt = "#,##0.00";
+        row.fill = i % 2 === 0
+          ? { type: "pattern", pattern: "solid", fgColor: { argb: "FFFAFAFA" } }
+          : { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFFFF" } };
+        totalMonto += parseFloat(s.monto);
+      });
+
+      // Fila total
+      const totalRow = sheet.addRow({
+        concepto: "TOTAL",
+        monto: totalMonto,
+      });
+      totalRow.getCell("concepto").font = { bold: true, color: { argb: "FFFFFFFF" } };
+      totalRow.getCell("concepto").alignment = { horizontal: "right" };
+      totalRow.getCell("monto").numFmt = "#,##0.00";
+      totalRow.getCell("monto").font = { bold: true, color: { argb: "FFFFFFFF" } };
+      totalRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2c3e50" } };
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename=salidas_${fecha_inicio}_${fecha_fin}.xlsx`);
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error) {
+      next(error);
+    }
+  },
 };
 
 module.exports = ReportesExportController;

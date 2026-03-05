@@ -8,14 +8,14 @@ const { requireAdmin } = require("../middleware/auth-middleware");
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         p.*,
         c.nombre as categoria_nombre,
         pr.nombre as proveedor_nombre
       FROM productos p
       LEFT JOIN categorias c ON p.categoria_id = c.id
       LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
-      WHERE p.activo = true 
+      WHERE p.activo = true AND p.stock_actual > 0
       ORDER BY p.nombre
     `);
     res.json(result.rows);
@@ -42,9 +42,9 @@ router.get("/buscar", async (req, res) => {
        FROM productos p
        LEFT JOIN categorias c ON p.categoria_id = c.id
        LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
-       WHERE p.activo = true 
+       WHERE p.activo = true AND p.stock_actual > 0
        AND (
-         LOWER(p.nombre) LIKE LOWER($1) OR 
+         LOWER(p.nombre) LIKE LOWER($1) OR
          LOWER(p.codigo_barras) LIKE LOWER($1) OR
          LOWER(p.imei) LIKE LOWER($1)
        )
@@ -56,6 +56,44 @@ router.get("/buscar", async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error("❌ Error al buscar productos:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== HISTORIAL DE PRODUCTOS VENDIDOS ====================
+router.get("/vendidos", async (req, res) => {
+  try {
+    const { fecha_inicio, fecha_fin } = req.query;
+
+    const result = await pool.query(
+      `SELECT
+        dv.id, dv.producto_id, dv.nombre_producto,
+        p.imei,
+        dv.cantidad, dv.precio_unitario, dv.subtotal,
+        v.numero_ticket, v.fecha, v.hora, v.metodo_pago,
+        TRIM(CONCAT(c.nombre, ' ', COALESCE(c.apellido, ''))) AS cliente_nombre,
+        p.stock_actual AS stock_restante,
+        COALESCE(SUM(dd.cantidad_devuelta), 0) AS cantidad_devuelta
+      FROM detalle_venta dv
+      JOIN ventas v ON dv.venta_id = v.id
+      LEFT JOIN clientes c ON v.cliente_id = c.id
+      LEFT JOIN productos p ON dv.producto_id = p.id
+      LEFT JOIN devoluciones dev ON dev.venta_id = v.id AND dev.estado = 'procesada'
+      LEFT JOIN detalle_devolucion dd ON dd.devolucion_id = dev.id AND dd.producto_id = dv.producto_id
+      WHERE v.estado != 'anulada' AND dv.producto_id IS NOT NULL
+        AND ($1::date IS NULL OR v.fecha >= $1)
+        AND ($2::date IS NULL OR v.fecha <= $2)
+      GROUP BY dv.id, dv.producto_id, dv.nombre_producto,
+               p.imei, dv.cantidad, dv.precio_unitario, dv.subtotal,
+               v.numero_ticket, v.fecha, v.hora, v.metodo_pago,
+               c.nombre, c.apellido, p.stock_actual
+      ORDER BY v.fecha DESC, dv.id DESC`,
+      [fecha_inicio || null, fecha_fin || null],
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("❌ Error al obtener productos vendidos:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -118,6 +156,12 @@ router.post("/", requireAdmin, async (req, res) => {
       // Extras
       costos,
       caracteristicas,
+      // Factura del proveedor
+      factura_proveedor_numero,
+      factura_proveedor_fecha,
+      ncf,
+      // Gasto
+      registrar_como_gasto,
     } = req.body;
 
     // Validaciones
@@ -161,10 +205,13 @@ router.post("/", requireAdmin, async (req, res) => {
         activo,
         costos,
         caracteristicas,
-        creado_por
+        creado_por,
+        factura_proveedor_numero,
+        factura_proveedor_fecha,
+        ncf
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-        $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+        $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
       ) RETURNING *`,
       [
         codigo_barras || null,
@@ -188,13 +235,26 @@ router.post("/", requireAdmin, async (req, res) => {
         costos ? JSON.stringify(costos) : null,
         caracteristicas ? JSON.stringify(caracteristicas) : null,
         creadoPor,
+        factura_proveedor_numero || null,
+        factura_proveedor_fecha || null,
+        ncf || null,
       ],
     );
 
     const producto = result.rows[0];
 
-    // Registrar cada costo como una salida
-    if (Array.isArray(costos) && costos.length > 0) {
+    // Registrar cada costo como una salida (solo si el checkbox está marcado)
+    if (registrar_como_gasto && Array.isArray(costos) && costos.length > 0) {
+      // Obtener nombre del proveedor si existe
+      let proveedorNombre = null;
+      if (proveedor_id) {
+        const provRes = await pool.query(
+          `SELECT nombre FROM proveedores WHERE id = $1`,
+          [proveedor_id],
+        );
+        if (provRes.rows.length > 0) proveedorNombre = provRes.rows[0].nombre;
+      }
+
       for (const costo of costos) {
         if (!costo.concepto || !costo.monto) continue;
 
@@ -205,12 +265,14 @@ router.post("/", requireAdmin, async (req, res) => {
           "SAL" + String(numResult.rows[0].siguiente).padStart(8, "0");
 
         await pool.query(
-          `INSERT INTO salidas (numero_salida, fecha, concepto, monto, categoria_gasto)
-           VALUES ($1, CURRENT_DATE, $2, $3, 'Compras')`,
+          `INSERT INTO salidas (numero_salida, fecha, concepto, monto, categoria_gasto, beneficiario, ncf)
+           VALUES ($1, CURRENT_DATE, $2, $3, 'Compras de Inventario', $4, $5)`,
           [
             numeroSalida,
-            `${nombre} (${producto.codigo_barras}) - ${costo.concepto}`,
+            `${nombre} (${producto.codigo_barras || producto.imei || "s/c"}) - ${costo.concepto}`,
             parseFloat(costo.monto),
+            proveedorNombre,
+            ncf || null,
           ],
         );
       }
@@ -265,6 +327,9 @@ router.put("/:id", requireAdmin, async (req, res) => {
       disponible,
       costos,
       caracteristicas,
+      factura_proveedor_numero,
+      factura_proveedor_fecha,
+      ncf,
     } = req.body;
 
     if (!nombre || nombre.trim() === "") {
@@ -283,7 +348,7 @@ router.put("/:id", requireAdmin, async (req, res) => {
     }
 
     const result = await pool.query(
-      `UPDATE productos 
+      `UPDATE productos
        SET codigo_barras = $1,
            imei = $2,
            nombre = $3,
@@ -301,8 +366,11 @@ router.put("/:id", requireAdmin, async (req, res) => {
            descuento_monto = $15,
            disponible = $16,
            costos = $17,
-           caracteristicas = $18
-       WHERE id = $19
+           caracteristicas = $18,
+           factura_proveedor_numero = $19,
+           factura_proveedor_fecha = $20,
+           ncf = $21
+       WHERE id = $22
        RETURNING *`,
       [
         codigo_barras,
@@ -323,6 +391,9 @@ router.put("/:id", requireAdmin, async (req, res) => {
         disponible,
         costos ? JSON.stringify(costos) : null,
         caracteristicas ? JSON.stringify(caracteristicas) : null,
+        factura_proveedor_numero || null,
+        factura_proveedor_fecha || null,
+        ncf || null,
         id,
       ],
     );

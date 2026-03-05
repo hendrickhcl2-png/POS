@@ -33,6 +33,16 @@ const ProductosAPI = {
   async delete(id) {
     return await APIClient.delete(`/productos/${id}`);
   },
+
+  // Historial de productos vendidos
+  async getVendidos(fechaInicio, fechaFin) {
+    let url = "/productos/vendidos";
+    const params = [];
+    if (fechaInicio) params.push(`fecha_inicio=${fechaInicio}`);
+    if (fechaFin) params.push(`fecha_fin=${fechaFin}`);
+    if (params.length) url += "?" + params.join("&");
+    return await APIClient.get(url);
+  },
 };
 
 // Exportar

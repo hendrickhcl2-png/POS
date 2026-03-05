@@ -739,6 +739,65 @@ const ReportesController = {
     }
   },
 
+  // ==================== REPORTE DE SALIDAS ====================
+
+  async getReporteSalidas(req, res, next) {
+    try {
+      const { fecha_inicio, fecha_fin } = req.query;
+
+      if (!fecha_inicio || !fecha_fin) {
+        return res.status(400).json({ success: false, message: "Debe especificar fecha_inicio y fecha_fin" });
+      }
+
+      const salidasResult = await pool.query(
+        `SELECT id, numero_salida, fecha, concepto, descripcion, monto,
+                categoria_gasto, metodo_pago, beneficiario, numero_referencia
+         FROM salidas
+         WHERE fecha >= $1 AND fecha <= $2
+         ORDER BY fecha DESC, id DESC`,
+        [fecha_inicio, fecha_fin],
+      );
+
+      const porCategoriaResult = await pool.query(
+        `SELECT COALESCE(categoria_gasto, 'Sin categoría') AS categoria,
+                COUNT(*) AS cantidad,
+                SUM(monto) AS total
+         FROM salidas
+         WHERE fecha >= $1 AND fecha <= $2
+         GROUP BY categoria_gasto
+         ORDER BY total DESC`,
+        [fecha_inicio, fecha_fin],
+      );
+
+      const porMetodoResult = await pool.query(
+        `SELECT COALESCE(metodo_pago, 'No especificado') AS metodo_pago,
+                COUNT(*) AS cantidad,
+                SUM(monto) AS total
+         FROM salidas
+         WHERE fecha >= $1 AND fecha <= $2
+         GROUP BY metodo_pago
+         ORDER BY total DESC`,
+        [fecha_inicio, fecha_fin],
+      );
+
+      const total = salidasResult.rows.reduce((sum, s) => sum + parseFloat(s.monto), 0);
+
+      res.json({
+        success: true,
+        periodo: { fecha_inicio, fecha_fin },
+        resumen: {
+          total_salidas: parseFloat(total.toFixed(2)),
+          cantidad_salidas: salidasResult.rows.length,
+        },
+        salidas: salidasResult.rows,
+        por_categoria: porCategoriaResult.rows,
+        por_metodo: porMetodoResult.rows,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async getReporteInventario(req, res, next) {
     try {
       const result = await pool.query(`

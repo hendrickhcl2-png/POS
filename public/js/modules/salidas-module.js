@@ -11,7 +11,7 @@ async function cargarSalidas() {
     if (!tbody) return;
 
     if (salidas.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center" style="color: #7f8c8d">No hay salidas registradas</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: #7f8c8d">No hay salidas registradas</td></tr>`;
       return;
     }
 
@@ -27,6 +27,7 @@ async function cargarSalidas() {
           </td>
           <td>${s.metodo_pago || "-"}</td>
           <td>${s.beneficiario || "-"}</td>
+          <td>${s.ncf || "-"}</td>
           <td>
             <button class="btn btn-warning btn-small" onclick="editarSalida(${s.id})">Editar</button>
             <button class="btn btn-danger btn-small" onclick="eliminarSalida(${s.id}, '${s.concepto.replace(/'/g, "\\'")}')">Eliminar</button>
@@ -53,6 +54,7 @@ function editarSalida(id) {
   setValueIfExists("salidaMonto", s.monto);
   setValueIfExists("salidaMetodoPago", s.metodo_pago || "efectivo");
   setValueIfExists("salidaBeneficiario", s.beneficiario || "");
+  setValueIfExists("salidaNcf", s.ncf || "");
 
   const btnSubmit = document.querySelector("#formSalida button[type='submit']");
   if (btnSubmit) btnSubmit.textContent = "Actualizar Salida";
@@ -106,6 +108,7 @@ async function guardarSalida(e) {
     categoria_gasto: getValue("salidaCategoria"),
     metodo_pago: getValue("salidaMetodoPago"),
     beneficiario: getValue("salidaBeneficiario"),
+    ncf: getValue("salidaNcf") || null,
   };
 
   if (!salidaData.concepto || salidaData.concepto.trim() === "") {

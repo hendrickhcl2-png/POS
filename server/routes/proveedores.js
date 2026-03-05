@@ -72,7 +72,7 @@ router.get("/:id/productos", async (req, res) => {
 // Crear proveedor
 router.post("/", requireAdmin, async (req, res) => {
   try {
-    const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas } =
+    const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion } =
       req.body;
 
     if (!nombre || nombre.trim() === "") {
@@ -81,19 +81,19 @@ router.post("/", requireAdmin, async (req, res) => {
 
     // Generar código único
     const codigoResult = await pool.query(
-      `SELECT COALESCE(MAX(CAST(SUBSTRING(codigo FROM 5) AS INTEGER)), 0) + 1 as next_num 
-       FROM proveedores 
+      `SELECT COALESCE(MAX(CAST(SUBSTRING(codigo FROM 5) AS INTEGER)), 0) + 1 as next_num
+       FROM proveedores
        WHERE codigo LIKE 'PROV%'`,
     );
     const nextNum = codigoResult.rows[0].next_num;
     const codigo = `PROV${String(nextNum).padStart(4, "0")}`; // PROV0001, PROV0002, etc.
 
     const result = await pool.query(
-      `INSERT INTO proveedores 
-       (codigo, nombre, contacto_nombre, telefono, email, direccion, rnc, notas)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO proveedores
+       (codigo, nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
-      [codigo, nombre, contacto_nombre, telefono, email, direccion, rnc, notas],
+      [codigo, nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion || null],
     );
 
     res.status(201).json(result.rows[0]);
@@ -107,7 +107,7 @@ router.post("/", requireAdmin, async (req, res) => {
 router.put("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas } =
+    const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion } =
       req.body;
 
     if (!nombre || nombre.trim() === "") {
@@ -115,12 +115,13 @@ router.put("/:id", requireAdmin, async (req, res) => {
     }
 
     const result = await pool.query(
-      `UPDATE proveedores 
-       SET nombre = $1, contacto_nombre = $2, telefono = $3, 
-           email = $4, direccion = $5, rnc = $6, notas = $7
-       WHERE id = $8
+      `UPDATE proveedores
+       SET nombre = $1, contacto_nombre = $2, telefono = $3,
+           email = $4, direccion = $5, rnc = $6, notas = $7,
+           descripcion = $8
+       WHERE id = $9
        RETURNING *`,
-      [nombre, contacto_nombre, telefono, email, direccion, rnc, notas, id],
+      [nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion || null, id],
     );
 
     if (result.rows.length === 0) {

@@ -223,6 +223,9 @@ window.editarProducto = async function (productoId) {
     setValueIfExists("productoCategoria", producto.categoria_id || "");
     toggleStockPorCategoria();
     setValueIfExists("productoProveedor", producto.proveedor_id || "");
+    setValueIfExists("productoFacturaProveedorNumero", producto.factura_proveedor_numero || "");
+    setValueIfExists("productoFacturaProveedorFecha", producto.factura_proveedor_fecha ? producto.factura_proveedor_fecha.split("T")[0] : "");
+    setValueIfExists("productoNcf", producto.ncf || "");
     setValueIfExists("productoPrecio", producto.precio_venta || "");
     setValueIfExists("productoMayoreo", producto.precio_mayoreo || "");
     setValueIfExists("productoCantidadMayoreo", producto.cantidad_mayoreo || 5);
@@ -367,6 +370,9 @@ async function guardarProducto(e) {
     descripcion: getValue("productoDescripcion"),
     categoria_id: parseInt(categoriaId),
     proveedor_id: parseInt(getValue("productoProveedor")) || null,
+    factura_proveedor_numero: getValue("productoFacturaProveedorNumero") || null,
+    factura_proveedor_fecha: getValue("productoFacturaProveedorFecha") || null,
+    ncf: getValue("productoNcf") || null,
     precio_costo: parseFloat(getValue("productoCosto")) || 0,
     precio_venta: parseFloat(getValue("productoPrecio")) || 0,
     precio_mayoreo: parseFloat(getValue("productoMayoreo")) || null,
@@ -381,6 +387,7 @@ async function guardarProducto(e) {
     activo: true,
     costos: costos,
     caracteristicas: caracteristicas,
+    registrar_como_gasto: document.getElementById("productoRegistrarGasto")?.checked === true,
   };
 
   try {
@@ -593,6 +600,24 @@ window.verDetalleProducto = async function (productoId) {
             <strong>Proveedor:</strong>
             <p>${producto.proveedor_nombre || "Sin proveedor"}</p>
           </div>
+
+          ${producto.factura_proveedor_numero ? `
+          <div class="prod-field">
+            <strong>N° Factura Proveedor:</strong>
+            <p>${producto.factura_proveedor_numero}</p>
+          </div>` : ""}
+
+          ${producto.factura_proveedor_fecha ? `
+          <div class="prod-field">
+            <strong>Fecha Factura Proveedor:</strong>
+            <p>${new Date(producto.factura_proveedor_fecha).toLocaleDateString("es-DO", { year: "numeric", month: "long", day: "numeric" })}</p>
+          </div>` : ""}
+
+          ${producto.ncf ? `
+          <div class="prod-field">
+            <strong>NCF:</strong>
+            <p style="font-family:monospace;">${producto.ncf}</p>
+          </div>` : ""}
 
           <div class="prod-field">
             <strong>Estado:</strong>

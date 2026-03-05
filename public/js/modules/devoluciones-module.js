@@ -318,11 +318,15 @@ const DevolucionModule = {
   const confirmar = confirm(
   `¿Confirma procesar esta devolución?\n\n` +
   `Items: ${this.itemsSeleccionados.length}\n` +
-  `Monto a devolver: ${this.formatCurrency(totalDevolucion)}\n\n` +
-  `Esta acción devolverá los productos al inventario.`,
+  `Monto a devolver: ${this.formatCurrency(totalDevolucion)}`,
   );
 
   if (!confirmar) return;
+
+  const restaurarStock = confirm(
+  `¿Desea agregar los productos devueltos de vuelta al inventario?\n\n` +
+  `Selecciona OK para restaurar el stock, Cancelar para solo registrar la devolución.`
+  );
 
   // Preparar datos
   const devolucionData = {
@@ -333,6 +337,7 @@ const DevolucionModule = {
   })),
   motivo: motivo,
   notas: notas || null,
+  restaurar_stock: restaurarStock,
   };
 
 

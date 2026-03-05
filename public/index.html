@@ -78,6 +78,10 @@
     <span class="nav-label">Reporte Inventario</span>
   </div>
 
+  <div id="nav-inventario-vendido" class="nav-item" onclick="showSection('inventario-vendido')">
+    <span class="nav-label">Inventario Vendido</span>
+  </div>
+
   <div id="nav-group-admin" class="nav-group-label">Admin</div>
 
   <div id="nav-facturacion" class="nav-item" onclick="showSection('facturacion')">
@@ -744,6 +748,17 @@
   />
   </div>
 
+  <!-- Registrar como gasto -->
+  <div class="caja-disponibilidad" style="margin-top: 10px;">
+  <label class="disponibilidad-label">
+  <input type="checkbox" id="productoRegistrarGasto" class="disponibilidad-checkbox" checked />
+  <div>
+  <strong class="disponibilidad-titulo">Registrar como gasto</strong>
+  <p class="disponibilidad-descripcion">Los costos se registrarán automáticamente como salidas en el módulo de gastos, con el proveedor como beneficiario</p>
+  </div>
+  </label>
+  </div>
+
   <div class="form-row-2 precios-grid">
   <div class="form-group">
   <label
@@ -854,6 +869,30 @@
   </p>
   </div>
 
+  <!-- ==================== PROVEEDOR ==================== -->
+  <h4 class="seccion-titulo-simple">Proveedor</h4>
+
+  <div class="form-row-3">
+  <div class="form-group">
+  <label>Proveedor:</label>
+  <select id="productoProveedor">
+  <option value="">Sin proveedor</option>
+  </select>
+  </div>
+  <div class="form-group">
+  <label>N° Factura del Proveedor:</label>
+  <input type="text" id="productoFacturaProveedorNumero" placeholder="Ej: FAC-0001" />
+  </div>
+  <div class="form-group">
+  <label>Fecha Factura del Proveedor:</label>
+  <input type="date" id="productoFacturaProveedorFecha" />
+  </div>
+  </div>
+  <div class="form-group" style="max-width:260px;">
+  <label>NCF:</label>
+  <input type="text" id="productoNcf" placeholder="Ej: B0100000001" maxlength="20" />
+  </div>
+
   <button type="submit" class="btn btn-primary">
   Guardar Producto
   </button>
@@ -890,6 +929,71 @@
   </tr>
   </tbody>
   </table>
+  </div>
+  </section>
+
+  <!-- INVENTARIO VENDIDO SECTION -->
+  <section id="inventario-vendido" class="section">
+  <div class="header">
+  <h1>Inventario Vendido</h1>
+  </div>
+
+  <div class="card">
+  <!-- Filtros -->
+  <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px;">
+  <div>
+  <label style="display:block;font-size:13px;font-weight:600;color:#7f8c8d;margin-bottom:4px;">Desde</label>
+  <input type="date" id="ivFechaDesde" style="padding:8px 12px;border:1px solid #ddd;border-radius:5px;">
+  </div>
+  <div>
+  <label style="display:block;font-size:13px;font-weight:600;color:#7f8c8d;margin-bottom:4px;">Hasta</label>
+  <input type="date" id="ivFechaHasta" style="padding:8px 12px;border:1px solid #ddd;border-radius:5px;">
+  </div>
+  <button onclick="InventarioVendidoModule.cargar()" style="background:#3498db;color:white;border:none;padding:9px 20px;border-radius:5px;cursor:pointer;font-weight:600;">Buscar</button>
+  <div style="flex:1;min-width:200px;">
+  <label style="display:block;font-size:13px;font-weight:600;color:#7f8c8d;margin-bottom:4px;">Buscar</label>
+  <input type="text" id="ivBuscador" placeholder="Producto, ticket, cliente, IMEI..." oninput="InventarioVendidoModule.filtrar()" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:5px;box-sizing:border-box;">
+  </div>
+  </div>
+
+  <!-- Cards resumen -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
+  <div style="background:#eaf4fb;border:1px solid #aed6f1;border-radius:8px;padding:16px;text-align:center;">
+  <div style="font-size:13px;color:#7f8c8d;font-weight:600;">Total Ítems Vendidos</div>
+  <div id="ivCardItems" style="font-size:28px;font-weight:bold;color:#2980b9;">0</div>
+  </div>
+  <div style="background:#fef9e7;border:1px solid #f9e79f;border-radius:8px;padding:16px;text-align:center;">
+  <div style="font-size:13px;color:#7f8c8d;font-weight:600;">Total Devueltos</div>
+  <div id="ivCardDevueltos" style="font-size:28px;font-weight:bold;color:#d4ac0d;">0</div>
+  </div>
+  <div style="background:#eafaf1;border:1px solid #a9dfbf;border-radius:8px;padding:16px;text-align:center;">
+  <div style="font-size:13px;color:#7f8c8d;font-weight:600;">Valor Vendido</div>
+  <div id="ivCardValor" style="font-size:28px;font-weight:bold;color:#1e8449;">RD$0.00</div>
+  </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tbl-scroll">
+  <table style="width:100%;border-collapse:collapse;">
+  <thead>
+  <tr style="background:#2c3e50;color:white;">
+  <th style="padding:11px 12px;text-align:left;">N° Ticket</th>
+  <th style="padding:11px 12px;text-align:left;">Fecha</th>
+  <th style="padding:11px 12px;text-align:left;">Producto</th>
+  <th style="padding:11px 12px;text-align:center;">Cant. Vendida</th>
+  <th style="padding:11px 12px;text-align:center;">Devuelto</th>
+  <th style="padding:11px 12px;text-align:right;">Precio Unit.</th>
+  <th style="padding:11px 12px;text-align:right;">Subtotal</th>
+  <th style="padding:11px 12px;text-align:left;">Cliente</th>
+  <th style="padding:11px 12px;text-align:left;">Método Pago</th>
+  <th style="padding:11px 12px;text-align:center;">Estado</th>
+  </tr>
+  </thead>
+  <tbody id="ivTbody">
+  <tr><td colspan="10" style="text-align:center;padding:30px;color:#7f8c8d;">Seleccione un período y presione Buscar</td></tr>
+  </tbody>
+  </table>
+  </div>
   </div>
   </section>
 
@@ -933,6 +1037,10 @@
   <label>Dirección:</label>
   <textarea id="proveedorDireccion" rows="2"></textarea>
   </div>
+  <div class="form-group">
+  <label>Descripción:</label>
+  <input type="text" id="proveedorDescripcion" placeholder="Ej: Compra de celulares, accesorios..." />
+  </div>
   <button type="submit" class="btn btn-primary">
   Guardar Proveedor
   </button>
@@ -946,14 +1054,16 @@
   <tr>
   <th>Código</th>
   <th>Nombre</th>
+  <th>Descripción</th>
   <th>Contacto</th>
   <th>Teléfono</th>
   <th>Email</th>
+  <th>Acciones</th>
   </tr>
   </thead>
   <tbody id="tablaProveedores">
   <tr>
-  <td colspan="5" class="text-center tabla-vacia-mensaje">
+  <td colspan="7" class="text-center tabla-vacia-mensaje">
   No hay proveedores registrados
   </td>
   </tr>
@@ -1024,13 +1134,15 @@
   </select>
   </div>
   </div>
+  <div class="form-row-2">
   <div class="form-group">
   <label>Beneficiario:</label>
-  <input
-  type="text"
-  id="salidaBeneficiario"
-  placeholder="Nombre del beneficiario"
-  />
+  <input type="text" id="salidaBeneficiario" placeholder="Nombre del beneficiario" />
+  </div>
+  <div class="form-group">
+  <label>NCF:</label>
+  <input type="text" id="salidaNcf" placeholder="Ej: B0100000001" maxlength="20" />
+  </div>
   </div>
   <button type="submit" class="btn btn-primary">
   Registrar Salida
@@ -1049,12 +1161,13 @@
   <th>Monto</th>
   <th>Método</th>
   <th>Beneficiario</th>
+  <th>NCF</th>
   <th>Acciones</th>
   </tr>
   </thead>
   <tbody id="tablaSalidas">
   <tr>
-  <td colspan="7" class="text-center tabla-vacia-mensaje">
+  <td colspan="8" class="text-center tabla-vacia-mensaje">
   No hay salidas registradas
   </td>
   </tr>
@@ -1307,6 +1420,13 @@
   style="margin-left:8px;"
   >
   Cuadre de Turno
+  </button>
+  <button
+  class="btn btn-danger"
+  onclick="ReportesModule.abrirReporteSalidas()"
+  style="margin-left:8px;"
+  >
+  Reporte de Salidas
   </button>
   </div>
   <div id="loaderReportes" class="loader-reportes">
@@ -1889,6 +2009,84 @@
     </div>
   </div>
 
+  <!-- Modal Reporte de Salidas -->
+  <div class="modal" id="modalReporteSalidas">
+    <div class="modal-content" style="max-width:960px;max-height:90vh;overflow-y:auto;">
+      <div class="modal-header">
+        <h2>Reporte de Salidas</h2>
+        <span class="close-modal" onclick="cerrarModal('modalReporteSalidas')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <!-- Filtros -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+          <div class="form-group" style="margin:0;">
+            <label>Fecha desde</label>
+            <input type="date" id="salidasDesde" style="width:160px;" />
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Fecha hasta</label>
+            <input type="date" id="salidasHasta" style="width:160px;" />
+          </div>
+          <button class="btn btn-primary" onclick="ReportesModule.cargarReporteSalidas()">Consultar</button>
+          <button class="btn btn-success" id="btnSalidasExcel" onclick="ReportesModule.descargarSalidasExcel()" style="display:none;">
+            Descargar Excel
+          </button>
+        </div>
+
+        <div id="salidasLoader" style="display:none;text-align:center;padding:20px;color:var(--clr-muted);">Cargando reporte...</div>
+
+        <div id="salidasContenido" style="display:none;">
+
+          <!-- Tarjetas resumen -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+            <div class="card" style="padding:14px;text-align:center;">
+              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Total Salidas</div>
+              <div id="sTotalSalidas" style="font-size:22px;font-weight:700;color:var(--clr-danger);">RD$0.00</div>
+            </div>
+            <div class="card" style="padding:14px;text-align:center;">
+              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Cantidad</div>
+              <div id="sCantidadSalidas" style="font-size:22px;font-weight:700;color:var(--clr-primary);">0</div>
+            </div>
+          </div>
+
+          <!-- Gráficas -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            <div class="card" style="padding:14px;">
+              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Por Categoría</h4>
+              <div id="salidasPorCategoria"></div>
+            </div>
+            <div class="card" style="padding:14px;">
+              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Por Método de Pago</h4>
+              <div id="salidasPorMetodo"></div>
+            </div>
+          </div>
+
+          <!-- Tabla detalle -->
+          <div class="card" style="padding:14px;">
+            <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Detalle de Salidas</h4>
+            <div style="overflow-x:auto;">
+              <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                <thead>
+                  <tr style="background:var(--clr-primary);color:#fff;">
+                    <th style="padding:8px 10px;text-align:left;">N° Salida</th>
+                    <th style="padding:8px 10px;text-align:left;">Fecha</th>
+                    <th style="padding:8px 10px;text-align:left;">Concepto</th>
+                    <th style="padding:8px 10px;text-align:left;">Descripción</th>
+                    <th style="padding:8px 10px;text-align:right;">Monto</th>
+                    <th style="padding:8px 10px;text-align:left;">Categoría</th>
+                    <th style="padding:8px 10px;text-align:left;">Método</th>
+                  </tr>
+                </thead>
+                <tbody id="salidasTabla"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Cargar en este orden -->
   <script src="js/utils/toast.js"></script>
   <script src="js/utils/dom-utils.js"></script>
@@ -1934,6 +2132,7 @@
   <script src="js/modules/creditos-module.js"></script>
   <script src="js/modules/reportes-module.js"></script>
   <script src="js/modules/reporte-inventario-module.js"></script>
+  <script src="js/modules/inventario-vendido-module.js"></script>
   <script src="js/api/auth-api.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/modules/usuarios-module.js"></script>

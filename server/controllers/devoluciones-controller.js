@@ -16,6 +16,7 @@ const DevolucionesController = {
         items, // Array de items a devolver: [{ detalle_factura_id, cantidad_devuelta }]
         motivo,
         notas,
+        restaurar_stock = true,
       } = req.body;
 
       // Validaciones
@@ -194,31 +195,33 @@ const DevolucionesController = {
           [item.cantidad_devuelta, item.detalle_factura_id],
         );
 
-        // Devolver stock al inventario
-        await client.query(
-          `UPDATE productos 
-           SET stock_actual = stock_actual + $1,
-               disponible = true
-           WHERE id = $2`,
-          [item.cantidad_devuelta, item.producto_id],
-        );
+        // Devolver stock al inventario (solo si el usuario lo confirmó)
+        if (restaurar_stock !== false) {
+          await client.query(
+            `UPDATE productos
+             SET stock_actual = stock_actual + $1,
+                 disponible = true
+             WHERE id = $2`,
+            [item.cantidad_devuelta, item.producto_id],
+          );
 
-        // Registrar movimiento de inventario
-        await client.query(
-          `INSERT INTO movimientos_inventario (
-            producto_id,
-            tipo,
-            cantidad,
-            motivo,
-            usuario,
-            fecha
-          ) VALUES ($1, 'entrada', $2, $3, 'Sistema', CURRENT_TIMESTAMP)`,
-          [
-            item.producto_id,
-            item.cantidad_devuelta,
-            `Devolución ${numeroDevolucion} - ${motivo}`,
-          ],
-        );
+          // Registrar movimiento de inventario
+          await client.query(
+            `INSERT INTO movimientos_inventario (
+              producto_id,
+              tipo,
+              cantidad,
+              motivo,
+              usuario,
+              fecha
+            ) VALUES ($1, 'entrada', $2, $3, 'Sistema', CURRENT_TIMESTAMP)`,
+            [
+              item.producto_id,
+              item.cantidad_devuelta,
+              `Devolución ${numeroDevolucion} - ${motivo}`,
+            ],
+          );
+        }
       }
 
       // Si la factura tiene saldo pendiente, reducirlo por el monto devuelto

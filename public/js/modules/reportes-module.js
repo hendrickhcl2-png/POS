@@ -661,6 +661,133 @@ const ReportesModule = {
   }
   },
 
+  // ==================== REPORTE DE SALIDAS ====================
+
+  abrirReporteSalidas() {
+    const hoy = new Date().toISOString().split("T")[0];
+    const desde = document.getElementById("salidasDesde");
+    const hasta = document.getElementById("salidasHasta");
+    if (desde && !desde.value) desde.value = hoy;
+    if (hasta && !hasta.value) hasta.value = hoy;
+    document.getElementById("salidasContenido").style.display = "none";
+    document.getElementById("btnSalidasExcel").style.display = "none";
+    abrirModal("modalReporteSalidas");
+  },
+
+  async cargarReporteSalidas() {
+    const desde = document.getElementById("salidasDesde").value;
+    const hasta = document.getElementById("salidasHasta").value;
+    if (!desde || !hasta) { Toast.warning("Selecciona ambas fechas"); return; }
+
+    document.getElementById("salidasLoader").style.display = "block";
+    document.getElementById("salidasContenido").style.display = "none";
+
+    try {
+      const data = await ReportesAPI.getReporteSalidas(desde, hasta);
+      this._salidasActual = { data, desde, hasta };
+      this.renderizarReporteSalidas(data);
+      document.getElementById("salidasContenido").style.display = "block";
+      document.getElementById("btnSalidasExcel").style.display = "inline-block";
+    } catch (e) {
+      Toast.error("Error al cargar reporte: " + e.message);
+    } finally {
+      document.getElementById("salidasLoader").style.display = "none";
+    }
+  },
+
+  renderizarReporteSalidas(data) {
+    const f = (n) => this.formatCurrency(n || 0);
+    const resumen = data.resumen;
+
+    document.getElementById("sTotalSalidas").textContent = f(resumen.total_salidas);
+    document.getElementById("sCantidadSalidas").textContent = resumen.cantidad_salidas;
+
+    // Tabla principal
+    const tbody = document.getElementById("salidasTabla");
+    if (tbody) {
+      if (data.salidas.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--clr-muted);">Sin salidas en este período</td></tr>`;
+      } else {
+        tbody.innerHTML = data.salidas.map(s => `
+          <tr>
+            <td style="font-weight:600;color:var(--clr-primary);">${s.numero_salida || "—"}</td>
+            <td>${this.formatFecha(s.fecha)}</td>
+            <td>${s.concepto}</td>
+            <td style="color:var(--clr-muted);font-size:12px;">${s.descripcion || "—"}</td>
+            <td style="text-align:right;font-weight:600;color:var(--clr-danger);">${f(s.monto)}</td>
+            <td>${s.categoria_gasto || "—"}</td>
+            <td>${this.formatMetodoPago(s.metodo_pago)}</td>
+          </tr>`).join("");
+      }
+    }
+
+    // Por categoría
+    const catDiv = document.getElementById("salidasPorCategoria");
+    if (catDiv) {
+      catDiv.innerHTML = (data.por_categoria || []).map(c => {
+        const pct = resumen.total_salidas > 0 ? ((parseFloat(c.total) / resumen.total_salidas) * 100).toFixed(1) : 0;
+        return `
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-weight:600;">${c.categoria}</span>
+              <span>${f(c.total)} (${pct}%)</span>
+            </div>
+            <div style="background:#ecf0f1;height:24px;border-radius:12px;overflow:hidden;">
+              <div style="background:linear-gradient(90deg,#e74c3c,#c0392b);height:100%;width:${pct}%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold;">
+                ${c.cantidad} salidas
+              </div>
+            </div>
+          </div>`;
+      }).join("") || `<p style="color:var(--clr-muted);text-align:center;">Sin datos</p>`;
+    }
+
+    // Por método de pago
+    const metDiv = document.getElementById("salidasPorMetodo");
+    if (metDiv) {
+      metDiv.innerHTML = (data.por_metodo || []).map(m => {
+        const pct = resumen.total_salidas > 0 ? ((parseFloat(m.total) / resumen.total_salidas) * 100).toFixed(1) : 0;
+        return `
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-weight:600;">${this.formatMetodoPago(m.metodo_pago)}</span>
+              <span>${f(m.total)} (${pct}%)</span>
+            </div>
+            <div style="background:#ecf0f1;height:24px;border-radius:12px;overflow:hidden;">
+              <div style="background:linear-gradient(90deg,#3498db,#2980b9);height:100%;width:${pct}%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold;">
+                ${m.cantidad}
+              </div>
+            </div>
+          </div>`;
+      }).join("") || `<p style="color:var(--clr-muted);text-align:center;">Sin datos</p>`;
+    }
+  },
+
+  async descargarSalidasExcel() {
+    if (!this._salidasActual) { Toast.warning("Carga el reporte primero"); return; }
+    const { desde, hasta } = this._salidasActual;
+    const btn = document.getElementById("btnSalidasExcel");
+    btn.disabled = true;
+    btn.textContent = "Generando...";
+    try {
+      const baseURL = window.API_URL || "http://localhost:3000/api";
+      const url = `${baseURL}/reportes/salidas/excel?fecha_inicio=${desde}&fecha_fin=${hasta}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Error al generar Excel");
+      const blob = await response.blob();
+      const a = document.createElement("a");
+      a.href = window.URL.createObjectURL(blob);
+      a.download = `salidas_${desde}_${hasta}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (e) {
+      Toast.error("Error al descargar Excel: " + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Descargar Excel";
+    }
+  },
+
   async imprimirCuadre() {
   if (!this._cuadreActual) { Toast.warning("Carga el cuadre primero"); return; }
 

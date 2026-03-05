@@ -29,6 +29,7 @@ router.post(
       metodo_pago,
       beneficiario,
       numero_referencia,
+      ncf,
     } = req.body;
 
     if (!concepto || concepto.trim() === "") {
@@ -45,8 +46,8 @@ router.post(
       "SAL" + String(numResult.rows[0].siguiente).padStart(8, "0");
 
     const result = await pool.query(
-      `INSERT INTO salidas (numero_salida, fecha, concepto, descripcion, monto, categoria_gasto, metodo_pago, beneficiario, numero_referencia)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+      `INSERT INTO salidas (numero_salida, fecha, concepto, descripcion, monto, categoria_gasto, metodo_pago, beneficiario, numero_referencia, ncf)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
       [
         numeroSalida,
         fecha,
@@ -57,6 +58,7 @@ router.post(
         metodo_pago || null,
         beneficiario || null,
         numero_referencia || null,
+        ncf || null,
       ],
     );
 
@@ -79,6 +81,7 @@ router.put(
       metodo_pago,
       beneficiario,
       numero_referencia,
+      ncf,
     } = req.body;
 
     if (!concepto || concepto.trim() === "") {
@@ -90,8 +93,8 @@ router.put(
 
     const result = await pool.query(
       `UPDATE salidas SET fecha=$1, concepto=$2, descripcion=$3, monto=$4,
-       categoria_gasto=$5, metodo_pago=$6, beneficiario=$7, numero_referencia=$8
-       WHERE id=$9 RETURNING *`,
+       categoria_gasto=$5, metodo_pago=$6, beneficiario=$7, numero_referencia=$8, ncf=$9
+       WHERE id=$10 RETURNING *`,
       [
         fecha,
         concepto,
@@ -101,6 +104,7 @@ router.put(
         metodo_pago || null,
         beneficiario || null,
         numero_referencia || null,
+        ncf || null,
         id,
       ],
     );

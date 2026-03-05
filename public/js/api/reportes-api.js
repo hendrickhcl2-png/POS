@@ -29,6 +29,10 @@ const ReportesAPI = {
   async getCuadreTurno(fecha, fondoCaja = 0) {
     return await APIClient.get(`/reportes/cuadre?fecha=${fecha}&fondo_caja=${fondoCaja}`);
   },
+
+  async getReporteSalidas(fechaInicio, fechaFin) {
+    return await APIClient.get(`/reportes/salidas?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`);
+  },
 };
 
 window.ReportesAPI = ReportesAPI;

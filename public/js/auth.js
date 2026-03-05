@@ -72,6 +72,7 @@ window.Auth = {
       "nav-proveedores",
       "nav-salidas",
       "nav-reporte-inventario",
+      "nav-inventario-vendido",
       "nav-facturacion",
       "nav-configuracion",
       "nav-group-inventario",
