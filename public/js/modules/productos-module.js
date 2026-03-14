@@ -93,7 +93,11 @@ function limpiarCostos() {
 
 // ==================== CARACTERÍSTICAS ====================
 
-window.agregarCaracteristica = function (nombre = "", valor = "", tipo = "estado") {
+window.agregarCaracteristica = function (
+  nombre = "",
+  valor = "",
+  tipo = "estado",
+) {
   contadorCaracteristicas++;
   const container = document.getElementById("caracteristicasContainer");
   if (!container) return;
@@ -213,7 +217,9 @@ window.editarProducto = async function (productoId) {
     cerrarModal("modalDetalleProducto");
     showSection("productos");
 
-    document.getElementById("formProducto")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("formProducto")
+      ?.scrollIntoView({ behavior: "smooth" });
 
     setValueIfExists("productoCodigo", producto.codigo_barras || "");
     setValueIfExists("productoIMEI", producto.imei || "");
@@ -223,13 +229,21 @@ window.editarProducto = async function (productoId) {
     setValueIfExists("productoCategoria", producto.categoria_id || "");
     toggleStockPorCategoria();
     setValueIfExists("productoProveedor", producto.proveedor_id || "");
-    setValueIfExists("productoFacturaProveedorNumero", producto.factura_proveedor_numero || "");
-    setValueIfExists("productoFacturaProveedorFecha", producto.factura_proveedor_fecha ? producto.factura_proveedor_fecha.split("T")[0] : "");
+    setValueIfExists(
+      "productoFacturaProveedorNumero",
+      producto.factura_proveedor_numero || "",
+    );
+    setValueIfExists(
+      "productoFacturaProveedorFecha",
+      producto.factura_proveedor_fecha
+        ? producto.factura_proveedor_fecha.split("T")[0]
+        : "",
+    );
     setValueIfExists("productoNcf", producto.ncf || "");
     setValueIfExists("productoPrecio", producto.precio_venta || "");
     setValueIfExists("productoMayoreo", producto.precio_mayoreo || "");
     setValueIfExists("productoCantidadMayoreo", producto.cantidad_mayoreo || 5);
-    setValueIfExists("productoStock", producto.stock_actual || 0);
+    setValueIfExists("productoStock", producto.stock_actual || 1);
     setValueIfExists("productoStockMin", producto.stock_minimo || 0);
     setValueIfExists("productoStockMax", producto.stock_maximo || 0);
     setValueIfExists("descuentoPorcentaje", producto.descuento_porcentaje || 0);
@@ -244,7 +258,9 @@ window.editarProducto = async function (productoId) {
     if (producto.costos && producto.costos.length > 0) {
       producto.costos.forEach((costo) => {
         agregarLineaCosto();
-        const ultimaLinea = document.querySelector(".costo-item-dinamico:last-child");
+        const ultimaLinea = document.querySelector(
+          ".costo-item-dinamico:last-child",
+        );
         if (ultimaLinea) {
           ultimaLinea.querySelector(".costo-concepto").value = costo.concepto;
           ultimaLinea.querySelector(".costo-monto").value = costo.monto;
@@ -264,7 +280,9 @@ window.editarProducto = async function (productoId) {
       agregarCaracteristica();
     }
 
-    const btnSubmit = document.querySelector('#formProducto button[type="submit"]');
+    const btnSubmit = document.querySelector(
+      '#formProducto button[type="submit"]',
+    );
     if (btnSubmit) {
       btnSubmit.textContent = "Actualizar Producto";
       btnSubmit.classList.remove("btn-primary");
@@ -282,7 +300,10 @@ window.editarProducto = async function (productoId) {
       btnSubmit.parentElement.appendChild(btnCancelar);
     }
 
-    mostrarAlerta("Modo edición activado. Modifica los campos necesarios.", "info");
+    mostrarAlerta(
+      "Modo edición activado. Modifica los campos necesarios.",
+      "info",
+    );
   } catch (error) {
     mostrarAlerta("Error al cargar producto para editar", "danger");
   }
@@ -298,7 +319,9 @@ function cancelarEdicion() {
   agregarLineaCosto();
   agregarCaracteristica();
 
-  const btnSubmit = document.querySelector('#formProducto button[type="submit"]');
+  const btnSubmit = document.querySelector(
+    '#formProducto button[type="submit"]',
+  );
   if (btnSubmit) {
     btnSubmit.textContent = "Guardar Producto";
     btnSubmit.classList.remove("btn-warning");
@@ -342,13 +365,16 @@ async function guardarProducto(e) {
   if (precioCosto > 0 && precioVenta < precioCosto) {
     mostrarAlerta(
       `Atención: el precio de venta ($${precioVenta.toFixed(2)}) es menor al costo ($${precioCosto.toFixed(2)}). ¿Desea continuar?`,
-      "warning"
+      "warning",
     );
     // Solo advierte, no bloquea (puede ser liquidación intencional)
   }
 
   if (stockMax > 0 && stockMin > stockMax) {
-    mostrarAlerta("El stock mínimo no puede ser mayor al stock máximo", "warning");
+    mostrarAlerta(
+      "El stock mínimo no puede ser mayor al stock máximo",
+      "warning",
+    );
     return;
   }
 
@@ -370,7 +396,8 @@ async function guardarProducto(e) {
     descripcion: getValue("productoDescripcion"),
     categoria_id: parseInt(categoriaId),
     proveedor_id: parseInt(getValue("productoProveedor")) || null,
-    factura_proveedor_numero: getValue("productoFacturaProveedorNumero") || null,
+    factura_proveedor_numero:
+      getValue("productoFacturaProveedorNumero") || null,
     factura_proveedor_fecha: getValue("productoFacturaProveedorFecha") || null,
     ncf: getValue("productoNcf") || null,
     precio_costo: parseFloat(getValue("productoCosto")) || 0,
@@ -382,28 +409,37 @@ async function guardarProducto(e) {
     stock_maximo: parseInt(getValue("productoStockMax")) || 0,
     descuento_porcentaje: parseFloat(getValue("descuentoPorcentaje")) || 0,
     descuento_monto: parseFloat(getValue("descuentoMonto")) || 0,
-    disponible: document.getElementById("productoDisponible")?.checked !== false,
+    disponible:
+      document.getElementById("productoDisponible")?.checked !== false,
     aplica_itbis: true,
     activo: true,
     costos: costos,
     caracteristicas: caracteristicas,
-    registrar_como_gasto: document.getElementById("productoRegistrarGasto")?.checked === true,
+    registrar_como_gasto:
+      document.getElementById("productoRegistrarGasto")?.checked === true,
   };
 
   try {
     let producto;
 
     if (productoEnEdicion) {
-      producto = await window.API.Productos.update(productoEnEdicion.id, productoData);
+      producto = await window.API.Productos.update(
+        productoEnEdicion.id,
+        productoData,
+      );
 
       const index = productos.findIndex((p) => p.id === productoEnEdicion.id);
       if (index !== -1) {
         if (producto.categoria_id) {
-          const categoria = categorias.find((c) => c.id == producto.categoria_id);
+          const categoria = categorias.find(
+            (c) => c.id == producto.categoria_id,
+          );
           if (categoria) producto.categoria_nombre = categoria.nombre;
         }
         if (producto.proveedor_id) {
-          const proveedor = proveedores.find((p) => p.id == producto.proveedor_id);
+          const proveedor = proveedores.find(
+            (p) => p.id == producto.proveedor_id,
+          );
           if (proveedor) producto.proveedor_nombre = proveedor.nombre;
         }
         productos[index] = producto;
@@ -419,7 +455,9 @@ async function guardarProducto(e) {
         if (categoria) producto.categoria_nombre = categoria.nombre;
       }
       if (producto.proveedor_id) {
-        const proveedor = proveedores.find((p) => p.id == producto.proveedor_id);
+        const proveedor = proveedores.find(
+          (p) => p.id == producto.proveedor_id,
+        );
         if (proveedor) producto.proveedor_nombre = proveedor.nombre;
       }
 
@@ -456,7 +494,8 @@ function actualizarTablaProductos() {
     .map((p) => {
       const codigoPrincipal = p.codigo_barras || p.imei || `ID-${p.id}`;
       const disponible = p.disponible !== false;
-      const tieneDescuento = p.descuento_porcentaje > 0 || p.descuento_monto > 0;
+      const tieneDescuento =
+        p.descuento_porcentaje > 0 || p.descuento_monto > 0;
 
       return `
         <tr style="${!disponible ? "opacity: 0.6;" : ""}">
@@ -464,15 +503,17 @@ function actualizarTablaProductos() {
           <td>
             ${p.nombre}
             ${p.caracteristicas && p.caracteristicas.length > 0
-              ? `<br><small style="color: #7f8c8d;">${p.caracteristicas.length} característica(s)</small>`
-              : ""}
+          ? `<br><small style="color: #7f8c8d;">${p.caracteristicas.length} característica(s)</small>`
+          : ""
+        }
           </td>
           <td>${p.categoria_nombre || "-"}</td>
           <td>
             ${tieneDescuento
-              ? `<span style="text-decoration: line-through; color: #95a5a6;">$${parseFloat(p.precio_venta).toFixed(2)}</span><br>
+          ? `<span style="text-decoration: line-through; color: #95a5a6;">$${parseFloat(p.precio_venta).toFixed(2)}</span><br>
                  <span style="color: #27ae60; font-weight: bold;">$${parseFloat(p.precio_con_descuento || p.precio_venta).toFixed(2)}</span>`
-              : `$${parseFloat(p.precio_venta).toFixed(2)}`}
+          : `$${parseFloat(p.precio_venta).toFixed(2)}`
+        }
           </td>
           <td>${p.stock_actual}</td>
           <td>
@@ -497,16 +538,19 @@ window.verDetalleProducto = async function (productoId) {
   try {
     const producto = await window.API.Productos.getById(productoId);
 
-    const codigoPrincipal = producto.imei || producto.codigo_barras || producto.sku;
+    const codigoPrincipal =
+      producto.imei || producto.codigo_barras || producto.sku;
     const tipoProducto = producto.imei
       ? "IMEI"
       : producto.codigo_barras
-      ? "Código de Barras"
-      : "SKU";
+        ? "Código de Barras"
+        : "SKU";
 
     const precioFinal = producto.precio_con_descuento || producto.precio_venta;
     const ganancia = precioFinal - producto.precio_costo;
-    const margenPorcentaje = ((ganancia / producto.precio_costo) * 100).toFixed(2);
+    const margenPorcentaje = ((ganancia / producto.precio_costo) * 100).toFixed(
+      2,
+    );
 
     let caracteristicasHTML = "";
     if (producto.caracteristicas && producto.caracteristicas.length > 0) {
@@ -514,15 +558,15 @@ window.verDetalleProducto = async function (productoId) {
         <div class="prod-carac-panel">
           <h4 style="color: #34495e; margin-bottom: 10px;">Características del Producto:</h4>
           ${producto.caracteristicas
-            .map(
-              (c) => `
+          .map(
+            (c) => `
             <div class="prod-carac-item">
               <strong style="color: #2c3e50;">${c.nombre}:</strong>
               <span style="color: #34495e;">${c.valor}</span>
             </div>
           `,
-            )
-            .join("")}
+          )
+          .join("")}
         </div>
       `;
     }
@@ -548,15 +592,17 @@ window.verDetalleProducto = async function (productoId) {
       `;
     }
 
-    const tieneDescuento = producto.descuento_porcentaje > 0 || producto.descuento_monto > 0;
+    const tieneDescuento =
+      producto.descuento_porcentaje > 0 || producto.descuento_monto > 0;
     let descuentoHTML = "";
     if (tieneDescuento) {
       descuentoHTML = `
         <div class="prod-descuento-panel">
           <h4 style="color: #856404; margin-bottom: 10px;">Descuento Aplicado:</h4>
           ${producto.descuento_porcentaje > 0
-            ? `<p style="margin: 5px 0; color: #856404;"><strong>Porcentaje:</strong> ${producto.descuento_porcentaje}%</p>`
-            : `<p style="margin: 5px 0; color: #856404;"><strong>Monto:</strong> $${producto.descuento_monto.toFixed(2)}</p>`}
+          ? `<p style="margin: 5px 0; color: #856404;"><strong>Porcentaje:</strong> ${producto.descuento_porcentaje}%</p>`
+          : `<p style="margin: 5px 0; color: #856404;"><strong>Monto:</strong> $${producto.descuento_monto.toFixed(2)}</p>`
+        }
           <p style="margin: 5px 0; color: #856404;">
             <strong>Precio Original:</strong>
             <span style="text-decoration: line-through;">$${parseFloat(producto.precio_venta).toFixed(2)}</span>
@@ -585,11 +631,12 @@ window.verDetalleProducto = async function (productoId) {
           </div>
 
           ${producto.descripcion
-            ? `<div class="prod-field">
+        ? `<div class="prod-field">
                 <strong>Descripción:</strong>
                 <p>${producto.descripcion}</p>
                </div>`
-            : ""}
+        : ""
+      }
 
           <div class="prod-field">
             <strong>Categoría:</strong>
@@ -601,23 +648,32 @@ window.verDetalleProducto = async function (productoId) {
             <p>${producto.proveedor_nombre || "Sin proveedor"}</p>
           </div>
 
-          ${producto.factura_proveedor_numero ? `
+          ${producto.factura_proveedor_numero
+        ? `
           <div class="prod-field">
             <strong>N° Factura Proveedor:</strong>
             <p>${producto.factura_proveedor_numero}</p>
-          </div>` : ""}
+          </div>`
+        : ""
+      }
 
-          ${producto.factura_proveedor_fecha ? `
+          ${producto.factura_proveedor_fecha
+        ? `
           <div class="prod-field">
             <strong>Fecha Factura Proveedor:</strong>
             <p>${new Date(producto.factura_proveedor_fecha).toLocaleDateString("es-DO", { year: "numeric", month: "long", day: "numeric" })}</p>
-          </div>` : ""}
+          </div>`
+        : ""
+      }
 
-          ${producto.ncf ? `
+          ${producto.ncf
+        ? `
           <div class="prod-field">
             <strong>NCF:</strong>
             <p style="font-family:monospace;">${producto.ncf}</p>
-          </div>` : ""}
+          </div>`
+        : ""
+      }
 
           <div class="prod-field">
             <strong>Estado:</strong>
@@ -654,23 +710,25 @@ window.verDetalleProducto = async function (productoId) {
             </div>
 
             ${tieneDescuento
-              ? `<div class="prod-field">
+        ? `<div class="prod-field">
                   <strong>Precio Final con Descuento:</strong>
                   <p style="font-size: 22px; color: #27ae60; font-weight: bold;">
                     $${parseFloat(precioFinal).toFixed(2)}
                   </p>
                  </div>`
-              : ""}
+        : ""
+      }
 
             ${producto.precio_mayoreo
-              ? `<div class="prod-field">
+        ? `<div class="prod-field">
                   <strong>Precio Mayoreo:</strong>
                   <p style="font-size: 18px; color: #f39c12; font-weight: bold;">
                     $${parseFloat(producto.precio_mayoreo).toFixed(2)}
                     <small>(${producto.cantidad_mayoreo}+ unidades)</small>
                   </p>
                  </div>`
-              : ""}
+        : ""
+      }
 
             <div class="prod-ganancia-panel">
               <strong>Ganancia por Unidad:</strong>
@@ -744,7 +802,9 @@ window.toggleStockPorCategoria = function () {
   const seccionStock = document.getElementById("seccionStock");
   if (!select || !seccionStock) return;
 
-  const nombre = (select.options[select.selectedIndex]?.text || "").toLowerCase();
+  const nombre = (
+    select.options[select.selectedIndex]?.text || ""
+  ).toLowerCase();
   const esTelefono = /tel[eé]fono|celular/i.test(nombre);
 
   if (esTelefono) {
