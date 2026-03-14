@@ -954,6 +954,22 @@ const VentasModule = {
   return true;
   },
 
+  toggleFechaRetroactiva(activo) {
+    const panel = document.getElementById("fechaRetroactivaPanel");
+    const input = document.getElementById("fechaVentaRetroactiva");
+    if (activo) {
+      panel.style.display = "block";
+      // Poner ayer por defecto
+      const ayer = new Date();
+      ayer.setDate(ayer.getDate() - 1);
+      input.value = ayer.toISOString().split("T")[0];
+      input.max = new Date().toISOString().split("T")[0];
+    } else {
+      panel.style.display = "none";
+      input.value = "";
+    }
+  },
+
   prepararDatosVenta(totales) {
   // Sincronizar método desde el DOM antes de preparar datos
   if (document.getElementById("pagoMixto")?.style.display === "block") {
@@ -968,6 +984,10 @@ const VentasModule = {
 
   const clienteId = document.getElementById("ventaCliente").value || null;
   const esCredito = document.getElementById("ventaCredito")?.checked || false;
+  const fechaRetroactivaActiva = document.getElementById("activarFechaRetroactiva")?.checked || false;
+  const fechaVentaRetroactiva = fechaRetroactivaActiva
+    ? document.getElementById("fechaVentaRetroactiva")?.value || null
+    : null;
 
   const ventaData = {
   cliente_id: clienteId ? parseInt(clienteId): null,
@@ -990,6 +1010,9 @@ const VentasModule = {
   precio: s.es_gratuito ? 0: parseFloat(s.precio),
   es_gratis: s.es_gratuito,
   })),
+
+  // ==================== FECHA RETROACTIVA ====================
+  fecha_venta: fechaVentaRetroactiva,
 
   // ==================== CAMPOS DE CRÉDITO ====================
   es_credito: esCredito,
@@ -1060,6 +1083,12 @@ const VentasModule = {
   const checkFactura = document.getElementById("generarFacturaElectronica");
   if (checkITBIS) checkITBIS.checked = false;
   if (checkFactura) checkFactura.checked = false;
+
+  const checkFechaRetro = document.getElementById("activarFechaRetroactiva");
+  if (checkFechaRetro) {
+    checkFechaRetro.checked = false;
+    this.toggleFechaRetroactiva(false);
+  }
 
   document.querySelectorAll(".payment-method").forEach((el, index) => {
   el.classList.toggle("active", index === 0);

@@ -139,6 +139,18 @@
   </select>
   </div>
 
+  <div id="fechaRetroactivaContainer" style="margin-bottom:10px;">
+  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9em;color:#856404;">
+  <input type="checkbox" id="activarFechaRetroactiva" onchange="VentasModule.toggleFechaRetroactiva(this.checked)" style="cursor:pointer;">
+  Registrar venta con fecha anterior
+  </label>
+  <div id="fechaRetroactivaPanel" style="display:none;margin-top:8px;padding:10px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;">
+  <label style="font-size:0.85em;font-weight:600;color:#856404;display:block;margin-bottom:4px;">Fecha de la venta:</label>
+  <input type="date" id="fechaVentaRetroactiva" style="width:100%;padding:6px;border:1px solid #ffc107;border-radius:4px;font-size:0.9em;">
+  <small style="color:#856404;display:block;margin-top:4px;">Esta venta no aparecerá en el cuadre de turno de hoy.</small>
+  </div>
+  </div>
+
   <h4 class="seccion-titulo-simple"> Artículos en la venta</h4>
   <div class="invoice-items" id="ventaItems">
   <!-- Items will be added here dynamically -->

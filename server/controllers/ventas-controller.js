@@ -30,7 +30,18 @@ const VentasController = {
         monto_tarjeta,
         monto_transferencia,
         notas,
+        fecha_venta,
       } = req.body;
+
+      // Validar fecha_venta retroactiva si se provee
+      let fechaVentaFinal = null;
+      if (fecha_venta) {
+        const hoy = new Date().toISOString().split("T")[0];
+        if (fecha_venta > hoy) {
+          throw new Error("No se puede registrar una venta con fecha futura");
+        }
+        fechaVentaFinal = fecha_venta;
+      }
 
       // Validaciones
       if ((!items || items.length === 0) && (!servicios || servicios.length === 0)) {
@@ -96,7 +107,7 @@ const VentasController = {
           generar_factura_electronica,
           usuario_id,
           usuario_nombre
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_DATE, CURRENT_TIME, 'completada', $15, $16, $17, $18, $19)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, COALESCE($20::date, CURRENT_DATE), CURRENT_TIME, 'completada', $15, $16, $17, $18, $19)
         RETURNING *`,
         [
           numeroTicket,
@@ -124,6 +135,7 @@ const VentasController = {
           generar_factura_electronica || false,
           usuarioSesion?.id || null,
           usuarioSesion?.nombre || null,
+          fechaVentaFinal,
         ],
       );
 
@@ -308,7 +320,7 @@ const VentasController = {
           estado,
           tipo_factura,
           venta_id
-        ) VALUES ($1, $2, 'B02', $3, $4, $5, $6, $7, CURRENT_DATE, $8, $9, $10, $11)
+        ) VALUES ($1, $2, 'B02', $3, $4, $5, $6, $7, COALESCE($12::date, CURRENT_DATE), $8, $9, $10, $11)
         RETURNING *`,
         [
           numeroFactura,
@@ -322,6 +334,7 @@ const VentasController = {
           estadoFactura,
           tipoFactura,
           venta.id,
+          fechaVentaFinal,
         ],
       );
 

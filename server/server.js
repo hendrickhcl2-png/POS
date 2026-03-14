@@ -127,6 +127,16 @@ async function initAuth() {
     await pool.query(`
       ALTER TABLE productos ADD COLUMN IF NOT EXISTS creado_por VARCHAR(100)
     `);
+    // Migración: columnas de factura del proveedor en productos
+    await pool.query(`
+      ALTER TABLE productos ADD COLUMN IF NOT EXISTS factura_proveedor_numero VARCHAR(100)
+    `);
+    await pool.query(`
+      ALTER TABLE productos ADD COLUMN IF NOT EXISTS factura_proveedor_fecha DATE
+    `);
+    await pool.query(`
+      ALTER TABLE productos ADD COLUMN IF NOT EXISTS ncf VARCHAR(19)
+    `);
     // Migración: columna nombre_impresora en configuracion
     await pool.query(`
       ALTER TABLE configuracion ADD COLUMN IF NOT EXISTS nombre_impresora VARCHAR(255)
