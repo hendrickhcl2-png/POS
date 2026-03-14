@@ -452,6 +452,52 @@ router.delete("/:id", requireAdmin, async (req, res) => {
   }
 });
 
+// ==================== ELIMINAR PRODUCTO PERMANENTEMENTE ====================
+router.delete("/:id/force", requireAdmin, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params;
+
+    // Verificar que el producto existe
+    const existe = await client.query("SELECT id, nombre FROM productos WHERE id = $1", [id]);
+    if (existe.rows.length === 0) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    // Bloquear si tiene ventas, créditos, devoluciones o facturas
+    const conVentas = await client.query(
+      `SELECT COUNT(*) FROM detalle_venta WHERE producto_id = $1
+       UNION ALL SELECT COUNT(*) FROM detalle_credito WHERE producto_id = $1
+       UNION ALL SELECT COUNT(*) FROM detalle_devolucion WHERE producto_id = $1
+       UNION ALL SELECT COUNT(*) FROM detalle_factura WHERE producto_id = $1`,
+      [id]
+    );
+    const tieneVentas = conVentas.rows.some((r) => parseInt(r.count) > 0);
+    if (tieneVentas) {
+      return res.status(409).json({
+        error: "No se puede eliminar: el producto tiene ventas, créditos, devoluciones o facturas registradas.",
+      });
+    }
+
+    await client.query("BEGIN");
+    await client.query("DELETE FROM caracteristicas_producto WHERE producto_id = $1", [id]);
+    await client.query("DELETE FROM detalle_costo_producto WHERE producto_id = $1", [id]);
+    await client.query("DELETE FROM historial_producto WHERE producto_id = $1", [id]);
+    await client.query("DELETE FROM movimientos_inventario WHERE producto_id = $1", [id]);
+    await client.query("DELETE FROM ajustes_inventario WHERE producto_id = $1", [id]);
+    await client.query("DELETE FROM productos WHERE id = $1", [id]);
+    await client.query("COMMIT");
+
+    res.json({ success: true, message: "Producto eliminado permanentemente" });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("❌ Error al eliminar producto permanentemente:", error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 console.log("✅ Rutas de productos cargadas");
 
 module.exports = router;

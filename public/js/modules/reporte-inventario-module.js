@@ -145,9 +145,27 @@ const ReporteInventarioModule = {
             <span class="inv-stock${sinStock ? " inv-stock--cero" : bajStock ? " inv-stock--bajo" : ""}">${stock}</span>
           </td>
           <td style="color:var(--text-muted);font-size:0.85rem">${p.creado_por || "—"}</td>
+          <td>
+            <button class="btn btn-danger btn-small" onclick="ReporteInventarioModule._confirmarEliminar(${p.id}, '${(p.nombre || "").replace(/'/g, "\\'")}')">Eliminar</button>
+          </td>
         </tr>`;
       })
       .join("");
+  },
+
+  async _confirmarEliminar(id, nombre) {
+    if (!confirm(`¿Eliminar permanentemente "${nombre}"?\n\nEsto borrará el producto y su código del sistema. Esta acción NO se puede deshacer.`)) return;
+
+    try {
+      await window.API.Productos.forceDelete(id);
+      this._datos = this._datos.filter((p) => p.id !== id);
+      this._filtrados = this._filtrados.filter((p) => p.id !== id);
+      this._renderizar();
+      Toast.success(`"${nombre}" eliminado permanentemente`);
+    } catch (e) {
+      const msg = e?.message || "Error al eliminar el producto";
+      Toast.error(msg);
+    }
   },
 
   _exportarCSV() {
