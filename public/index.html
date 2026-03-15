@@ -750,12 +750,7 @@
             <!-- Stats bar -->
             <div
               id="creditosStats"
-              style="
-                display: flex;
-                gap: 16px;
-                margin-bottom: 20px;
-                flex-wrap: wrap;
-              "
+              class="kpi-grid"
             ></div>
 
             <div class="card" style="padding: 0; overflow: hidden">
@@ -782,15 +777,7 @@
 
           <!-- Tab pagados -->
           <div class="tab-content" id="tabContentPagados">
-            <div
-              id="creditosPagadosStats"
-              style="
-                display: flex;
-                gap: 16px;
-                margin-bottom: 20px;
-                flex-wrap: wrap;
-              "
-            ></div>
+            <div id="creditosPagadosStats" class="kpi-grid"></div>
 
             <div class="card" style="padding: 0; overflow: hidden">
               <table>
@@ -835,15 +822,7 @@
           </div>
 
           <!-- Stats bar -->
-          <div
-            id="clientesStats"
-            style="
-              display: flex;
-              gap: 16px;
-              margin-bottom: 20px;
-              flex-wrap: wrap;
-            "
-          ></div>
+          <div id="clientesStats" class="kpi-grid"></div>
 
           <div class="card" style="padding: 0; overflow: hidden">
             <table>
@@ -1414,70 +1393,21 @@
             </div>
 
             <!-- Cards resumen -->
-            <div
-              style="
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 15px;
-                margin-bottom: 20px;
-              "
-            >
-              <div
-                style="
-                  background: #eaf4fb;
-                  border: 1px solid #aed6f1;
-                  border-radius: 8px;
-                  padding: 16px;
-                  text-align: center;
-                "
-              >
-                <div style="font-size: 13px; color: #7f8c8d; font-weight: 600">
-                  Total Ítems Vendidos
-                </div>
-                <div
-                  id="ivCardItems"
-                  style="font-size: 28px; font-weight: bold; color: #2980b9"
-                >
-                  0
-                </div>
+            <div class="kpi-grid" style="margin-bottom:20px;">
+              <div class="kpi-card kpi--blue">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Total Ítems Vendidos</div>
+                <div id="ivCardItems" class="kpi-card-value">0</div>
               </div>
-              <div
-                style="
-                  background: #fef9e7;
-                  border: 1px solid #f9e79f;
-                  border-radius: 8px;
-                  padding: 16px;
-                  text-align: center;
-                "
-              >
-                <div style="font-size: 13px; color: #7f8c8d; font-weight: 600">
-                  Total Devueltos
-                </div>
-                <div
-                  id="ivCardDevueltos"
-                  style="font-size: 28px; font-weight: bold; color: #d4ac0d"
-                >
-                  0
-                </div>
+              <div class="kpi-card kpi--amber">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Total Devueltos</div>
+                <div id="ivCardDevueltos" class="kpi-card-value">0</div>
               </div>
-              <div
-                style="
-                  background: #eafaf1;
-                  border: 1px solid #a9dfbf;
-                  border-radius: 8px;
-                  padding: 16px;
-                  text-align: center;
-                "
-              >
-                <div style="font-size: 13px; color: #7f8c8d; font-weight: 600">
-                  Valor Vendido
-                </div>
-                <div
-                  id="ivCardValor"
-                  style="font-size: 28px; font-weight: bold; color: #1e8449"
-                >
-                  RD$0.00
-                </div>
+              <div class="kpi-card kpi--green">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Valor Vendido</div>
+                <div id="ivCardValor" class="kpi-card-value">RD$0.00</div>
               </div>
             </div>
 
@@ -1787,49 +1717,26 @@
           </div>
 
           <!-- ESTADÍSTICAS RÁPIDAS -->
-          <div class="facturacion-stats-grid">
-            <div class="card stat-card-total-facturas">
-              <div class="stat-card-fila">
-                <div>
-                  <p class="stat-card-etiqueta">Total Facturas</p>
-                  <h2 id="totalFacturas" class="stat-card-valor-grande">0</h2>
-                </div>
-                <div class="stat-card-icono"></div>
-              </div>
+          <div class="kpi-grid">
+            <div class="kpi-card kpi--blue">
+              <div class="kpi-card-accent"></div>
+              <div class="kpi-card-label">Total Facturas</div>
+              <div id="totalFacturas" class="kpi-card-value">0</div>
             </div>
-
-            <div class="card stat-card-monto-total">
-              <div class="stat-card-fila">
-                <div>
-                  <p class="stat-card-etiqueta">Monto Total</p>
-                  <h2 id="totalMonto" class="stat-card-valor-mediano">
-                    RD$0.00
-                  </h2>
-                </div>
-                <div class="stat-card-icono"></div>
-              </div>
+            <div class="kpi-card kpi--blue">
+              <div class="kpi-card-accent"></div>
+              <div class="kpi-card-label">Monto Total</div>
+              <div id="totalMonto" class="kpi-card-value">RD$0.00</div>
             </div>
-
-            <div class="card stat-card-pendientes">
-              <div class="stat-card-fila">
-                <div>
-                  <p class="stat-card-etiqueta">Crédito</p>
-                  <h2 id="facturasPendientes" class="stat-card-valor-mediano">
-                    RD$0.00
-                  </h2>
-                </div>
-                <div class="stat-card-icono"></div>
-              </div>
+            <div class="kpi-card kpi--amber">
+              <div class="kpi-card-accent"></div>
+              <div class="kpi-card-label">Crédito</div>
+              <div id="facturasPendientes" class="kpi-card-value">RD$0.00</div>
             </div>
-
-            <div class="card stat-card-pagadas">
-              <div class="stat-card-fila">
-                <div>
-                  <p class="stat-card-etiqueta">Contado</p>
-                  <h2 id="facturasPagadas" class="stat-card-valor-mediano">RD$0.00</h2>
-                </div>
-                <div class="stat-card-icono"></div>
-              </div>
+            <div class="kpi-card kpi--green">
+              <div class="kpi-card-accent"></div>
+              <div class="kpi-card-label">Contado</div>
+              <div id="facturasPagadas" class="kpi-card-value">RD$0.00</div>
             </div>
           </div>
 
@@ -1999,43 +1906,9 @@
             .rpt-panel { display:none; }
             .rpt-panel.active { display:block; }
 
-            /* KPI cards grid */
-            .rpt-kpi-grid { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:16px; }
-            .rpt-kpi { flex:1 1 175px; border-radius:14px; padding:16px 18px; position:relative; overflow:hidden; background:var(--clr-bg); border:1px solid var(--clr-border); min-width:0; }
-            .rpt-kpi-accent { position:absolute; top:0; right:0; width:44px; height:100%; opacity:.07; pointer-events:none; }
-            .rpt-kpi-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--clr-muted); margin-bottom:8px; }
-            .rpt-kpi-value { font-size:20px; font-weight:800; line-height:1.25; margin-bottom:4px; overflow-wrap:anywhere; }
-            .rpt-kpi-sub { font-size:11px; color:var(--clr-muted); line-height:1.5; overflow-wrap:anywhere; }
-
-            .rpt-kpi--ventas  { border-left:4px solid #3498db; } .rpt-kpi--ventas  .rpt-kpi-accent { background:#3498db; } .rpt-kpi--ventas  .rpt-kpi-value { color:#3498db; }
-            .rpt-kpi--gan     { border-left:4px solid #27ae60; } .rpt-kpi--gan     .rpt-kpi-accent { background:#27ae60; } .rpt-kpi--gan     .rpt-kpi-value { color:#27ae60; }
-            .rpt-kpi--gastos  { border-left:4px solid #e67e22; } .rpt-kpi--gastos  .rpt-kpi-accent { background:#e67e22; } .rpt-kpi--gastos  .rpt-kpi-value { color:#e67e22; }
-            .rpt-kpi--cnt     { border-left:4px solid #9b59b6; } .rpt-kpi--cnt     .rpt-kpi-accent { background:#9b59b6; } .rpt-kpi--cnt     .rpt-kpi-value { color:#9b59b6; }
-            .rpt-kpi--margen  { border-left:4px solid #1abc9c; } .rpt-kpi--margen  .rpt-kpi-accent { background:#1abc9c; }
-            .rpt-kpi--itbis   { border-left:4px solid #2c3e50; } .rpt-kpi--itbis   .rpt-kpi-accent { background:#2c3e50; } .rpt-kpi--itbis   .rpt-kpi-value { color:#2c3e50; }
-            .rpt-kpi--dev     { border-left:4px solid #e74c3c; } .rpt-kpi--dev     .rpt-kpi-accent { background:#e74c3c; } .rpt-kpi--dev     .rpt-kpi-value { color:#e74c3c; }
-
             /* Chart / sub-cards */
             .rpt-sub-card { background:var(--clr-bg-surface); border-radius:12px; padding:16px; }
             .rpt-sub-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--clr-muted); margin-bottom:12px; }
-
-            /* Cuadre stat row */
-            .ci-kpi-grid { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
-            .ci-kpi { flex:1 1 150px; min-width:0; border-radius:10px; padding:14px 16px; border-left:3px solid; }
-            .ci-kpi-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--clr-muted); margin-bottom:6px; }
-            .ci-kpi-val { font-size:18px; font-weight:800; overflow-wrap:anywhere; }
-            .ci-kpi--cnt    { background:color-mix(in srgb,#3498db 8%,transparent); border-color:#3498db; }
-            .ci-kpi--cnt    .ci-kpi-val { color:#3498db; }
-            .ci-kpi--neto   { background:color-mix(in srgb,#3498db 8%,transparent); border-color:#3498db; }
-            .ci-kpi--neto   .ci-kpi-val { color:#3498db; }
-            .ci-kpi--gan    { background:color-mix(in srgb,#27ae60 8%,transparent); border-color:#27ae60; }
-            .ci-kpi--gan    .ci-kpi-val { color:#27ae60; }
-            .ci-kpi--caja   { background:color-mix(in srgb,#1abc9c 8%,transparent); border-color:#1abc9c; }
-            .ci-kpi--caja   .ci-kpi-val { color:#1abc9c; }
-            .ci-kpi--sal    { background:color-mix(in srgb,#e67e22 8%,transparent); border-color:#e67e22; }
-            .ci-kpi--sal    .ci-kpi-val { color:#e67e22; }
-            .ci-kpi--ing    { background:color-mix(in srgb,#9b59b6 8%,transparent); border-color:#9b59b6; }
-            .ci-kpi--ing    .ci-kpi-val { color:#9b59b6; }
           </style>
 
           <!-- ── Top bar: título + periodo + acciones ── -->
@@ -2072,48 +1945,48 @@
           <div class="rpt-panel active" id="rpt-panel-resumen">
 
             <!-- KPI cards -->
-            <div class="rpt-kpi-grid">
-              <div class="rpt-kpi rpt-kpi--ventas">
-                <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-label">Total Ventas (Neto)</div>
-                <div id="reporteTotalVentas" class="rpt-kpi-value">RD$0.00</div>
-                <div id="reporteTotalVentasNota" class="rpt-kpi-sub" style="display:none;"></div>
+            <div class="kpi-grid">
+              <div class="kpi-card kpi--blue">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Total Ventas (Neto)</div>
+                <div id="reporteTotalVentas" class="kpi-card-value">RD$0.00</div>
+                <div id="reporteTotalVentasNota" class="kpi-card-sub" style="display:none;"></div>
               </div>
 
-              <div class="rpt-kpi rpt-kpi--gan">
-                <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-label">Ganancias</div>
-                <div id="reporteGanancias" class="rpt-kpi-value">RD$0.00</div>
+              <div class="kpi-card kpi--green">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Ganancias</div>
+                <div id="reporteGanancias" class="kpi-card-value">RD$0.00</div>
               </div>
 
-              <div class="rpt-kpi rpt-kpi--gastos">
-                <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-label">Gastos Operativos</div>
-                <div id="reporteCostosOperativos" class="rpt-kpi-value">RD$0.00</div>
+              <div class="kpi-card kpi--orange">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Gastos Operativos</div>
+                <div id="reporteCostosOperativos" class="kpi-card-value">RD$0.00</div>
               </div>
 
-              <div class="rpt-kpi rpt-kpi--cnt">
-                <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-label">Cantidad Ventas</div>
-                <div id="reporteCantidadVentas" class="rpt-kpi-value">0</div>
+              <div class="kpi-card kpi--purple">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Cantidad Ventas</div>
+                <div id="reporteCantidadVentas" class="kpi-card-value">0</div>
               </div>
 
-              <div class="rpt-kpi rpt-kpi--margen">
-                <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-label">Margen</div>
-                <div id="reporteMargen" class="rpt-kpi-value" style="color:#1abc9c;">0%</div>
+              <div class="kpi-card kpi--teal">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Margen</div>
+                <div id="reporteMargen" class="kpi-card-value" style="color:#1abc9c;">0%</div>
               </div>
 
-              <div class="rpt-kpi rpt-kpi--itbis">
-                <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-label">ITBIS Recaudado</div>
-                <div id="reporteITBIS" class="rpt-kpi-value">RD$0.00</div>
+              <div class="kpi-card kpi--dark">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">ITBIS Recaudado</div>
+                <div id="reporteITBIS" class="kpi-card-value">RD$0.00</div>
               </div>
 
-              <div id="cardDevolucionesResumen" class="rpt-kpi rpt-kpi--dev" style="display:none;">
-                <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-label">Devoluciones</div>
-                <div id="reporteTotalDevoluciones" class="rpt-kpi-value">RD$0.00</div>
+              <div id="cardDevolucionesResumen" class="kpi-card kpi--red" style="display:none;">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Devoluciones</div>
+                <div id="reporteTotalDevoluciones" class="kpi-card-value">RD$0.00</div>
               </div>
             </div>
 
@@ -2228,30 +2101,30 @@
               <div id="ciContenido" style="display:none;">
 
                 <!-- KPIs del cuadre -->
-                <div class="ci-kpi-grid">
-                  <div class="ci-kpi ci-kpi--cnt">
-                    <div class="ci-kpi-lbl"># Ventas</div>
-                    <div id="ciCantVentas" class="ci-kpi-val">0</div>
+                <div class="kpi-grid">
+                  <div class="kpi-card kpi--purple">
+                    <div class="kpi-card-label"># Ventas</div>
+                    <div id="ciCantVentas" class="kpi-card-value">0</div>
                   </div>
-                  <div class="ci-kpi ci-kpi--neto">
-                    <div class="ci-kpi-lbl">Ventas Neto</div>
-                    <div id="ciVentasNeto" class="ci-kpi-val">RD$0</div>
+                  <div class="kpi-card kpi--blue">
+                    <div class="kpi-card-label">Ventas Neto</div>
+                    <div id="ciVentasNeto" class="kpi-card-value">RD$0</div>
                   </div>
-                  <div class="ci-kpi ci-kpi--gan">
-                    <div class="ci-kpi-lbl">Ganancia</div>
-                    <div id="ciGanancia" class="ci-kpi-val">RD$0</div>
+                  <div class="kpi-card kpi--green">
+                    <div class="kpi-card-label">Ganancia</div>
+                    <div id="ciGanancia" class="kpi-card-value">RD$0</div>
                   </div>
-                  <div class="ci-kpi ci-kpi--caja">
-                    <div class="ci-kpi-lbl">Efectivo en Caja</div>
-                    <div id="ciEfectivoCaja" class="ci-kpi-val">RD$0</div>
+                  <div class="kpi-card kpi--teal">
+                    <div class="kpi-card-label">Efectivo en Caja</div>
+                    <div id="ciEfectivoCaja" class="kpi-card-value">RD$0</div>
                   </div>
-                  <div class="ci-kpi ci-kpi--sal">
-                    <div class="ci-kpi-lbl">Total Salidas</div>
-                    <div id="ciTotalSalidas" class="ci-kpi-val">RD$0</div>
+                  <div class="kpi-card kpi--orange">
+                    <div class="kpi-card-label">Total Salidas</div>
+                    <div id="ciTotalSalidas" class="kpi-card-value">RD$0</div>
                   </div>
-                  <div class="ci-kpi ci-kpi--ing">
-                    <div class="ci-kpi-lbl">Total Ingresos</div>
-                    <div id="ciTotalIngresos" class="ci-kpi-val">RD$0</div>
+                  <div class="kpi-card kpi--purple">
+                    <div class="kpi-card-label">Total Ingresos</div>
+                    <div id="ciTotalIngresos" class="kpi-card-value">RD$0</div>
                   </div>
                 </div>
 

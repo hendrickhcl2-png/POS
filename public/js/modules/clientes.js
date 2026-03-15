@@ -70,17 +70,20 @@ const ClientesModule = {
   const sinDeuda = clientes.length - conDeuda;
 
   container.innerHTML = `
-    <div class="stat-mini" style="min-width:140px;">
-      <div class="stat-mini__label">Total clientes</div>
-      <div class="stat-mini__value">${clientes.length}</div>
+    <div class="kpi-card kpi--blue">
+      <div class="kpi-card-accent"></div>
+      <div class="kpi-card-label">Total clientes</div>
+      <div class="kpi-card-value">${clientes.length}</div>
     </div>
-    <div class="stat-mini" style="min-width:140px;">
-      <div class="stat-mini__label">Al corriente</div>
-      <div class="stat-mini__value stat-mini__value--success">${sinDeuda}</div>
+    <div class="kpi-card kpi--green">
+      <div class="kpi-card-accent"></div>
+      <div class="kpi-card-label">Al corriente</div>
+      <div class="kpi-card-value">${sinDeuda}</div>
     </div>
-    <div class="stat-mini" style="min-width:140px;">
-      <div class="stat-mini__label">Con saldo pendiente</div>
-      <div class="stat-mini__value stat-mini__value--danger">${conDeuda}</div>
+    <div class="kpi-card kpi--red">
+      <div class="kpi-card-accent"></div>
+      <div class="kpi-card-label">Con saldo pendiente</div>
+      <div class="kpi-card-value">${conDeuda}</div>
     </div>`;
   },
 
@@ -311,22 +314,26 @@ const ClientesModule = {
   }
 
   <h4 style="color: #2c3e50; margin-bottom: 15px;"> Estadísticas</h4>
-  <div class="info-grid--4" style="gap:15px;margin-bottom:30px;">
-  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px; text-align: center; color: white;">
-  <div style="font-size: 28px; font-weight: bold;">${estadisticas.total_compras || 0}</div>
-  <div style="opacity: 0.9; margin-top: 5px;">Compras</div>
+  <div class="kpi-grid" style="margin-bottom:30px;">
+  <div class="kpi-card kpi--purple">
+    <div class="kpi-card-accent"></div>
+    <div class="kpi-card-label">Compras</div>
+    <div class="kpi-card-value">${estadisticas.total_compras || 0}</div>
   </div>
-  <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 20px; border-radius: 10px; text-align: center; color: white;">
-  <div style="font-size: 28px; font-weight: bold;">${Formatters.formatCurrency(estadisticas.total_gastado || 0)}</div>
-  <div style="opacity: 0.9; margin-top: 5px;">Gastado</div>
+  <div class="kpi-card kpi--blue">
+    <div class="kpi-card-accent"></div>
+    <div class="kpi-card-label">Gastado</div>
+    <div class="kpi-card-value">${Formatters.formatCurrency(estadisticas.total_gastado || 0)}</div>
   </div>
-  <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); padding: 20px; border-radius: 10px; text-align: center; color: white;">
-  <div style="font-size: 28px; font-weight: bold;">${estadisticas.total_facturas || 0}</div>
-  <div style="opacity: 0.9; margin-top: 5px;">Facturas</div>
+  <div class="kpi-card kpi--teal">
+    <div class="kpi-card-accent"></div>
+    <div class="kpi-card-label">Facturas</div>
+    <div class="kpi-card-value">${estadisticas.total_facturas || 0}</div>
   </div>
-  <div style="background: ${estadisticas.saldo_pendiente > 0 ? "linear-gradient(135deg, #fa709a 0%, #fee140 100%)": "linear-gradient(135deg, #30cfd0 0%, #330867 100%)"}; padding: 20px; border-radius: 10px; text-align: center; color: white;">
-  <div style="font-size: 28px; font-weight: bold;">${Formatters.formatCurrency(estadisticas.saldo_pendiente || 0)}</div>
-  <div style="opacity: 0.9; margin-top: 5px;">Saldo Pendiente</div>
+  <div class="kpi-card ${estadisticas.saldo_pendiente > 0 ? 'kpi--amber' : 'kpi--green'}">
+    <div class="kpi-card-accent"></div>
+    <div class="kpi-card-label">Saldo Pendiente</div>
+    <div class="kpi-card-value">${Formatters.formatCurrency(estadisticas.saldo_pendiente || 0)}</div>
   </div>
   </div>
 

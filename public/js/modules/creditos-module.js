@@ -80,13 +80,15 @@ const CreditosModule = {
     );
 
     container.innerHTML = `
-      <div class="stat-mini">
-        <div class="stat-mini__label">Facturas saldadas</div>
-        <div class="stat-mini__value">${pagados.length}</div>
+      <div class="kpi-card kpi--blue">
+        <div class="kpi-card-accent"></div>
+        <div class="kpi-card-label">Facturas saldadas</div>
+        <div class="kpi-card-value">${pagados.length}</div>
       </div>
-      <div class="stat-mini" style="flex:2;min-width:200px;">
-        <div class="stat-mini__label">Total cobrado</div>
-        <div class="stat-mini__value stat-mini__value--success">${this._fmt(totalCobrado)}</div>
+      <div class="kpi-card kpi--green">
+        <div class="kpi-card-accent"></div>
+        <div class="kpi-card-label">Total cobrado</div>
+        <div class="kpi-card-value">${this._fmt(totalCobrado)}</div>
       </div>`;
   },
 
@@ -167,17 +169,20 @@ const CreditosModule = {
     );
 
     container.innerHTML = `
-      <div class="stat-mini">
-        <div class="stat-mini__label">Clientes con deuda</div>
-        <div class="stat-mini__value">${clientes.length}</div>
+      <div class="kpi-card kpi--blue">
+        <div class="kpi-card-accent"></div>
+        <div class="kpi-card-label">Clientes con deuda</div>
+        <div class="kpi-card-value">${clientes.length}</div>
       </div>
-      <div class="stat-mini">
-        <div class="stat-mini__label">Facturas pendientes</div>
-        <div class="stat-mini__value stat-mini__value--warning">${totalFacturas}</div>
+      <div class="kpi-card kpi--amber">
+        <div class="kpi-card-accent"></div>
+        <div class="kpi-card-label">Facturas pendientes</div>
+        <div class="kpi-card-value">${totalFacturas}</div>
       </div>
-      <div class="stat-mini" style="flex:2;min-width:200px;">
-        <div class="stat-mini__label">Total por cobrar</div>
-        <div class="stat-mini__value stat-mini__value--danger">${this._fmt(totalSaldo)}</div>
+      <div class="kpi-card kpi--red">
+        <div class="kpi-card-accent"></div>
+        <div class="kpi-card-label">Total por cobrar</div>
+        <div class="kpi-card-value">${this._fmt(totalSaldo)}</div>
       </div>`;
   },
 

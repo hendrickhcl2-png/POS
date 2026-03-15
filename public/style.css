@@ -2120,6 +2120,90 @@ tbody tr:hover {
   margin-bottom: 20px;
 }
 
+/* ==================== UNIFIED KPI CARDS ==================== */
+.kpi-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.kpi-card {
+  flex: 1 1 175px;
+  min-width: 0;
+  border-radius: 12px;
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+  background: var(--clr-bg);
+  border: 1px solid var(--clr-border);
+  border-left: 4px solid var(--clr-primary);
+}
+
+.kpi-card-accent {
+  position: absolute;
+  top: 0; right: 0;
+  width: 44px; height: 100%;
+  opacity: .07;
+  pointer-events: none;
+}
+
+.kpi-card-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--clr-muted);
+  margin-bottom: 8px;
+}
+
+.kpi-card-value {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
+  margin-bottom: 4px;
+  overflow-wrap: anywhere;
+}
+
+.kpi-card-sub {
+  font-size: 11px;
+  color: var(--clr-muted);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.kpi--blue   { border-left-color: #3498db; background: color-mix(in srgb, #3498db 6%, var(--clr-bg)); }
+.kpi--blue   .kpi-card-accent { background: #3498db; }
+.kpi--blue   .kpi-card-value  { color: #3498db; }
+
+.kpi--green  { border-left-color: #27ae60; background: color-mix(in srgb, #27ae60 6%, var(--clr-bg)); }
+.kpi--green  .kpi-card-accent { background: #27ae60; }
+.kpi--green  .kpi-card-value  { color: #27ae60; }
+
+.kpi--orange { border-left-color: #e67e22; background: color-mix(in srgb, #e67e22 6%, var(--clr-bg)); }
+.kpi--orange .kpi-card-accent { background: #e67e22; }
+.kpi--orange .kpi-card-value  { color: #e67e22; }
+
+.kpi--purple { border-left-color: #9b59b6; background: color-mix(in srgb, #9b59b6 6%, var(--clr-bg)); }
+.kpi--purple .kpi-card-accent { background: #9b59b6; }
+.kpi--purple .kpi-card-value  { color: #9b59b6; }
+
+.kpi--teal   { border-left-color: #1abc9c; background: color-mix(in srgb, #1abc9c 6%, var(--clr-bg)); }
+.kpi--teal   .kpi-card-accent { background: #1abc9c; }
+.kpi--teal   .kpi-card-value  { color: #1abc9c; }
+
+.kpi--dark   { border-left-color: #2c3e50; background: color-mix(in srgb, #2c3e50 6%, var(--clr-bg)); }
+.kpi--dark   .kpi-card-accent { background: #2c3e50; }
+.kpi--dark   .kpi-card-value  { color: #2c3e50; }
+
+.kpi--red    { border-left-color: #e74c3c; background: color-mix(in srgb, #e74c3c 6%, var(--clr-bg)); }
+.kpi--red    .kpi-card-accent { background: #e74c3c; }
+.kpi--red    .kpi-card-value  { color: #e74c3c; }
+
+.kpi--amber  { border-left-color: #f39c12; background: color-mix(in srgb, #f39c12 6%, var(--clr-bg)); }
+.kpi--amber  .kpi-card-accent { background: #f39c12; }
+.kpi--amber  .kpi-card-value  { color: #f39c12; }
+
 /* ==================== JS MODAL OVERLAY/BOX ==================== */
 .js-overlay {
   position: fixed;
