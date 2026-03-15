@@ -110,7 +110,7 @@ const ReporteInventarioModule = {
     if (conteo) conteo.textContent = `${this._filtrados.length} producto(s)`;
 
     if (this._filtrados.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem">Sin resultados</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:2rem">Sin resultados</td></tr>`;
       return;
     }
 
@@ -145,7 +145,8 @@ const ReporteInventarioModule = {
             <span class="inv-stock${sinStock ? " inv-stock--cero" : bajStock ? " inv-stock--bajo" : ""}">${stock}</span>
           </td>
           <td style="color:var(--text-muted);font-size:0.85rem">${p.creado_por || "—"}</td>
-          <td>
+          <td style="white-space:nowrap">
+            <button class="btn btn-warning btn-small" onclick="editarProducto(${p.id})" style="margin-right:4px">Editar</button>
             <button class="btn btn-danger btn-small" onclick="ReporteInventarioModule._confirmarEliminar(${p.id}, '${(p.nombre || "").replace(/'/g, "\\'")}')">Eliminar</button>
           </td>
         </tr>`;

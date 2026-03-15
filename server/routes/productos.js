@@ -60,6 +60,64 @@ router.get("/buscar", async (req, res) => {
   }
 });
 
+// ==================== BUSCAR INCLUYENDO SIN STOCK ====================
+router.get("/buscar-agotados", async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.status(400).json({ error: "Query parameter required" });
+
+    const result = await pool.query(
+      `SELECT p.*, c.nombre as categoria_nombre
+       FROM productos p
+       LEFT JOIN categorias c ON p.categoria_id = c.id
+       WHERE p.activo = true AND p.stock_actual <= 0
+       AND (
+         LOWER(p.nombre) LIKE LOWER($1) OR
+         LOWER(p.codigo_barras) LIKE LOWER($1) OR
+         LOWER(p.imei) LIKE LOWER($1)
+       )
+       ORDER BY p.nombre
+       LIMIT 10`,
+      [`%${q}%`],
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("❌ Error al buscar productos agotados:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== ACTUALIZAR STOCK RÁPIDO ====================
+router.patch("/:id/stock", requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { cantidad } = req.body;
+
+    if (!cantidad || isNaN(cantidad) || parseInt(cantidad) <= 0) {
+      return res.status(400).json({ error: "Cantidad inválida" });
+    }
+
+    const result = await pool.query(
+      `UPDATE productos
+       SET stock_actual = stock_actual + $1,
+           disponible = true
+       WHERE id = $2
+       RETURNING *`,
+      [parseInt(cantidad), id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    res.json({ success: true, producto: result.rows[0] });
+  } catch (error) {
+    console.error("❌ Error al actualizar stock:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== HISTORIAL DE PRODUCTOS VENDIDOS ====================
 router.get("/vendidos", async (req, res) => {
   try {

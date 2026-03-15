@@ -229,7 +229,13 @@ const VentasModule = {
   const productos = await API.Productos.search(query);
 
   if (productos.length === 0) {
-  this.mostrarAlerta("Producto no encontrado", "warning");
+  // Buscar entre agotados para ofrecer opción de agregar stock
+  const agotados = await API.Productos.searchAgotados(query);
+  if (agotados.length > 0) {
+    this.mostrarListaProductos(agotados, true);
+  } else {
+    this.mostrarAlerta("Producto no encontrado", "warning");
+  }
   return;
   }
 
@@ -241,14 +247,35 @@ const VentasModule = {
   }
   },
 
-  mostrarListaProductos(productos) {
+  async agregarStockRapido(id, nombre) {
+  const cantidad = prompt(`¿Cuántas unidades agregar a "${nombre}"?`);
+  if (cantidad === null) return;
+  const n = parseInt(cantidad);
+  if (isNaN(n) || n <= 0) {
+    this.mostrarAlerta("Cantidad inválida", "warning");
+    return;
+  }
+  try {
+    await API.Productos.agregarStock(id, n);
+    this.cerrarListaResultados();
+    this.mostrarAlerta(`Stock actualizado. Ahora puedes buscar "${nombre}" nuevamente.`, "success");
+  } catch (e) {
+    this.mostrarAlerta(e?.message || "Error al actualizar stock", "danger");
+  }
+  },
+
+  mostrarListaProductos(productos, soloAgotados = false) {
   // Crear modal o dropdown con los productos
   const container = document.getElementById("ventaItems");
   if (!container) return;
 
+  const titulo = soloAgotados
+    ? `<h4 style="margin: 0 0 10px 0; color: #e67e22;"> Sin stock — ¿Deseas agregar unidades? (${productos.length})</h4>`
+    : `<h4 style="margin: 0 0 10px 0; color: #2c3e50;"> Resultados de búsqueda (${productos.length})</h4>`;
+
   const resultadosHTML = `
-  <div style="background: #fff; border: 2px solid #3498db; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
-  <h4 style="margin: 0 0 10px 0; color: #2c3e50;"> Resultados de búsqueda (${productos.length})</h4>
+  <div style="background: #fff; border: 2px solid ${soloAgotados ? "#e67e22" : "#3498db"}; border-radius: 5px; padding: 15px; margin-bottom: 20px;">
+  ${titulo}
   <div style="max-height: 300px; overflow-y: auto;">
   ${productos
 .map(
@@ -262,7 +289,9 @@ const VentasModule = {
   Precio: ${this.formatCurrency(p.precio_venta)}
   </small>
   </div>
-  <button
+  ${soloAgotados
+    ? `<button type="button" class="btn btn-warning btn-small" onclick="VentasModule.agregarStockRapido(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')">+ Agregar Stock</button>`
+    : `<button
   type="button"
   class="btn btn-primary btn-small"
   onclick="VentasModule.agregarProductoAlCarrito({
@@ -277,7 +306,8 @@ const VentasModule = {
   ${!p.disponible || p.stock_actual <= 0 ? "disabled": ""}
   >
   Agregar
-  </button>
+  </button>`
+  }
   </div>
   `,
   )
