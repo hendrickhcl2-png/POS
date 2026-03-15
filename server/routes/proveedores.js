@@ -69,6 +69,60 @@ router.get("/:id/productos", async (req, res) => {
   }
 });
 
+// Facturas de proveedores (agrupadas por número de factura)
+router.get("/facturas/listado", async (req, res) => {
+  try {
+    const { proveedor_id } = req.query;
+    let where = `p.activo = true AND p.factura_proveedor_numero IS NOT NULL AND p.factura_proveedor_numero != ''`;
+    const params = [];
+    if (proveedor_id) {
+      params.push(proveedor_id);
+      where += ` AND p.proveedor_id = $1`;
+    }
+
+    const result = await pool.query(`
+      SELECT
+        p.factura_proveedor_numero AS numero,
+        p.factura_proveedor_fecha  AS fecha,
+        p.ncf,
+        p.proveedor_id,
+        pr.nombre                  AS proveedor_nombre,
+        COUNT(p.id)                AS cantidad_productos,
+        SUM(p.precio_costo)        AS total_costo,
+        MIN(p.created_at)          AS fecha_registro
+      FROM productos p
+      LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+      WHERE ${where}
+      GROUP BY p.factura_proveedor_numero, p.factura_proveedor_fecha,
+               p.ncf, p.proveedor_id, pr.nombre
+      ORDER BY p.factura_proveedor_fecha DESC NULLS LAST, MIN(p.created_at) DESC
+    `, params);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("❌ Error al obtener facturas:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Productos de una factura específica
+router.get("/facturas/:numero/productos", async (req, res) => {
+  try {
+    const numero = decodeURIComponent(req.params.numero);
+    const result = await pool.query(`
+      SELECT p.*, c.nombre AS categoria_nombre
+      FROM productos p
+      LEFT JOIN categorias c ON p.categoria_id = c.id
+      WHERE p.activo = true AND p.factura_proveedor_numero = $1
+      ORDER BY p.nombre
+    `, [numero]);
+    res.json(result.rows);
+  } catch (error) {
+    console.error("❌ Error al obtener productos de factura:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Crear proveedor
 router.post("/", requireAdmin, async (req, res) => {
   try {

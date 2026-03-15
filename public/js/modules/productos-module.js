@@ -477,6 +477,7 @@ async function guardarProducto(e) {
     actualizarTablaProductos();
     actualizarSelectProductos();
     actualizarInventario();
+    if (window.FacturasProveedoresModule) FacturasProveedoresModule.cargar();
   } catch (error) {
     mostrarAlerta(error.message, "danger");
   }

@@ -31,6 +31,19 @@ const ProveedoresAPI = {
   async delete(id) {
     return await APIClient.delete(`/proveedores/${id}`);
   },
+
+  // Facturas de proveedores agrupadas
+  async getFacturas(proveedorId = null) {
+    const url = proveedorId
+      ? `/proveedores/facturas/listado?proveedor_id=${proveedorId}`
+      : "/proveedores/facturas/listado";
+    return await APIClient.get(url);
+  },
+
+  // Productos de una factura específica
+  async getProductosFactura(numero) {
+    return await APIClient.get(`/proveedores/facturas/${encodeURIComponent(numero)}/productos`);
+  },
 };
 
 // Exportar

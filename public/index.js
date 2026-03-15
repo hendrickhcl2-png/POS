@@ -214,6 +214,10 @@ window.showSection = function (sectionId) {
       break;
 case "proveedores":
       actualizarTablaProveedores();
+      if (window.FacturasProveedoresModule) {
+        FacturasProveedoresModule.actualizarFiltroProveedores();
+        FacturasProveedoresModule.cargar();
+      }
       break;
     case "creditos":
       actualizarTablaCreditos();

@@ -1568,6 +1568,47 @@
           </div>
 
           <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+              <h3 style="margin:0">Facturas de Proveedores</h3>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <select id="facturaFiltroProveedor" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px">
+                  <option value="">Todos los proveedores</option>
+                </select>
+                <button class="btn btn-primary btn-small" onclick="FacturasProveedoresModule.cargar()">Filtrar</button>
+              </div>
+            </div>
+            <div class="tabla-scroll-horizontal">
+              <table>
+                <thead>
+                  <tr>
+                    <th>N° Factura</th>
+                    <th>Proveedor</th>
+                    <th>Fecha</th>
+                    <th>NCF</th>
+                    <th>Productos</th>
+                    <th>Costo Total</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaFacturasProveedores">
+                  <tr><td colspan="7" class="text-center tabla-vacia-mensaje">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Modal detalle factura -->
+          <div id="modalDetalleFactura" class="js-overlay" style="display:none">
+            <div class="js-modal js-modal--lg" style="padding:24px;max-height:80vh;overflow-y:auto">
+              <h3 id="modalFacturaTitulo" style="margin-top:0"></h3>
+              <div id="modalFacturaContenido"></div>
+              <div style="margin-top:16px;text-align:right">
+                <button class="btn btn-secondary" onclick="document.getElementById('modalDetalleFactura').style.display='none'">Cerrar</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
             <h3>Lista de Proveedores</h3>
             <table>
               <thead>
@@ -3241,6 +3282,7 @@
     <script src="js/utils/barcode-scanner.js"></script>
     <script src="js/modules/productos-module.js"></script>
     <script src="js/modules/productos-multiple-module.js"></script>
+    <script src="js/modules/facturas-proveedores-module.js"></script>
     <script src="js/modules/proveedores-module.js"></script>
     <script src="js/modules/verificador-module.js"></script>
     <script src="js/modules/salidas-module.js"></script>

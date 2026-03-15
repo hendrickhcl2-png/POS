@@ -134,10 +134,8 @@ const ProductosMultipleModule = {
       if (creados > 0) {
         Toast.success(`${creados} producto(s) guardado(s) exitosamente`);
         this.limpiar();
-        // Actualizar lista de sin-precio
-        if (window.actualizarTablaProductosSinPrecio) {
-          await actualizarTablaProductosSinPrecio();
-        }
+        if (window.actualizarTablaProductosSinPrecio) await actualizarTablaProductosSinPrecio();
+        if (window.FacturasProveedoresModule) FacturasProveedoresModule.cargar();
       }
 
       if (errores && errores.length > 0) {
