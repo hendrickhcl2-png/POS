@@ -152,6 +152,48 @@ async function initAuth() {
     await pool.query(`
       ALTER TABLE detalle_venta ADD COLUMN IF NOT EXISTS imei VARCHAR(50)
     `);
+
+    // Corrección: facturas de ventas a crédito que quedaron como contado/pagada por bug anterior
+    const correccionCreditos = await pool.query(`
+      UPDATE facturas f
+      SET
+        tipo_factura   = 'credito',
+        estado         = 'pendiente',
+        monto_pagado   = 0,
+        saldo_pendiente = f.total
+      FROM ventas v
+      WHERE f.venta_id = v.id
+        AND v.metodo_pago = 'credito'
+        AND f.tipo_factura = 'contado'
+        AND f.estado = 'pagada'
+        AND COALESCE(f.saldo_pendiente, 0) = 0
+        AND NOT EXISTS (
+          SELECT 1 FROM pagos_factura pf WHERE pf.factura_id = f.id
+        )
+    `);
+    if (correccionCreditos.rowCount > 0) {
+      console.log(`✅ Corrección: ${correccionCreditos.rowCount} factura(s) de crédito actualizadas a estado pendiente`);
+
+      // Recalcular saldo_pendiente de los clientes afectados
+      await pool.query(`
+        UPDATE clientes c
+        SET saldo_pendiente = (
+          SELECT COALESCE(SUM(f.saldo_pendiente), 0)
+          FROM facturas f
+          WHERE f.cliente_id = c.id
+            AND f.estado IN ('pendiente', 'parcial')
+        )
+        WHERE c.id IN (
+          SELECT DISTINCT f.cliente_id
+          FROM facturas f
+          JOIN ventas v ON f.venta_id = v.id
+          WHERE v.metodo_pago = 'credito'
+            AND f.tipo_factura = 'credito'
+            AND c.id IS NOT NULL
+        )
+      `);
+    }
+
     console.log("✅ Auth inicializado");
   } catch (error) {
     console.error("❌ Error en initAuth:", error);
