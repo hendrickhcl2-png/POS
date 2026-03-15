@@ -115,14 +115,14 @@ const ReportesController = {
         totalITBIS += parseFloat(venta.itbis);
 
         const costosResult = await pool.query(
-          `SELECT dv.cantidad, p.costo
+          `SELECT dv.cantidad, p.precio_costo
            FROM detalle_venta dv
            JOIN productos p ON dv.producto_id = p.id
            WHERE dv.venta_id = $1`,
           [venta.id],
         );
         for (const item of costosResult.rows) {
-          totalCostos += parseFloat(item.costo || 0) * parseInt(item.cantidad);
+          totalCostos += parseFloat(item.precio_costo || 0) * parseInt(item.cantidad);
         }
       }
 
@@ -284,13 +284,13 @@ const ReportesController = {
           p.codigo_barras,
           p.imei,
           p.nombre,
-          p.costo,
+          p.precio_costo AS costo,
           p.precio_venta,
           c.nombre as categoria_nombre,
           SUM(dv.cantidad) as cantidad_vendida,
           SUM(dv.subtotal) as total_ventas,
-          SUM(dv.cantidad * p.costo) as total_costo,
-          SUM(dv.subtotal - (dv.cantidad * p.costo)) as ganancia,
+          SUM(dv.cantidad * p.precio_costo) as total_costo,
+          SUM(dv.subtotal - (dv.cantidad * p.precio_costo)) as ganancia,
           COUNT(DISTINCT v.id) as numero_transacciones
         FROM detalle_venta dv
         JOIN productos p ON dv.producto_id = p.id
@@ -299,7 +299,7 @@ const ReportesController = {
         LEFT JOIN categorias c ON p.categoria_id = c.id
         WHERE v.fecha >= $1 AND v.fecha <= $2
           AND COALESCE(f.estado, 'pagada') != 'anulada'
-        GROUP BY p.id, p.codigo_barras, p.imei, p.nombre, p.costo, p.precio_venta, c.nombre
+        GROUP BY p.id, p.codigo_barras, p.imei, p.nombre, p.precio_costo, p.precio_venta, c.nombre
         ORDER BY cantidad_vendida DESC`,
         [fechaInicio, fechaFin],
       );
