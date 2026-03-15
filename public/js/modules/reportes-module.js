@@ -83,14 +83,14 @@ const ReportesModule = {
   },
 
   renderizarReporte() {
-  if (!this.reporteActual) return;
-
-  this.renderizarResumenVentas();
-  this.renderizarTablaVentas();
-  this.renderizarTopProductos();
-  this.renderizarMetodosPago();
-  this.renderizarDevoluciones();
-  this.renderizarVentasPorCategoria();
+    if (!this.reporteActual) return;
+    this.renderizarResumenVentas();
+    this.renderizarDesgloseGanancias();
+    this.renderizarTablaVentas();
+    this.renderizarTopProductos();
+    this.renderizarMetodosPago();
+    this.renderizarDevoluciones();
+    this.renderizarVentasPorCategoria();
   },
 
   renderizarResumenVentas() {
@@ -148,6 +148,53 @@ const ReportesModule = {
   if (costosOpEl) {
   costosOpEl.textContent = this.formatCurrency(resumen.costos_salidas || 0);
   }
+  },
+
+  renderizarDesgloseGanancias() {
+    const el = document.getElementById("rptDesglose");
+    if (!el) return;
+
+    const r = this.reporteActual.ventas.resumen;
+    const f = (n) => this.formatCurrency(n || 0);
+    const pct = (n, base) => base > 0 ? ((Math.abs(n) / base) * 100).toFixed(1) + "%" : "—";
+
+    const hayDevoluciones = r.total_devoluciones > 0;
+    const margenBruto = r.total_ventas > 0 ? ((r.ganancia / r.total_ventas) * 100).toFixed(1) : 0;
+    const margenNeto  = r.total_ventas > 0 ? ((r.ganancia_neta / r.total_ventas) * 100).toFixed(1) : 0;
+
+    const fila = (label, valor, opts = {}) => {
+      const { color = "inherit", bold = false, indent = false, bg = "transparent", borderTop = false, large = false } = opts;
+      return `
+        <div style="
+          display:flex; justify-content:space-between; align-items:baseline;
+          padding:${large ? "10px 14px" : "7px 14px"};
+          background:${bg};
+          border-top:${borderTop ? "2px solid var(--clr-border)" : "none"};
+          border-radius:6px; margin-bottom:2px;
+        ">
+          <span style="color:var(--clr-text);font-size:${large ? "14px" : "13px"};font-weight:${bold ? "700" : "400"};padding-left:${indent ? "18px" : "0"};">${label}</span>
+          <span style="color:${color};font-size:${large ? "15px" : "13px"};font-weight:${bold ? "700" : "600"};white-space:nowrap;">${valor}</span>
+        </div>`;
+    };
+
+    el.innerHTML = `
+      ${fila("Ventas brutas", f(r.total_ventas_bruto), { bold: true })}
+      ${hayDevoluciones ? fila("(−) Devoluciones", f(r.total_devoluciones), { indent: true, color: "var(--clr-danger)" }) : ""}
+      ${fila("= Ventas neto", f(r.total_ventas), { bold: true, bg: "color-mix(in srgb,#3498db 8%,transparent)", borderTop: hayDevoluciones })}
+
+      ${fila("(−) Costo de productos vendidos", f(r.costos), { indent: true, color: "var(--clr-danger)" })}
+
+      ${fila(`= Ganancia bruta &nbsp;<small style="font-weight:400;font-size:11px;color:var(--clr-muted);">(margen ${margenBruto}%)</small>`,
+        f(r.ganancia), { bold: true, bg: "color-mix(in srgb,#27ae60 8%,transparent)", borderTop: true, large: true,
+        color: r.ganancia >= 0 ? "#27ae60" : "var(--clr-danger)" })}
+
+      ${r.costos_salidas > 0 ? fila("(−) Gastos operativos (salidas)", f(r.costos_salidas), { indent: true, color: "var(--clr-danger)" }) : ""}
+
+      ${fila(`= Ganancia neta &nbsp;<small style="font-weight:400;font-size:11px;color:var(--clr-muted);">(margen ${margenNeto}%)</small>`,
+        f(r.ganancia_neta), { bold: true, bg: r.ganancia_neta >= 0 ? "color-mix(in srgb,#27ae60 12%,transparent)" : "color-mix(in srgb,#e74c3c 10%,transparent)",
+        borderTop: r.costos_salidas > 0, large: true,
+        color: r.ganancia_neta >= 0 ? "#27ae60" : "var(--clr-danger)" })}
+    `;
   },
 
   renderizarTablaVentas() {
