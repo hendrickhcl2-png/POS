@@ -47,7 +47,6 @@ const ProductosMultipleModule = {
           ${this._opcionesCategorias()}
         </select>
       </td>
-      <td><input type="number" class="lote-costo" step="0.01" min="0" placeholder="0.00" style="width:100px"/></td>
       <td><input type="number" class="lote-cantidad" value="1" min="1" style="width:70px"/></td>
       <td>
         <button type="button" class="btn btn-danger btn-small" onclick="ProductosMultipleModule.quitarFila(${id})">✕</button>
@@ -84,7 +83,6 @@ const ProductosMultipleModule = {
         codigo_barras: fila.querySelector(".lote-codigo").value.trim() || null,
         nombre,
         categoria_id: parseInt(fila.querySelector(".lote-categoria").value) || null,
-        precio_costo: parseFloat(fila.querySelector(".lote-costo").value) || 0,
         stock_actual: parseInt(fila.querySelector(".lote-cantidad").value) || 1,
       });
     }
@@ -99,6 +97,7 @@ const ProductosMultipleModule = {
       factura_proveedor_numero: document.getElementById("loteFacturaNumero").value.trim() || null,
       factura_proveedor_fecha: document.getElementById("loteFacturaFecha").value || null,
       ncf: document.getElementById("loteNcf").value.trim() || null,
+      costo_total_factura: parseFloat(document.getElementById("loteCostoTotal").value) || 0,
       registrar_como_gasto: document.getElementById("loteRegistrarGasto").checked,
       productos,
     };

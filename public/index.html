@@ -1156,13 +1156,17 @@
                   <label>NCF:</label>
                   <input type="text" id="loteNcf" placeholder="Ej: B0100000001" maxlength="20" />
                 </div>
+                <div class="form-group">
+                  <label>Costo Total de la Factura:</label>
+                  <input type="number" id="loteCostoTotal" step="0.01" min="0" placeholder="0.00" />
+                </div>
               </div>
               <div class="caja-disponibilidad" style="margin-top:10px">
                 <label class="disponibilidad-label">
                   <input type="checkbox" id="loteRegistrarGasto" class="disponibilidad-checkbox" checked />
                   <div>
                     <strong class="disponibilidad-titulo">Registrar como gasto</strong>
-                    <p class="disponibilidad-descripcion">Los costos se registrarán automáticamente como salidas en el módulo de gastos</p>
+                    <p class="disponibilidad-descripcion">El costo total se registrará como una salida en el módulo de gastos</p>
                   </div>
                 </label>
               </div>
@@ -1176,7 +1180,6 @@
                       <th>Código de Barras</th>
                       <th>Nombre <span class="campo-requerido">*</span></th>
                       <th>Categoría</th>
-                      <th>Costo Total</th>
                       <th>Cantidad</th>
                       <th></th>
                     </tr>

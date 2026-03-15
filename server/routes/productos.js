@@ -117,6 +117,7 @@ router.post("/lote", requireAdmin, async (req, res) => {
       factura_proveedor_numero,
       factura_proveedor_fecha,
       ncf,
+      costo_total_factura,
       registrar_como_gasto,
       productos: items,
     } = req.body;
@@ -139,7 +140,7 @@ router.post("/lote", requireAdmin, async (req, res) => {
     const errores = [];
 
     for (const item of items) {
-      const { codigo_barras, nombre, categoria_id, precio_costo, stock_actual } = item;
+      const { codigo_barras, nombre, categoria_id, stock_actual } = item;
 
       if (!nombre || nombre.trim() === "") {
         errores.push({ item, error: "Nombre requerido" });
@@ -155,17 +156,16 @@ router.post("/lote", requireAdmin, async (req, res) => {
             disponible, aplica_itbis, activo, creado_por,
             factura_proveedor_numero, factura_proveedor_fecha, ncf
           ) VALUES (
-            $1, $2, $3, $4, $5, 0, $6,
+            $1, $2, $3, $4, 0, 0, $5,
             0, 0, 0, 0,
-            false, true, true, $7,
-            $8, $9, $10
+            false, true, true, $6,
+            $7, $8, $9
           ) RETURNING *`,
           [
             codigo_barras || null,
             nombre.trim(),
             categoria_id || null,
             proveedor_id || null,
-            parseFloat(precio_costo) || 0,
             parseInt(stock_actual) || 1,
             creadoPor,
             factura_proveedor_numero || null,
@@ -174,28 +174,7 @@ router.post("/lote", requireAdmin, async (req, res) => {
           ],
         );
 
-        const producto = r.rows[0];
-        creados.push(producto);
-
-        // Registrar como gasto si está marcado y hay costo
-        if (registrar_como_gasto && parseFloat(precio_costo) > 0) {
-          const numResult = await client.query(
-            `SELECT COALESCE(MAX(CAST(REGEXP_REPLACE(numero_salida, '[^0-9]', '', 'g') AS INTEGER)), 0) + 1 as siguiente FROM salidas`,
-          );
-          const numeroSalida = "SAL" + String(numResult.rows[0].siguiente).padStart(8, "0");
-
-          await client.query(
-            `INSERT INTO salidas (numero_salida, fecha, concepto, monto, categoria_gasto, beneficiario, ncf)
-             VALUES ($1, CURRENT_DATE, $2, $3, 'Compras de Inventario', $4, $5)`,
-            [
-              numeroSalida,
-              `${nombre.trim()} (${codigo_barras || "s/c"}) - Costo de compra`,
-              parseFloat(precio_costo),
-              proveedorNombre,
-              ncf || null,
-            ],
-          );
-        }
+        creados.push(r.rows[0]);
       } catch (itemError) {
         if (itemError.code === "23505") {
           errores.push({ nombre, error: "Código duplicado — ya existe en el sistema" });
@@ -203,6 +182,24 @@ router.post("/lote", requireAdmin, async (req, res) => {
           errores.push({ nombre, error: itemError.message });
         }
       }
+    }
+
+    // Registrar el costo total de la factura como un único gasto
+    const costoTotal = parseFloat(costo_total_factura) || 0;
+    if (registrar_como_gasto && costoTotal > 0 && creados.length > 0) {
+      const numResult = await client.query(
+        `SELECT COALESCE(MAX(CAST(REGEXP_REPLACE(numero_salida, '[^0-9]', '', 'g') AS INTEGER)), 0) + 1 as siguiente FROM salidas`,
+      );
+      const numeroSalida = "SAL" + String(numResult.rows[0].siguiente).padStart(8, "0");
+      const concepto = factura_proveedor_numero
+        ? `Compra de inventario - Factura ${factura_proveedor_numero}`
+        : `Compra de inventario (${creados.length} producto(s))`;
+
+      await client.query(
+        `INSERT INTO salidas (numero_salida, fecha, concepto, monto, categoria_gasto, beneficiario, ncf)
+         VALUES ($1, CURRENT_DATE, $2, $3, 'Compras de Inventario', $4, $5)`,
+        [numeroSalida, concepto, costoTotal, proveedorNombre, ncf || null],
+      );
     }
 
     await client.query("COMMIT");
