@@ -39,6 +39,11 @@ const ProductosAPI = {
     return await APIClient.delete(`/productos/${id}/force`);
   },
 
+  // Restaurar producto eliminado (soft delete revertido)
+  async restaurar(id) {
+    return await APIClient.post(`/productos/${id}/restaurar`, {});
+  },
+
   // Buscar productos agotados (stock <= 0) por código o nombre
   async searchAgotados(query) {
     return await APIClient.get(`/productos/buscar-agotados?q=${encodeURIComponent(query)}`);

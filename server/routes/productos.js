@@ -505,17 +505,26 @@ router.post("/", requireAdmin, async (req, res) => {
 
     if (error.code === "23505") {
       const esImei = error.constraint && error.constraint.includes("imei");
-      let mensaje = "Este producto ya existe";
       try {
         const existing = await pool.query(
-          `SELECT nombre FROM productos WHERE (codigo_barras = $1 AND $1 IS NOT NULL) OR (imei = $2 AND $2 IS NOT NULL) LIMIT 1`,
+          `SELECT id, nombre, activo FROM productos WHERE (codigo_barras = $1 AND $1 IS NOT NULL) OR (imei = $2 AND $2 IS NOT NULL) LIMIT 1`,
           [codigo_barras || null, imei || null],
         );
         if (existing.rows.length > 0) {
-          mensaje += ` — ${esImei ? "IMEI" : "código"} pertenece a: "${existing.rows[0].nombre}"`;
+          const prod = existing.rows[0];
+          if (!prod.activo) {
+            return res.status(409).json({
+              error: `Este ${esImei ? "IMEI" : "código"} pertenece a "${prod.nombre}", que fue eliminado anteriormente. ¿Desea restaurarlo?`,
+              producto_inactivo_id: prod.id,
+              puede_restaurar: true,
+            });
+          }
+          return res.status(409).json({
+            error: `Este producto ya existe — ${esImei ? "IMEI" : "código"} pertenece a: "${prod.nombre}"`,
+          });
         }
       } catch (_) {}
-      return res.status(409).json({ error: mensaje });
+      return res.status(409).json({ error: "Este producto ya existe" });
     }
 
     res.status(500).json({
@@ -642,6 +651,27 @@ router.put("/:id", requireAdmin, async (req, res) => {
       return res.status(409).json({ error: mensaje });
     }
 
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== RESTAURAR PRODUCTO INACTIVO ====================
+router.post("/:id/restaurar", requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `UPDATE productos SET activo = true, disponible = true WHERE id = $1 AND activo = false RETURNING *`,
+      [id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Producto no encontrado o ya está activo" });
+    }
+
+    res.json({ success: true, message: "Producto restaurado correctamente", producto: result.rows[0] });
+  } catch (error) {
+    console.error("❌ Error al restaurar producto:", error);
     res.status(500).json({ error: error.message });
   }
 });

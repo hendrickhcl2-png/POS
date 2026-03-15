@@ -15,8 +15,10 @@ const APIClient = {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || error.error || "Error en la petición");
+        const errorData = await response.json();
+        const err = new Error(errorData.message || errorData.error || "Error en la petición");
+        Object.assign(err, errorData);
+        throw err;
       }
 
       const result = await response.json();

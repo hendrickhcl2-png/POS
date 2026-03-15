@@ -479,7 +479,31 @@ async function guardarProducto(e) {
     actualizarInventario();
     if (window.FacturasProveedoresModule) FacturasProveedoresModule.cargar();
   } catch (error) {
-    mostrarAlerta(error.message, "danger");
+    if (error.puede_restaurar && error.producto_inactivo_id) {
+      const confirmar = confirm(
+        `${error.message}\n\n¿Desea restaurarlo con los datos que ingresó?`,
+      );
+      if (confirmar) {
+        try {
+          await window.API.Productos.restaurar(error.producto_inactivo_id);
+          // Actualizar con los datos nuevos del formulario
+          await window.API.Productos.update(error.producto_inactivo_id, productoData);
+          mostrarAlerta(`"${nombre}" restaurado exitosamente`, "success");
+          document.getElementById("formProducto").reset();
+          limpiarCostos();
+          limpiarCaracteristicas();
+          agregarLineaCosto();
+          agregarCaracteristica();
+          actualizarTablaProductos();
+          actualizarSelectProductos();
+          actualizarInventario();
+        } catch (e) {
+          mostrarAlerta(e.message, "danger");
+        }
+      }
+    } else {
+      mostrarAlerta(error.message, "danger");
+    }
   }
 }
 
