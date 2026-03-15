@@ -2,6 +2,7 @@
 
 let _salidasData = [];
 let salidaEnEdicion = null;
+const _pgSalidas = new Paginator('tablaSalidas', 20);
 
 async function actualizarSelectCategoriasGasto() {
   const select = document.getElementById("salidaCategoria");
@@ -23,17 +24,8 @@ async function cargarSalidas() {
   try {
     const salidas = await window.API.Salidas.getAll();
     _salidasData = salidas;
-    const tbody = document.getElementById("tablaSalidas");
-    if (!tbody) return;
-
-    if (salidas.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center" style="color: #7f8c8d">No hay salidas registradas</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = salidas
-      .map(
-        (s) => `
+    _pgSalidas.render(
+      salidas.map((s) => `
         <tr>
           <td>${s.fecha ? new Date(s.fecha).toLocaleDateString("es-DO") : "-"}</td>
           <td>${s.categoria_gasto || "-"}</td>
@@ -49,9 +41,9 @@ async function cargarSalidas() {
             <button class="btn btn-danger btn-small" onclick="eliminarSalida(${s.id}, '${s.concepto.replace(/'/g, "\\'")}')">Eliminar</button>
           </td>
         </tr>
-      `,
-      )
-      .join("");
+      `),
+      `<tr><td colspan="8" class="text-center" style="color: #7f8c8d">No hay salidas registradas</td></tr>`
+    );
   } catch (error) {
     mostrarAlerta("Error al cargar salidas", "danger");
   }

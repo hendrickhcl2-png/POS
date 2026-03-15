@@ -6,6 +6,7 @@ const ClientesModule = {
   clientes: [],
   clientesConSaldo: [],
   clienteActual: null,
+  _paginator: null,
 
   // Inicializar módulo
   init() {
@@ -86,61 +87,48 @@ const ClientesModule = {
   // ==================== ACTUALIZAR TABLA ====================
 
   actualizarTablaClientes(clientes) {
-  const tbody = document.getElementById("tablaClientes");
-  if (!tbody) return;
-
-  if (!clientes || clientes.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="4" class="text-center" style="padding:48px;color:var(--clr-muted);">
-          <p style="margin:0;font-size:15px;">No hay clientes registrados</p>
-          <p style="margin:6px 0 0;font-size:13px;">Haz clic en "+ Nuevo Cliente" para comenzar</p>
-        </td>
-      </tr>`;
-    return;
+  if (!this._paginator) {
+    this._paginator = new Paginator('tablaClientes', 20);
   }
-
-  tbody.innerHTML = clientes.map((c) => {
-    const iniciales = this.getIniciales(c.nombre, c.apellido);
-    const nombreCompleto = `${c.nombre} ${c.apellido || ""}`.trim();
-    const saldo = parseFloat(c.saldo_pendiente) || 0;
-    const tieneDeuda = saldo > 0;
-
-    return `
-    <tr>
-      <td>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="avatar-circle" style="font-size:14px;">
-            ${iniciales}
-          </div>
-          <div>
-            <strong style="font-size:14px;color:var(--clr-dark);">${nombreCompleto}</strong>
-            ${c.cedula ? `<br><small style="color:var(--clr-muted);">${c.cedula}</small>` : ""}
-            ${c.rnc ? `<br><small style="color:var(--clr-muted);">RNC: ${c.rnc}</small>` : ""}
-          </div>
-        </div>
-      </td>
-      <td>
-        ${c.telefono ? `<div style="font-size:13px;">${c.telefono}</div>` : ""}
-        ${c.email ? `<div style="font-size:12px;color:var(--clr-muted);">${c.email}</div>` : ""}
-        ${!c.telefono && !c.email ? `<span style="color:var(--clr-muted);">—</span>` : ""}
-      </td>
-      <td style="text-align:right;">
-        ${tieneDeuda
-          ? `<span style="background:var(--clr-danger);color:white;padding:4px 10px;border-radius:8px;font-weight:700;font-size:13px;">
-              ${Formatters.formatCurrency(saldo)}
-             </span>`
-          : `<span style="color:var(--clr-success);font-weight:600;font-size:13px;">Al corriente</span>`}
-      </td>
-      <td style="text-align:center;">
-        <div class="flex-gap-sm" style="justify-content:center;">
-          <button class="btn btn-secondary btn-small" onclick="ClientesModule.verDetalleCliente(${c.id})">Ver</button>
-          ${window.Auth?.isAdmin() ? `<button class="btn btn-primary btn-small" onclick="ClientesModule.editarCliente(${c.id})">Editar</button>` : ""}
-          ${window.Auth?.isAdmin() ? `<button class="btn btn-danger btn-small" onclick="ClientesModule.confirmarEliminar(${c.id})">Eliminar</button>` : ""}
-        </div>
-      </td>
-    </tr>`;
-  }).join("");
+  this._paginator.render(
+    (clientes || []).map((c) => {
+      const iniciales = this.getIniciales(c.nombre, c.apellido);
+      const nombreCompleto = `${c.nombre} ${c.apellido || ""}`.trim();
+      const saldo = parseFloat(c.saldo_pendiente) || 0;
+      const tieneDeuda = saldo > 0;
+      return `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="avatar-circle" style="font-size:14px;">${iniciales}</div>
+              <div>
+                <strong style="font-size:14px;color:var(--clr-dark);">${nombreCompleto}</strong>
+                ${c.cedula ? `<br><small style="color:var(--clr-muted);">${c.cedula}</small>` : ""}
+                ${c.rnc ? `<br><small style="color:var(--clr-muted);">RNC: ${c.rnc}</small>` : ""}
+              </div>
+            </div>
+          </td>
+          <td>
+            ${c.telefono ? `<div style="font-size:13px;">${c.telefono}</div>` : ""}
+            ${c.email ? `<div style="font-size:12px;color:var(--clr-muted);">${c.email}</div>` : ""}
+            ${!c.telefono && !c.email ? `<span style="color:var(--clr-muted);">—</span>` : ""}
+          </td>
+          <td style="text-align:right;">
+            ${tieneDeuda
+              ? `<span style="background:var(--clr-danger);color:white;padding:4px 10px;border-radius:8px;font-weight:700;font-size:13px;">${Formatters.formatCurrency(saldo)}</span>`
+              : `<span style="color:var(--clr-success);font-weight:600;font-size:13px;">Al corriente</span>`}
+          </td>
+          <td style="text-align:center;">
+            <div class="flex-gap-sm" style="justify-content:center;">
+              <button class="btn btn-secondary btn-small" onclick="ClientesModule.verDetalleCliente(${c.id})">Ver</button>
+              ${window.Auth?.isAdmin() ? `<button class="btn btn-primary btn-small" onclick="ClientesModule.editarCliente(${c.id})">Editar</button>` : ""}
+              ${window.Auth?.isAdmin() ? `<button class="btn btn-danger btn-small" onclick="ClientesModule.confirmarEliminar(${c.id})">Eliminar</button>` : ""}
+            </div>
+          </td>
+        </tr>`;
+    }),
+    `<tr><td colspan="4" class="text-center" style="padding:48px;color:var(--clr-muted);"><p style="margin:0;font-size:15px;">No hay clientes registrados</p></td></tr>`
+  );
   },
 
   // ==================== MOSTRAR MODAL ====================

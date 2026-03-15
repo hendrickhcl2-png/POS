@@ -2,6 +2,7 @@
 
 const FacturasProveedoresModule = {
   _data: [],
+  _paginator: null,
 
   async cargar() {
     const tbody = document.getElementById("tablaFacturasProveedores");
@@ -17,9 +18,9 @@ const FacturasProveedoresModule = {
   },
 
   _renderFiltrado() {
-    const tbody = document.getElementById("tablaFacturasProveedores");
-    if (!tbody) return;
-
+    if (!this._paginator) {
+      this._paginator = new Paginator('tablaFacturasProveedores', 20);
+    }
     const q = (document.getElementById("facturasBusqueda")?.value || "").toLowerCase().trim();
     const data = q
       ? this._data.filter((f) =>
@@ -28,31 +29,29 @@ const FacturasProveedoresModule = {
         )
       : this._data;
 
-    if (!data || data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center tabla-vacia-mensaje">${q ? "No se encontraron facturas" : "No hay facturas registradas"}</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = data.map((f) => {
-      const fecha = f.fecha ? new Date(f.fecha + "T00:00:00").toLocaleDateString("es-DO") : "—";
-      const costo = parseFloat(f.total_costo) || 0;
-      return `
-        <tr>
-          <td><strong>${f.numero}</strong></td>
-          <td>${f.proveedor_nombre || '<span style="color:var(--text-muted)">Sin proveedor</span>'}</td>
-          <td>${fecha}</td>
-          <td>${f.ncf || "—"}</td>
-          <td style="text-align:center">${f.cantidad_productos}</td>
-          <td style="font-weight:600;color:var(--clr-danger)">$${costo.toFixed(2)}</td>
-          <td>
-            <button class="btn btn-info btn-small"
-              onclick="FacturasProveedoresModule.verDetalle('${f.numero.replace(/'/g, "\\'")}', '${(f.proveedor_nombre || "").replace(/'/g, "\\'")}', '${f.fecha || ""}')">
-              Ver productos
-            </button>
-          </td>
-        </tr>
-      `;
-    }).join("");
+    this._paginator.render(
+      data.map((f) => {
+        const fecha = f.fecha ? new Date(f.fecha + "T00:00:00").toLocaleDateString("es-DO") : "—";
+        const costo = parseFloat(f.total_costo) || 0;
+        return `
+          <tr>
+            <td><strong>${f.numero}</strong></td>
+            <td>${f.proveedor_nombre || '<span style="color:var(--text-muted)">Sin proveedor</span>'}</td>
+            <td>${fecha}</td>
+            <td>${f.ncf || "—"}</td>
+            <td style="text-align:center">${f.cantidad_productos}</td>
+            <td style="font-weight:600;color:var(--clr-danger)">$${costo.toFixed(2)}</td>
+            <td>
+              <button class="btn btn-info btn-small"
+                onclick="FacturasProveedoresModule.verDetalle('${f.numero.replace(/'/g, "\\'")}', '${(f.proveedor_nombre || "").replace(/'/g, "\\'")}', '${f.fecha || ""}')">
+                Ver productos
+              </button>
+            </td>
+          </tr>
+        `;
+      }),
+      `<tr><td colspan="7" class="text-center tabla-vacia-mensaje">${q ? "No se encontraron facturas" : "No hay facturas registradas"}</td></tr>`
+    );
   },
 
   filtrarPorProveedor(nombre) {

@@ -40,7 +40,11 @@ const ProductosMultipleModule = {
     const tr = document.createElement("tr");
     tr.id = `lote-fila-${id}`;
     tr.innerHTML = `
-      <td><input type="text" class="lote-codigo" placeholder="Código de barras" style="width:130px"/></td>
+      <td>
+        <input type="text" class="lote-codigo" placeholder="Código de barras" style="width:130px"
+          onchange="ProductosMultipleModule.buscarPorCodigo(this)"/>
+        <div class="lote-badge-wrap" style="margin-top:3px;min-height:16px;"></div>
+      </td>
       <td><input type="text" class="lote-nombre" placeholder="Nombre *" required style="width:200px"/></td>
       <td>
         <select class="lote-categoria" style="width:140px">
@@ -57,6 +61,52 @@ const ProductosMultipleModule = {
       </td>
     `;
     document.getElementById("tbodyLoteProductos").appendChild(tr);
+  },
+
+  async buscarPorCodigo(inputEl) {
+    const codigo = inputEl.value.trim();
+    const tr = inputEl.closest("tr");
+    const badgeWrap = tr.querySelector(".lote-badge-wrap");
+    const nombreInput = tr.querySelector(".lote-nombre");
+    const catSelect = tr.querySelector(".lote-categoria");
+    const costoInput = tr.querySelector(".lote-costo");
+
+    // Limpiar estado previo
+    delete tr.dataset.productoId;
+    if (badgeWrap) badgeWrap.innerHTML = "";
+    if (nombreInput) { nombreInput.style.color = ""; nombreInput.readOnly = false; }
+
+    if (!codigo) return;
+
+    try {
+      const res = await fetch(`/api/productos/por-codigo?codigo=${encodeURIComponent(codigo)}`);
+      const json = await res.json();
+      const producto = json.data;
+
+      if (producto) {
+        // Producto existente: rellenar campos
+        tr.dataset.productoId = producto.id;
+        if (nombreInput) {
+          nombreInput.value = producto.nombre;
+          nombreInput.style.color = "var(--clr-primary)";
+          nombreInput.readOnly = true;
+        }
+        if (catSelect) catSelect.value = producto.categoria_id || "";
+        if (costoInput && !costoInput.value) costoInput.value = producto.precio_costo || "";
+        if (badgeWrap) {
+          badgeWrap.innerHTML = `<span style="background:var(--clr-success);color:white;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600;">
+            Actualizar · Stock actual: ${producto.stock_actual || 0}
+          </span>`;
+        }
+      } else {
+        // No existe: resaltar como nuevo
+        if (badgeWrap) {
+          badgeWrap.innerHTML = `<span style="background:var(--clr-primary);color:white;padding:2px 7px;border-radius:4px;font-size:11px;">Nuevo</span>`;
+        }
+      }
+    } catch (e) {
+      // silently fail
+    }
   },
 
   recalcularTotal() {
@@ -96,9 +146,13 @@ const ProductosMultipleModule = {
     const productos = [];
 
     for (const fila of filas) {
-      const nombre = fila.querySelector(".lote-nombre").value.trim();
+      // Quitar readOnly antes de leer el valor
+      const nombreInput = fila.querySelector(".lote-nombre");
+      if (nombreInput) nombreInput.readOnly = false;
+      const nombre = nombreInput?.value.trim();
       if (!nombre) continue;
       productos.push({
+        producto_id: fila.dataset.productoId ? parseInt(fila.dataset.productoId) : null,
         codigo_barras: fila.querySelector(".lote-codigo").value.trim() || null,
         nombre,
         categoria_id: parseInt(fila.querySelector(".lote-categoria").value) || null,
@@ -134,8 +188,9 @@ const ProductosMultipleModule = {
       const { creados, errores } = res;
 
       if (creados > 0) {
-        Toast.success(`${creados} producto(s) guardado(s) exitosamente`);
+        Toast.success(`${creados} producto(s) procesado(s) exitosamente`);
         this.limpiar();
+        if (window.actualizarTablaProductos) actualizarTablaProductos();
         if (window.actualizarTablaProductosSinPrecio) await actualizarTablaProductosSinPrecio();
         if (window.FacturasProveedoresModule) FacturasProveedoresModule.cargar();
       }

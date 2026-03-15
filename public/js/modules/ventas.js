@@ -7,6 +7,7 @@ const VentasModule = {
   metodoPagoActual: "efectivo",
   incluirITBIS: false,
   generarFacturaElectronica: false,
+  _paginator: null,
 
   init() {
   this.cargarClientes();
@@ -1281,26 +1282,17 @@ const VentasModule = {
     conteo.textContent = `${ventas.length} venta(s) — Total: ${this.formatCurrency(total)}`;
   }
 
-  if (ventas.length === 0) {
-  tbody.innerHTML = `
-  <tr>
-  <td colspan="7" class="text-center" style="color: #7f8c8d;">
-  No hay ventas en ese período
-  </td>
-  </tr>
-  `;
-  return;
-  }
-
   const isAdmin = window.Auth?.isAdmin();
-  tbody.innerHTML = ventas
-.map(
-  (venta) => {
-    const fechaISO = venta.fecha ? venta.fecha.split("T")[0] : "";
-    const fechaDisplay = fechaISO
-      ? new Date(fechaISO + "T00:00:00").toLocaleDateString("es-DO")
-      : "—";
-    return `
+  if (!this._paginator) {
+    this._paginator = new Paginator('tablaVentasHoy', 20);
+  }
+  this._paginator.render(
+    ventas.map((venta) => {
+      const fechaISO = venta.fecha ? venta.fecha.split("T")[0] : "";
+      const fechaDisplay = fechaISO
+        ? new Date(fechaISO + "T00:00:00").toLocaleDateString("es-DO")
+        : "—";
+      return `
   <tr id="historial-fila-${venta.id}">
   <td>#${venta.numero_ticket}</td>
   <td>
@@ -1322,8 +1314,9 @@ const VentasModule = {
   </td>
   </tr>
   `;
-  })
-.join("");
+    }),
+    `<tr><td colspan="7" class="text-center" style="color: #7f8c8d;">No hay ventas en ese período</td></tr>`
+  );
   },
 
   async verDetalleVenta(ventaId) {

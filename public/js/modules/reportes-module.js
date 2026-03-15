@@ -3,10 +3,16 @@
 const ReportesModule = {
   periodoActual: "hoy",
   reporteActual: null,
+  _pgVentas: null,
+  _pgDevoluciones: null,
 
   init() {
   this.setupEventListeners();
+  // Precargar fecha de hoy en cuadre inline
+  const ciFecha = document.getElementById("ciFecha");
+  if (ciFecha) ciFecha.value = new Date().toISOString().split("T")[0];
   this.cargarReporte("hoy");
+  this.cargarCuadreDia();
   },
 
   setupEventListeners() {
@@ -148,56 +154,49 @@ const ReportesModule = {
     return db.localeCompare(da);
   });
 
-  if (filas.length === 0) {
-  tbody.innerHTML = `
-  <tr>
-  <td colspan="7" style="text-align: center; padding: 40px; color: #7f8c8d;">
-  <p>No hay ventas en este periodo</p>
-  </td>
-  </tr>
-  `;
-  return;
-  }
-
-  tbody.innerHTML = filas.map((row) => {
-  if (row._tipo === "pago") {
+  if (!this._pgVentas) this._pgVentas = new Paginator('tablaReporteVentas', 20);
+  this._pgVentas.render(
+    filas.map((row) => {
+    if (row._tipo === "pago") {
+      return `
+      <tr style="background:color-mix(in srgb, var(--clr-warning) 8%, transparent);">
+        <td style="font-weight:600;color:var(--clr-warning);">
+          ${row.numero_pago}
+          <br><small style="font-size:10px;color:var(--clr-muted);font-weight:normal;">
+            Pago crédito · ${row.numero_factura || ""}
+          </small>
+        </td>
+        <td>${this.formatFecha(row.fecha)}</td>
+        <td>${row.hora || "N/A"}</td>
+        <td>${row.cliente_nombre || "—"}</td>
+        <td style="text-align:right;">—</td>
+        <td style="text-align:right;font-weight:600;color:var(--clr-success);">
+          ${this.formatCurrency(row.monto)}
+        </td>
+        <td>${this.formatMetodoPago(row.metodo_pago)}</td>
+      </tr>`;
+    }
+    const devuelto = parseFloat(row.monto_devuelto || 0);
+    const neto = parseFloat(row.total) - devuelto;
+    const tieneDevolucion = devuelto > 0;
     return `
-    <tr style="background:color-mix(in srgb, var(--clr-warning) 8%, transparent);">
-      <td style="font-weight:600;color:var(--clr-warning);">
-        ${row.numero_pago}
-        <br><small style="font-size:10px;color:var(--clr-muted);font-weight:normal;">
-          Pago crédito · ${row.numero_factura || ""}
-        </small>
-      </td>
-      <td>${this.formatFecha(row.fecha)}</td>
-      <td>${row.hora || "N/A"}</td>
-      <td>${row.cliente_nombre || "—"}</td>
-      <td style="text-align:right;">—</td>
-      <td style="text-align:right;font-weight:600;color:var(--clr-success);">
-        ${this.formatCurrency(row.monto)}
-      </td>
-      <td>${this.formatMetodoPago(row.metodo_pago)}</td>
+    <tr>
+    <td style="font-weight:600;color:var(--clr-primary);">${row.numero_ticket}</td>
+    <td>${this.formatFecha(row.fecha)}</td>
+    <td>${row.hora || "N/A"}</td>
+    <td>${row.cliente_nombre || "Cliente General"}</td>
+    <td style="text-align:right;">${this.formatCurrency(row.subtotal)}</td>
+    <td style="text-align:right;font-weight:600;color:${tieneDevolucion ? "var(--clr-danger)" : "var(--clr-success)"};">
+    ${this.formatCurrency(neto)}
+    ${tieneDevolucion ? `<br><small style="font-size:10px;font-weight:normal;color:var(--clr-muted);">
+    <span style="text-decoration:line-through;">${this.formatCurrency(row.total)}</span>
+    &nbsp;↩ ${this.formatCurrency(devuelto)}</small>` : ""}
+    </td>
+    <td>${this.formatMetodoPago(row.metodo_pago)}</td>
     </tr>`;
-  }
-  const devuelto = parseFloat(row.monto_devuelto || 0);
-  const neto = parseFloat(row.total) - devuelto;
-  const tieneDevolucion = devuelto > 0;
-  return `
-  <tr>
-  <td style="font-weight:600;color:var(--clr-primary);">${row.numero_ticket}</td>
-  <td>${this.formatFecha(row.fecha)}</td>
-  <td>${row.hora || "N/A"}</td>
-  <td>${row.cliente_nombre || "Cliente General"}</td>
-  <td style="text-align:right;">${this.formatCurrency(row.subtotal)}</td>
-  <td style="text-align:right;font-weight:600;color:${tieneDevolucion ? "var(--clr-danger)" : "var(--clr-success)"};">
-  ${this.formatCurrency(neto)}
-  ${tieneDevolucion ? `<br><small style="font-size:10px;font-weight:normal;color:var(--clr-muted);">
-  <span style="text-decoration:line-through;">${this.formatCurrency(row.total)}</span>
-  &nbsp;↩ ${this.formatCurrency(devuelto)}</small>` : ""}
-  </td>
-  <td>${this.formatMetodoPago(row.metodo_pago)}</td>
-  </tr>`;
-  }).join("");
+    }),
+    `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #7f8c8d;"><p>No hay ventas en este periodo</p></td></tr>`
+  );
   },
 
   renderizarDevoluciones() {
@@ -220,35 +219,39 @@ const ReportesModule = {
   if (cardResumen) cardResumen.style.display = "block";
   if (totalDevEl) totalDevEl.textContent = this.formatCurrency(resumen.total_devoluciones);
 
-  tbody.innerHTML = devoluciones.map((dev) => {
-  const itemsHtml = (dev.items || []).map((item) => `
-  <tr style="background:#fdf9f9;">
-  <td style="padding:4px 12px;color:var(--clr-muted);" colspan="2"></td>
-  <td style="padding:4px 12px;color:var(--clr-muted);font-size:12px;" colspan="2">
-  ↳ ${item.nombre_producto} × ${item.cantidad_devuelta}
-  </td>
-  <td style="padding:4px 12px;font-size:12px;color:var(--clr-muted);">
-  @ ${this.formatCurrency(item.precio_unitario)}
-  </td>
-  <td style="padding:4px 12px;text-align:right;font-size:12px;color:var(--clr-danger);">
-  −${this.formatCurrency(item.total)}
-  </td>
-  </tr>`).join("");
+  if (!this._pgDevoluciones) this._pgDevoluciones = new Paginator('tablaReporteDevoluciones', 20);
+  this._pgDevoluciones.render(
+    devoluciones.map((dev) => {
+    const itemsHtml = (dev.items || []).map((item) => `
+    <tr style="background:#fdf9f9;">
+    <td style="padding:4px 12px;color:var(--clr-muted);" colspan="2"></td>
+    <td style="padding:4px 12px;color:var(--clr-muted);font-size:12px;" colspan="2">
+    ↳ ${item.nombre_producto} × ${item.cantidad_devuelta}
+    </td>
+    <td style="padding:4px 12px;font-size:12px;color:var(--clr-muted);">
+    @ ${this.formatCurrency(item.precio_unitario)}
+    </td>
+    <td style="padding:4px 12px;text-align:right;font-size:12px;color:var(--clr-danger);">
+    −${this.formatCurrency(item.total)}
+    </td>
+    </tr>`).join("");
 
-  return `
-  <tr>
-  <td style="font-weight:600;color:var(--clr-danger);">${dev.numero_devolucion}</td>
-  <td>${dev.numero_ticket || "—"}</td>
-  <td>${dev.numero_factura || "—"}</td>
-  <td>${this.formatFecha(dev.fecha)}</td>
-  <td>${dev.cliente_nombre || "Cliente General"}</td>
-  <td style="font-size:13px;color:var(--clr-muted);">${dev.motivo}</td>
-  <td style="text-align:right;font-weight:600;color:var(--clr-danger);">
-  −${this.formatCurrency(dev.monto_devuelto)}
-  </td>
-  </tr>
-  ${itemsHtml}`;
-  }).join("");
+    return `
+    <tr>
+    <td style="font-weight:600;color:var(--clr-danger);">${dev.numero_devolucion}</td>
+    <td>${dev.numero_ticket || "—"}</td>
+    <td>${dev.numero_factura || "—"}</td>
+    <td>${this.formatFecha(dev.fecha)}</td>
+    <td>${dev.cliente_nombre || "Cliente General"}</td>
+    <td style="font-size:13px;color:var(--clr-muted);">${dev.motivo}</td>
+    <td style="text-align:right;font-weight:600;color:var(--clr-danger);">
+    −${this.formatCurrency(dev.monto_devuelto)}
+    </td>
+    </tr>
+    ${itemsHtml}`;
+    }),
+    ''
+  );
   },
 
   renderizarTopProductos() {
@@ -668,6 +671,164 @@ const ReportesModule = {
       </tr>`;
     }
   }
+  },
+
+  // ==================== CUADRE INLINE ====================
+
+  async cargarCuadreDia() {
+    const fechaInput = document.getElementById("ciFecha");
+    const fondoInput = document.getElementById("ciFondo");
+    if (!fechaInput) return;
+    const fecha = fechaInput.value || new Date().toISOString().split("T")[0];
+    const fondo = parseFloat(fondoInput?.value || 0) || 0;
+
+    const loader = document.getElementById("ciLoader");
+    const contenido = document.getElementById("ciContenido");
+    if (loader) loader.style.display = "block";
+    if (contenido) contenido.style.display = "none";
+
+    try {
+      const data = await ReportesAPI.getCuadreTurno(fecha, fondo);
+      this.renderizarCuadreDia(data.cuadre);
+      if (contenido) contenido.style.display = "block";
+    } catch (e) {
+      Toast.error("Error al cargar cuadre: " + e.message);
+    } finally {
+      if (loader) loader.style.display = "none";
+    }
+  },
+
+  renderizarCuadreDia(c) {
+    const f = (n) => this.formatCurrency(n || 0);
+    const neg = (n) => "-" + f(Math.abs(n || 0));
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+    // Stats
+    set("ciCantVentas", c.cantidad_ventas);
+    set("ciVentasNeto", f(c.ventas_neto));
+    set("ciGanancia", f(c.ganancia));
+    set("ciTotalSalidas", f(c.total_salidas));
+    set("ciTotalIngresos", f(c.total_ingresos));
+
+    const efEl = document.getElementById("ciEfectivoCaja");
+    if (efEl) { efEl.textContent = f(c.efectivo_en_caja); efEl.style.color = c.efectivo_en_caja < 0 ? "var(--clr-danger)" : "var(--clr-success)"; }
+    const ganEl = document.getElementById("ciGanancia");
+    if (ganEl) ganEl.style.color = c.ganancia < 0 ? "var(--clr-danger)" : "var(--clr-success)";
+
+    // Métodos de pago
+    set("ciMetEfectivo", f(c.ventas_efectivo));
+    set("ciMetTarjeta", f(c.ventas_tarjeta));
+    set("ciMetTransferencia", f(c.ventas_transferencia));
+    set("ciMetCheque", f(c.ventas_cheque));
+    set("ciMetCredito", f(c.total_ventas_credito));
+    set("ciMetDev", neg(c.devoluciones_total));
+    set("ciMetTotal", f((c.ventas_neto || 0) + (c.total_ventas_credito || 0)));
+
+    // Efectivo en caja desglose
+    set("ciFondoCaja", f(c.fondo_caja));
+    set("ciIngEfectivo", f(c.ventas_efectivo));
+    set("ciAbonos", f(c.pagos_efectivo));
+    set("ciSalidasEf", neg(c.salidas_efectivo));
+    set("ciDevEf", neg(c.dev_efectivo));
+    set("ciEfectivoCaja2", f(c.efectivo_en_caja));
+
+    // Salidas
+    const salidasEl = document.getElementById("ciSalidasLista");
+    if (salidasEl) {
+      const lista = c.salidas || [];
+      if (lista.length === 0) {
+        salidasEl.innerHTML = "<span style='color:var(--clr-muted);'>Sin salidas</span>";
+      } else {
+        salidasEl.innerHTML = lista.map(s =>
+          `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--clr-border);">
+            <span>${s.concepto || s.descripcion || "Salida"}${s.categoria_gasto ? ` <small style="color:var(--clr-muted);">(${s.categoria_gasto})</small>` : ""}</span>
+            <span style="color:var(--clr-danger);font-weight:600;">${neg(s.monto)}</span>
+          </div>`
+        ).join("") +
+        `<div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700;">
+          <span>Total</span><span style="color:var(--clr-danger);">${neg(c.total_salidas)}</span>
+        </div>`;
+      }
+    }
+
+    // Categorías
+    const catEl = document.getElementById("ciCategorias");
+    if (catEl) {
+      catEl.innerHTML = (c.por_categoria || []).map(cat =>
+        `<tr>
+          <td style="padding:3px 0;">${cat.categoria}</td>
+          <td style="text-align:right;font-weight:600;">${f(cat.total)}</td>
+        </tr>`
+      ).join("") || `<tr><td colspan="2" style="color:var(--clr-muted);">Sin datos</td></tr>`;
+    }
+
+    // Abonos de crédito
+    const pagosEl = document.getElementById("ciPagosLista");
+    if (pagosEl) {
+      const pagos = c.pagos_credito || [];
+      if (pagos.length === 0) {
+        pagosEl.innerHTML = "<span style='color:var(--clr-muted);'>Sin abonos</span>";
+      } else {
+        const metLabel = m => m === "transferencia" ? "TRA" : (m || "").substring(0, 3).toUpperCase();
+        pagosEl.innerHTML = pagos.map(p =>
+          `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--clr-border);">
+            <span>${p.cliente_nombre || "—"} <small style="color:var(--clr-muted);">(${metLabel(p.metodo_pago)})</small></span>
+            <span style="font-weight:600;">${f(p.monto)}</span>
+          </div>`
+        ).join("") +
+        `<div style="display:flex;justify-content:space-between;padding:4px 0;font-weight:700;">
+          <span>Total</span><span style="color:var(--clr-primary);">${f(c.pagos_clientes)}</span>
+        </div>`;
+      }
+    }
+
+    // Devoluciones
+    const devEl = document.getElementById("ciDevoluciones");
+    if (devEl) {
+      const devEf = c.devoluciones_efectivo || [];
+      const devCr = c.devoluciones_credito || [];
+      if (devEf.length === 0 && devCr.length === 0) {
+        devEl.innerHTML = "<span style='color:var(--clr-muted);'>Sin devoluciones</span>";
+      } else {
+        let html = "";
+        const renderDev = (lista) => lista.map(d => {
+          const desc = (d.items || []).map(i => i.nombre_producto).join(", ");
+          return `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--clr-border);">
+            <span>${desc || d.numero_devolucion}${d.numero_ticket ? ` · T#${d.numero_ticket}` : ""}</span>
+            <span style="color:var(--clr-danger);font-weight:600;">-${f(d.total)}</span>
+          </div>`;
+        }).join("");
+        if (devEf.length > 0) html += `<div style="font-size:11px;font-weight:700;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Efectivo</div>${renderDev(devEf)}`;
+        if (devCr.length > 0) html += `<div style="font-size:11px;font-weight:700;color:var(--clr-muted);text-transform:uppercase;margin:6px 0 4px;">Crédito</div>${renderDev(devCr)}`;
+        devEl.innerHTML = html;
+      }
+    }
+
+    // Ventas a crédito
+    const creditosCuerpo = document.getElementById("ciCreditosCuerpo");
+    if (creditosCuerpo) {
+      const lista = c.ventas_credito_lista || [];
+      if (lista.length === 0) {
+        creditosCuerpo.innerHTML = `<tr><td colspan="5" style="padding:8px;color:var(--clr-muted);">Sin ventas a crédito hoy</td></tr>`;
+      } else {
+        let totalSaldo = 0;
+        creditosCuerpo.innerHTML = lista.map(v => {
+          totalSaldo += parseFloat(v.saldo_pendiente || 0);
+          return `<tr>
+            <td style="padding:4px 8px;font-weight:600;color:var(--clr-primary);">${v.numero_ticket}</td>
+            <td style="padding:4px 8px;">${v.numero_factura || "—"}</td>
+            <td style="padding:4px 8px;">${v.cliente_nombre || "—"}</td>
+            <td style="padding:4px 8px;text-align:right;">${f(v.total)}</td>
+            <td style="padding:4px 8px;text-align:right;color:var(--clr-warning);">${f(v.saldo_pendiente || 0)}</td>
+          </tr>`;
+        }).join("") +
+        `<tr style="font-weight:700;border-top:2px solid var(--clr-border);">
+          <td colspan="3" style="padding:5px 8px;">Total</td>
+          <td style="padding:5px 8px;text-align:right;">${f(c.total_ventas_credito)}</td>
+          <td style="padding:5px 8px;text-align:right;color:var(--clr-warning);">${f(totalSaldo)}</td>
+        </tr>`;
+      }
+    }
   },
 
   async descargarCuadreExcel() {

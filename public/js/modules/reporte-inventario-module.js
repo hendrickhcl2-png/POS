@@ -4,6 +4,7 @@ const ReporteInventarioModule = {
   _datos: [],
   _filtrados: [],
   _initialized: false,
+  _paginator: null,
 
   async init() {
     if (!this._initialized) {
@@ -109,13 +110,9 @@ const ReporteInventarioModule = {
     this._actualizarResumen();
     if (conteo) conteo.textContent = `${this._filtrados.length} producto(s)`;
 
-    if (this._filtrados.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:2rem">Sin resultados</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = this._filtrados
-      .map((p) => {
+    if (!this._paginator) this._paginator = new Paginator('invReporteTbody', 20);
+    this._paginator.render(
+      this._filtrados.map((p) => {
         const codigo = p.imei ? p.imei : (p.codigo_barras || "—");
         const tieneImei = !!p.imei;
         const costo = parseFloat(p.costo_total) || 0;
@@ -150,8 +147,9 @@ const ReporteInventarioModule = {
             <button class="btn btn-danger btn-small" onclick="ReporteInventarioModule._confirmarEliminar(${p.id}, '${(p.nombre || "").replace(/'/g, "\\'")}')">Eliminar</button>
           </td>
         </tr>`;
-      })
-      .join("");
+      }),
+      `<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:2rem">Sin resultados</td></tr>`
+    );
   },
 
   async _confirmarEliminar(id, nombre) {

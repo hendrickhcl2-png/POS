@@ -110,6 +110,25 @@ router.patch("/:id/precio", requireAdmin, async (req, res) => {
   }
 });
 
+// ==================== BUSCAR PRODUCTO POR CÓDIGO EXACTO (para lote) ====================
+router.get("/por-codigo", async (req, res) => {
+  try {
+    const { codigo } = req.query;
+    if (!codigo) return res.json({ success: true, data: null });
+    const result = await pool.query(
+      `SELECT p.id, p.nombre, p.categoria_id, p.precio_costo, p.stock_actual
+       FROM productos p
+       WHERE p.activo = true
+         AND (LOWER(p.codigo_barras) = LOWER($1) OR LOWER(p.imei) = LOWER($1))
+       LIMIT 1`,
+      [codigo.trim()]
+    );
+    res.json({ success: true, data: result.rows[0] || null });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== GUARDAR LOTE DE PRODUCTOS ====================
 router.post("/lote", requireAdmin, async (req, res) => {
   const client = await pool.connect();
@@ -143,42 +162,72 @@ router.post("/lote", requireAdmin, async (req, res) => {
     const errores = [];
 
     for (const item of items) {
-      const { codigo_barras, nombre, categoria_id, precio_costo, stock_actual } = item;
+      const { producto_id, codigo_barras, nombre, categoria_id, precio_costo, stock_actual } = item;
 
       if (!nombre || nombre.trim() === "") {
         errores.push({ item, error: "Nombre requerido" });
         continue;
       }
 
-      try {
-        const r = await client.query(
-          `INSERT INTO productos (
-            codigo_barras, nombre, categoria_id, proveedor_id,
-            precio_costo, precio_venta, stock_actual,
-            stock_minimo, stock_maximo, descuento_porcentaje, descuento_monto,
-            disponible, aplica_itbis, activo, creado_por,
-            factura_proveedor_numero, factura_proveedor_fecha, ncf
-          ) VALUES (
-            $1, $2, $3, $4, $5, 0, $6,
-            0, 0, 0, 0,
-            false, true, true, $7,
-            $8, $9, $10
-          ) RETURNING *`,
-          [
-            codigo_barras || null,
-            nombre.trim(),
-            categoria_id || null,
-            proveedor_id || null,
-            parseFloat(precio_costo) || 0,
-            parseInt(stock_actual) || 1,
-            creadoPor,
-            factura_proveedor_numero || null,
-            factura_proveedor_fecha || null,
-            ncf || null,
-          ],
-        );
+      const cantidadAgregar = parseInt(stock_actual) || 1;
+      const costoUnit = parseFloat(precio_costo) || 0;
 
-        creados.push(r.rows[0]);
+      try {
+        if (producto_id) {
+          // ---- ACTUALIZAR producto existente ----
+          const r = await client.query(
+            `UPDATE productos
+             SET stock_actual = COALESCE(stock_actual, 0) + $1,
+                 precio_costo = $2,
+                 disponible = true,
+                 proveedor_id = COALESCE($3, proveedor_id),
+                 factura_proveedor_numero = COALESCE($4, factura_proveedor_numero),
+                 factura_proveedor_fecha = COALESCE($5, factura_proveedor_fecha),
+                 ncf = COALESCE($6, ncf)
+             WHERE id = $7
+             RETURNING *`,
+            [
+              cantidadAgregar,
+              costoUnit,
+              proveedor_id || null,
+              factura_proveedor_numero || null,
+              factura_proveedor_fecha || null,
+              ncf || null,
+              producto_id,
+            ]
+          );
+          if (r.rows.length > 0) creados.push(r.rows[0]);
+          else errores.push({ nombre, error: "Producto no encontrado para actualizar" });
+        } else {
+          // ---- CREAR producto nuevo ----
+          const r = await client.query(
+            `INSERT INTO productos (
+              codigo_barras, nombre, categoria_id, proveedor_id,
+              precio_costo, precio_venta, stock_actual,
+              stock_minimo, stock_maximo, descuento_porcentaje, descuento_monto,
+              disponible, aplica_itbis, activo, creado_por,
+              factura_proveedor_numero, factura_proveedor_fecha, ncf
+            ) VALUES (
+              $1, $2, $3, $4, $5, 0, $6,
+              0, 0, 0, 0,
+              false, true, true, $7,
+              $8, $9, $10
+            ) RETURNING *`,
+            [
+              codigo_barras || null,
+              nombre.trim(),
+              categoria_id || null,
+              proveedor_id || null,
+              costoUnit,
+              cantidadAgregar,
+              creadoPor,
+              factura_proveedor_numero || null,
+              factura_proveedor_fecha || null,
+              ncf || null,
+            ],
+          );
+          creados.push(r.rows[0]);
+        }
       } catch (itemError) {
         if (itemError.code === "23505") {
           errores.push({ nombre, error: "Código duplicado — ya existe en el sistema" });

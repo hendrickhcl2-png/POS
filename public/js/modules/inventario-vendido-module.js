@@ -2,6 +2,7 @@
 
 const InventarioVendidoModule = {
   _items: [],
+  _paginator: null,
 
   // ==================== INIT ====================
 
@@ -57,46 +58,39 @@ const InventarioVendidoModule = {
   // ==================== RENDERIZAR TABLA ====================
 
   renderizar(items) {
-    const tbody = document.getElementById("ivTbody");
-    if (!tbody) return;
-
-    if (!items || items.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:#7f8c8d;">No hay registros para el período seleccionado</td></tr>`;
-      return;
+    if (!this._paginator) {
+      this._paginator = new Paginator('ivTbody', 20);
     }
-
-    tbody.innerHTML = items.map((item) => {
-      const cantVendida = parseInt(item.cantidad);
-      const cantDev = parseInt(item.cantidad_devuelta || 0);
-      let estadoBadge = "";
-      if (cantDev >= cantVendida) {
-        estadoBadge = `<span style="background:#e74c3c;color:white;padding:3px 8px;border-radius:4px;font-size:12px;">Devuelto</span>`;
-      } else if (cantDev > 0) {
-        estadoBadge = `<span style="background:#f39c12;color:white;padding:3px 8px;border-radius:4px;font-size:12px;">Parcial</span>`;
-      } else {
-        estadoBadge = `<span style="background:#27ae60;color:white;padding:3px 8px;border-radius:4px;font-size:12px;">Vendido</span>`;
-      }
-
-      const fecha = item.fecha ? item.fecha.split("T")[0] : "";
-      const imei = item.imei ? `<br><small style="color:#7f8c8d;font-size:11px;">${item.imei}</small>` : "";
-      const stockRestante = item.stock_restante !== null && item.stock_restante !== undefined
-        ? item.stock_restante
-        : "—";
-
-      return `
-        <tr style="border-bottom:1px solid #ecf0f1;">
-          <td style="padding:10px;font-family:monospace;font-size:13px;">${item.numero_ticket || "—"}</td>
-          <td style="padding:10px;">${fecha}</td>
-          <td style="padding:10px;"><strong>${item.nombre_producto}</strong>${imei}</td>
-          <td style="padding:10px;text-align:center;">${cantVendida}</td>
-          <td style="padding:10px;text-align:center;">${cantDev > 0 ? cantDev : "—"}</td>
-          <td style="padding:10px;text-align:right;">${this._fmt(item.precio_unitario)}</td>
-          <td style="padding:10px;text-align:right;font-weight:600;">${this._fmt(item.subtotal)}</td>
-          <td style="padding:10px;">${item.cliente_nombre && item.cliente_nombre.trim() ? item.cliente_nombre : "General"}</td>
-          <td style="padding:10px;text-align:center;">${item.metodo_pago || "—"}</td>
-          <td style="padding:10px;text-align:center;">${estadoBadge}</td>
-        </tr>`;
-    }).join("");
+    this._paginator.render(
+      (items || []).map((item) => {
+        const cantVendida = parseInt(item.cantidad);
+        const cantDev = parseInt(item.cantidad_devuelta || 0);
+        let estadoBadge = "";
+        if (cantDev >= cantVendida) {
+          estadoBadge = `<span style="background:#e74c3c;color:white;padding:3px 8px;border-radius:4px;font-size:12px;">Devuelto</span>`;
+        } else if (cantDev > 0) {
+          estadoBadge = `<span style="background:#f39c12;color:white;padding:3px 8px;border-radius:4px;font-size:12px;">Parcial</span>`;
+        } else {
+          estadoBadge = `<span style="background:#27ae60;color:white;padding:3px 8px;border-radius:4px;font-size:12px;">Vendido</span>`;
+        }
+        const fecha = item.fecha ? item.fecha.split("T")[0] : "";
+        const imei = item.imei ? `<br><small style="color:#7f8c8d;font-size:11px;">${item.imei}</small>` : "";
+        return `
+          <tr style="border-bottom:1px solid #ecf0f1;">
+            <td style="padding:10px;font-family:monospace;font-size:13px;">${item.numero_ticket || "—"}</td>
+            <td style="padding:10px;">${fecha}</td>
+            <td style="padding:10px;"><strong>${item.nombre_producto}</strong>${imei}</td>
+            <td style="padding:10px;text-align:center;">${cantVendida}</td>
+            <td style="padding:10px;text-align:center;">${cantDev > 0 ? cantDev : "—"}</td>
+            <td style="padding:10px;text-align:right;">${this._fmt(item.precio_unitario)}</td>
+            <td style="padding:10px;text-align:right;font-weight:600;">${this._fmt(item.subtotal)}</td>
+            <td style="padding:10px;">${item.cliente_nombre && item.cliente_nombre.trim() ? item.cliente_nombre : "General"}</td>
+            <td style="padding:10px;text-align:center;">${item.metodo_pago || "—"}</td>
+            <td style="padding:10px;text-align:center;">${estadoBadge}</td>
+          </tr>`;
+      }),
+      `<tr><td colspan="10" style="text-align:center;padding:30px;color:#7f8c8d;">No hay registros para el período seleccionado</td></tr>`
+    );
   },
 
   // ==================== FILTRAR (client-side) ====================

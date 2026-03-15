@@ -1,6 +1,7 @@
 // ==================== MÓDULO DE PROVEEDORES ====================
 
 let proveedorEnEdicion = null;
+const _pgProveedores = new Paginator('tablaProveedores', 20);
 
 async function guardarProveedor(e) {
   e.preventDefault();
@@ -111,18 +112,8 @@ window.eliminarProveedor = async function (id) {
 };
 
 function actualizarTablaProveedores() {
-  const tbody = document.getElementById("tablaProveedores");
-  if (!tbody) return;
-
-  if (proveedores.length === 0) {
-    tbody.innerHTML =
-      '<tr><td colspan="6" class="text-center">No hay proveedores registrados</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = proveedores
-    .map(
-      (p) => `
+  _pgProveedores.render(
+    proveedores.map((p) => `
       <tr>
         <td>${p.codigo || p.id}</td>
         <td><strong>${p.nombre}</strong></td>
@@ -135,9 +126,9 @@ function actualizarTablaProveedores() {
           <button class="btn btn-danger btn-small" onclick="eliminarProveedor(${p.id})">Eliminar</button>
         </td>
       </tr>
-    `,
-    )
-    .join("");
+    `),
+    '<tr><td colspan="6" class="text-center">No hay proveedores registrados</td></tr>'
+  );
 }
 
 function actualizarSelectProveedores() {

@@ -2224,6 +2224,153 @@
               </table>
             </div>
           </div>
+
+          <!-- ==================== CUADRE DEL DÍA INLINE ==================== -->
+          <div class="card" style="margin-top:1.5rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+              <h3 style="margin:0;">Cuadre del Día</h3>
+              <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+                <div class="form-group" style="margin:0;">
+                  <label style="font-size:12px;margin-bottom:3px;display:block;">Fecha</label>
+                  <input type="date" id="ciFecha" style="padding:6px 10px;border:1px solid var(--clr-border);border-radius:6px;font-size:14px;" />
+                </div>
+                <div class="form-group" style="margin:0;">
+                  <label style="font-size:12px;margin-bottom:3px;display:block;">Fondo de Caja (RD$)</label>
+                  <input type="number" id="ciFondo" value="0" min="0" style="width:120px;padding:6px 10px;border:1px solid var(--clr-border);border-radius:6px;font-size:14px;" />
+                </div>
+                <button class="btn btn-primary" onclick="ReportesModule.cargarCuadreDia()">Consultar</button>
+              </div>
+            </div>
+
+            <div id="ciLoader" style="display:none;text-align:center;padding:20px;color:var(--clr-muted);">Cargando cuadre...</div>
+            <div id="ciContenido" style="display:none;">
+
+              <!-- Stats principales -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;">
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;"># Ventas</div>
+                  <div id="ciCantVentas" style="font-size:26px;font-weight:700;color:var(--clr-primary);">0</div>
+                </div>
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Ventas Neto</div>
+                  <div id="ciVentasNeto" style="font-size:22px;font-weight:700;color:var(--clr-primary);">RD$0</div>
+                </div>
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Ganancia</div>
+                  <div id="ciGanancia" style="font-size:22px;font-weight:700;color:var(--clr-success);">RD$0</div>
+                </div>
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Efectivo en Caja</div>
+                  <div id="ciEfectivoCaja" style="font-size:22px;font-weight:700;color:var(--clr-success);">RD$0</div>
+                </div>
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Total Salidas</div>
+                  <div id="ciTotalSalidas" style="font-size:22px;font-weight:700;color:var(--clr-danger);">RD$0</div>
+                </div>
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Total Ingresos</div>
+                  <div id="ciTotalIngresos" style="font-size:22px;font-weight:700;color:var(--clr-primary);">RD$0</div>
+                </div>
+              </div>
+
+              <!-- Fila: Métodos de pago | Efectivo en caja | Salidas -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px;">
+
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
+                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Métodos de Pago</div>
+                  <table style="width:100%;font-size:13px;">
+                    <tbody id="ciMetodos">
+                      <tr><td style="padding:3px 0;">Efectivo</td><td id="ciMetEfectivo" style="text-align:right;font-weight:600;">RD$0</td></tr>
+                      <tr><td style="padding:3px 0;">Tarjeta</td><td id="ciMetTarjeta" style="text-align:right;font-weight:600;">RD$0</td></tr>
+                      <tr><td style="padding:3px 0;">Transferencia</td><td id="ciMetTransferencia" style="text-align:right;font-weight:600;">RD$0</td></tr>
+                      <tr><td style="padding:3px 0;">Cheque</td><td id="ciMetCheque" style="text-align:right;font-weight:600;">RD$0</td></tr>
+                      <tr><td style="padding:3px 0;color:var(--clr-warning);">Crédito</td><td id="ciMetCredito" style="text-align:right;font-weight:600;color:var(--clr-warning);">RD$0</td></tr>
+                      <tr><td style="padding:3px 0;color:var(--clr-danger);">Devoluciones</td><td id="ciMetDev" style="text-align:right;font-weight:600;color:var(--clr-danger);">RD$0</td></tr>
+                      <tr style="border-top:2px solid var(--clr-border);font-weight:700;">
+                        <td style="padding:5px 0;">Total</td>
+                        <td id="ciMetTotal" style="text-align:right;color:var(--clr-primary);">RD$0</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
+                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Efectivo en Caja</div>
+                  <table style="width:100%;font-size:13px;">
+                    <tbody>
+                      <tr><td style="padding:3px 0;">Fondo inicial</td><td id="ciFondoCaja" style="text-align:right;">RD$0</td></tr>
+                      <tr><td style="padding:3px 0;">+ Ventas efectivo</td><td id="ciIngEfectivo" style="text-align:right;">RD$0</td></tr>
+                      <tr><td style="padding:3px 0;">+ Abonos efectivo</td><td id="ciAbonos" style="text-align:right;">RD$0</td></tr>
+                      <tr><td style="padding:3px 0;color:var(--clr-danger);">− Salidas efectivo</td><td id="ciSalidasEf" style="text-align:right;color:var(--clr-danger);">RD$0</td></tr>
+                      <tr><td style="padding:3px 0;color:var(--clr-danger);">− Dev. efectivo</td><td id="ciDevEf" style="text-align:right;color:var(--clr-danger);">RD$0</td></tr>
+                      <tr style="border-top:2px solid var(--clr-border);font-weight:700;">
+                        <td style="padding:5px 0;">= Efectivo en caja</td>
+                        <td id="ciEfectivoCaja2" style="text-align:right;color:var(--clr-success);font-size:15px;">RD$0</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
+                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Salidas del Día</div>
+                  <div id="ciSalidasLista" style="font-size:13px;max-height:160px;overflow-y:auto;">
+                    <span style="color:var(--clr-muted);">Sin salidas</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Fila: Categorías | Pagos crédito | Devoluciones -->
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px;">
+
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
+                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Ventas por Categoría</div>
+                  <table style="width:100%;font-size:13px;">
+                    <tbody id="ciCategorias">
+                      <tr><td colspan="2" style="color:var(--clr-muted);">Sin datos</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
+                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Abonos Recibidos (Crédito)</div>
+                  <div id="ciPagosLista" style="font-size:13px;max-height:160px;overflow-y:auto;">
+                    <span style="color:var(--clr-muted);">Sin abonos</span>
+                  </div>
+                </div>
+
+                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
+                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Devoluciones</div>
+                  <div id="ciDevoluciones" style="font-size:13px;max-height:160px;overflow-y:auto;">
+                    <span style="color:var(--clr-muted);">Sin devoluciones</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Ventas a crédito del día -->
+              <div id="ciCreditosCard" style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
+                <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-warning);">Ventas a Crédito del Día</div>
+                <div style="overflow-x:auto;">
+                  <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                    <thead>
+                      <tr style="color:var(--clr-muted);font-size:11px;text-transform:uppercase;">
+                        <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Ticket</th>
+                        <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Factura</th>
+                        <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Cliente</th>
+                        <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Total</th>
+                        <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Saldo</th>
+                      </tr>
+                    </thead>
+                    <tbody id="ciCreditosCuerpo">
+                      <tr><td colspan="5" style="padding:8px;color:var(--clr-muted);">Sin ventas a crédito hoy</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </section>
 
         <!-- REPORTE INVENTARIO SECTION -->
@@ -3350,6 +3497,7 @@
     <script src="js/api/pagos-api.js"></script>
     <script src="js/api/configuracion-api.js"></script>
     <script src="js/api/reportes-api.js"></script>
+    <script src="js/utils/paginator.js"></script>
     <script src="js/api/salidas-api.js"></script>
     <script src="js/api/categorias-gasto-api.js"></script>
     <!-- Modales script-->

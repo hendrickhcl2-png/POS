@@ -2410,3 +2410,57 @@ tbody tr:hover {
   align-items: center;
   border-radius: 10px 10px 0 0;
 }
+
+/* ==================== PAGINACIÓN ==================== */
+.paginator-wrap {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 16px;
+  background: var(--clr-bg-surface);
+  border-top: 1px solid var(--clr-border);
+  border-radius: 0 0 8px 8px;
+}
+.paginator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.paginator-info {
+  color: var(--clr-muted);
+  font-size: 13px;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+.paginator-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--clr-border);
+  border-radius: 6px;
+  background: var(--clr-bg-white);
+  color: var(--clr-dark);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.paginator-btn:hover:not(:disabled) {
+  background: var(--clr-primary);
+  color: white;
+  border-color: var(--clr-primary);
+}
+.paginator-btn.active {
+  background: var(--clr-primary);
+  color: white;
+  border-color: var(--clr-primary);
+  font-weight: 700;
+}
+.paginator-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.paginator-ellipsis {
+  padding: 0 4px;
+  color: var(--clr-muted);
+  font-size: 13px;
+}

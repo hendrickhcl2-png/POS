@@ -507,40 +507,31 @@ async function guardarProducto(e) {
   }
 }
 
+let _pgProductos = null;
+let _pgSinPrecio = null;
+
 function actualizarTablaProductos() {
-  const tbody = document.getElementById("tablaProductos");
-  if (!tbody) return;
-
-  if (productos.length === 0) {
-    tbody.innerHTML =
-      '<tr><td colspan="7" class="text-center">No hay productos</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = productos
-    .map((p) => {
+  if (!_pgProductos) _pgProductos = new Paginator('tablaProductos', 20);
+  _pgProductos.render(
+    productos.map((p) => {
       const codigoPrincipal = p.codigo_barras || p.imei || `ID-${p.id}`;
       const disponible = p.disponible !== false;
-      const tieneDescuento =
-        p.descuento_porcentaje > 0 || p.descuento_monto > 0;
-
+      const tieneDescuento = p.descuento_porcentaje > 0 || p.descuento_monto > 0;
       return `
         <tr style="${!disponible ? "opacity: 0.6;" : ""}">
           <td>${codigoPrincipal}</td>
           <td>
             ${p.nombre}
             ${p.caracteristicas && p.caracteristicas.length > 0
-          ? `<br><small style="color: #7f8c8d;">${p.caracteristicas.length} característica(s)</small>`
-          : ""
-        }
+              ? `<br><small style="color: #7f8c8d;">${p.caracteristicas.length} característica(s)</small>`
+              : ""}
           </td>
           <td>${p.categoria_nombre || "-"}</td>
           <td>
             ${tieneDescuento
-          ? `<span style="text-decoration: line-through; color: #95a5a6;">$${parseFloat(p.precio_venta).toFixed(2)}</span><br>
+              ? `<span style="text-decoration: line-through; color: #95a5a6;">$${parseFloat(p.precio_venta).toFixed(2)}</span><br>
                  <span style="color: #27ae60; font-weight: bold;">$${parseFloat(p.precio_con_descuento || p.precio_venta).toFixed(2)}</span>`
-          : `$${parseFloat(p.precio_venta).toFixed(2)}`
-        }
+              : `$${parseFloat(p.precio_venta).toFixed(2)}`}
           </td>
           <td>${p.stock_actual}</td>
           <td>
@@ -555,8 +546,9 @@ function actualizarTablaProductos() {
           </td>
         </tr>
       `;
-    })
-    .join("");
+    }),
+    '<tr><td colspan="7" class="text-center">No hay productos</td></tr>'
+  );
 }
 
 // ==================== VER DETALLE DE PRODUCTO ====================
@@ -931,24 +923,22 @@ window.actualizarTablaProductosSinPrecio = async function () {
     const badge = document.getElementById("badgeSinPrecio");
     if (badge) badge.textContent = data.length > 0 ? ` (${data.length})` : "";
 
-    if (data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center tabla-vacia-mensaje">No hay productos sin precio</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = data.map((p) => `
-      <tr id="sin-precio-row-${p.id}">
-        <td>${p.codigo_barras || p.imei || "—"}</td>
-        <td>${p.nombre}<br><small style="color:var(--text-muted)">${p.categoria_nombre || ""}</small></td>
-        <td>${p.proveedor_nombre || "—"}</td>
-        <td>$${parseFloat(p.precio_costo || 0).toFixed(2)}</td>
-        <td>${p.stock_actual}</td>
-        <td>
-          <button class="btn btn-warning btn-small"
-            onclick="editarProducto(${p.id})">Editar</button>
-        </td>
-      </tr>
-    `).join("");
+    if (!_pgSinPrecio) _pgSinPrecio = new Paginator('tablaProductosSinPrecio', 20);
+    _pgSinPrecio.render(
+      data.map((p) => `
+        <tr id="sin-precio-row-${p.id}">
+          <td>${p.codigo_barras || p.imei || "—"}</td>
+          <td>${p.nombre}<br><small style="color:var(--text-muted)">${p.categoria_nombre || ""}</small></td>
+          <td>${p.proveedor_nombre || "—"}</td>
+          <td>$${parseFloat(p.precio_costo || 0).toFixed(2)}</td>
+          <td>${p.stock_actual}</td>
+          <td>
+            <button class="btn btn-warning btn-small" onclick="editarProducto(${p.id})">Editar</button>
+          </td>
+        </tr>
+      `),
+      `<tr><td colspan="6" class="text-center tabla-vacia-mensaje">No hay productos sin precio</td></tr>`
+    );
   } catch (e) {
     tbody.innerHTML = `<tr><td colspan="6" class="text-center">Error al cargar</td></tr>`;
   }

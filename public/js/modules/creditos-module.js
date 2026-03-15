@@ -4,6 +4,8 @@ const CreditosModule = {
   _clientes: [],
   _initialized: false,
   _tabActivo: "pendientes",
+  _pgPendientes: null,
+  _pgPagados: null,
 
   // ==================== INIT ====================
 
@@ -89,16 +91,9 @@ const CreditosModule = {
   },
 
   _renderHistorialPagados(pagados) {
-    const tbody = document.getElementById("tablaHistorialPagados");
-    if (!tbody) return;
-
-    if (!pagados || pagados.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" class="text-center tabla-vacia-mensaje">No hay cuentas pagadas registradas.</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = pagados
-      .map(
+    if (!this._pgPagados) this._pgPagados = new Paginator('tablaHistorialPagados', 20);
+    this._pgPagados.render(
+      (pagados || []).map(
         (r) => `
       <tr>
         <td>
@@ -116,8 +111,9 @@ const CreditosModule = {
           >Ver Pagos</button>
         </td>
       </tr>`,
-      )
-      .join("");
+      ),
+      `<tr><td colspan="6" class="text-center tabla-vacia-mensaje">No hay cuentas pagadas registradas.</td></tr>`
+    );
   },
 
   // ==================== CARGAR CLIENTES CON SALDO ====================
@@ -188,16 +184,9 @@ const CreditosModule = {
   // ==================== RENDER TABLA ====================
 
   _renderTabla(clientes) {
-    const tbody = document.getElementById("tablaClientesCredito");
-    if (!tbody) return;
-
-    if (!clientes || clientes.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center tabla-vacia-mensaje">No hay clientes con saldo pendiente.</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = clientes
-      .map(
+    if (!this._pgPendientes) this._pgPendientes = new Paginator('tablaClientesCredito', 20);
+    this._pgPendientes.render(
+      (clientes || []).map(
         (c) => `
       <tr>
         <td>
@@ -227,8 +216,9 @@ const CreditosModule = {
           </div>
         </td>
       </tr>`,
-      )
-      .join("");
+      ),
+      `<tr><td colspan="5" class="text-center tabla-vacia-mensaje">No hay clientes con saldo pendiente.</td></tr>`
+    );
   },
 
   // ==================== MODAL PAGO ====================

@@ -2,6 +2,7 @@
 
 const FacturacionModule = {
   facturas: [],
+  _paginator: null,
   filtros: {
   fecha_desde: null,
   fecha_hasta: null,
@@ -118,30 +119,18 @@ const FacturacionModule = {
   // ==================== RENDERIZAR ====================
 
   renderizarFacturas() {
-  const tbody = document.getElementById("tablaFacturas");
-  if (!tbody) return;
+  if (!this._paginator) {
+    this._paginator = new Paginator('tablaFacturas', 20);
+  }
 
   const q = this.filtros.numero_factura || "";
   const facturas = q
     ? this.facturas.filter((f) => (f.numero_factura || "").toLowerCase().includes(q))
     : this.facturas;
 
-  if (facturas.length === 0) {
-  tbody.innerHTML = `
-  <tr>
-  <td colspan="8" style="text-align: center; padding: 40px; color: #7f8c8d;">
-  <div style="font-size: 48px; margin-bottom: 10px;"></div>
-  <p style="font-size: 16px; margin: 5px 0;">No se encontraron facturas</p>
-  <p style="font-size: 14px; color: #95a5a6;">Prueba ajustando los filtros</p>
-  </td>
-  </tr>
-  `;
-  return;
-  }
-
-  tbody.innerHTML = facturas
-.map(
-  (factura) => `
+  this._paginator.render(
+    facturas.map(
+      (factura) => `
   <tr style="cursor: pointer;" onclick="FacturacionModule.verDetalleFactura(${factura.id})">
   <td style="font-weight: 600; color: #3498db;">#${factura.numero_factura}</td>
   <td>${this.formatFecha(factura.fecha)}</td>
@@ -205,8 +194,9 @@ const FacturacionModule = {
   </td>
   </tr>
   `,
-  )
-.join("");
+    ),
+    `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #7f8c8d;"><p style="font-size: 16px; margin: 5px 0;">No se encontraron facturas</p><p style="font-size: 14px; color: #95a5a6;">Prueba ajustando los filtros</p></td></tr>`
+  );
   },
 
   actualizarEstadisticas() {
