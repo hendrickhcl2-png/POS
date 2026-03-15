@@ -7,12 +7,24 @@ const ReportesModule = {
   _pgDevoluciones: null,
 
   init() {
-  this.setupEventListeners();
-  // Precargar fecha de hoy en cuadre inline
-  const ciFecha = document.getElementById("ciFecha");
-  if (ciFecha) ciFecha.value = new Date().toISOString().split("T")[0];
-  this.cargarReporte("hoy");
-  this.cargarCuadreDia();
+    this._initTabs();
+    this.setupEventListeners();
+    const ciFecha = document.getElementById("ciFecha");
+    if (ciFecha) ciFecha.value = new Date().toISOString().split("T")[0];
+    this.cargarReporte("hoy");
+    this.cargarCuadreDia();
+  },
+
+  _initTabs() {
+    document.querySelectorAll("#reportes .rpt-tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll("#reportes .rpt-tab").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll("#reportes .rpt-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        const panel = document.getElementById("rpt-panel-" + btn.dataset.tab);
+        if (panel) panel.classList.add("active");
+      });
+    });
   },
 
   setupEventListeners() {

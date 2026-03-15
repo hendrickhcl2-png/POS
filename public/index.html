@@ -1982,453 +1982,412 @@
         <!-- ==================== SECCIÓN DE REPORTES ==================== -->
         <!-- ==================== SECCIÓN DE REPORTES CON EXCEL ==================== -->
         <section id="reportes" class="section">
-          <div class="header">
-            <h1>Reportes y Análisis</h1>
+          <style>
+            /* ── Reportes Redesign ── */
+            .rpt-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:0; }
+            .rpt-periodo { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+            .rpt-periodo-label { font-size:12px; font-weight:600; color:var(--clr-muted); text-transform:uppercase; letter-spacing:.5px; }
+            .rpt-actions { display:flex; gap:8px; flex-wrap:wrap; }
+
+            /* Tab bar */
+            .rpt-tab-bar { display:flex; gap:4px; background:var(--clr-bg-surface); border-radius:12px; padding:5px; }
+            .rpt-tab { flex:1; padding:9px 14px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; background:transparent; color:var(--clr-muted); transition:all .18s; white-space:nowrap; }
+            .rpt-tab:hover { background:color-mix(in srgb, var(--clr-primary) 10%, transparent); color:var(--clr-primary); }
+            .rpt-tab.active { background:var(--clr-primary); color:#fff; box-shadow:0 2px 10px rgba(52,152,219,.35); }
+
+            /* Tab panels */
+            .rpt-panel { display:none; }
+            .rpt-panel.active { display:block; }
+
+            /* KPI cards grid */
+            .rpt-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:16px; }
+            .rpt-kpi { border-radius:14px; padding:18px 20px; position:relative; overflow:hidden; background:var(--clr-bg); border:1px solid var(--clr-border); }
+            .rpt-kpi-accent { position:absolute; top:0; right:0; width:52px; height:100%; opacity:.08; }
+            .rpt-kpi-icon { font-size:26px; position:absolute; top:14px; right:16px; opacity:.55; }
+            .rpt-kpi-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--clr-muted); margin-bottom:8px; }
+            .rpt-kpi-value { font-size:24px; font-weight:800; line-height:1.1; margin-bottom:4px; }
+            .rpt-kpi-sub { font-size:11px; color:var(--clr-muted); line-height:1.5; }
+
+            .rpt-kpi--ventas  { border-left:4px solid #3498db; } .rpt-kpi--ventas  .rpt-kpi-accent { background:#3498db; } .rpt-kpi--ventas  .rpt-kpi-value { color:#3498db; }
+            .rpt-kpi--gan     { border-left:4px solid #27ae60; } .rpt-kpi--gan     .rpt-kpi-accent { background:#27ae60; } .rpt-kpi--gan     .rpt-kpi-value { color:#27ae60; }
+            .rpt-kpi--gastos  { border-left:4px solid #e67e22; } .rpt-kpi--gastos  .rpt-kpi-accent { background:#e67e22; } .rpt-kpi--gastos  .rpt-kpi-value { color:#e67e22; }
+            .rpt-kpi--cnt     { border-left:4px solid #9b59b6; } .rpt-kpi--cnt     .rpt-kpi-accent { background:#9b59b6; } .rpt-kpi--cnt     .rpt-kpi-value { color:#9b59b6; }
+            .rpt-kpi--margen  { border-left:4px solid #1abc9c; } .rpt-kpi--margen  .rpt-kpi-accent { background:#1abc9c; }
+            .rpt-kpi--itbis   { border-left:4px solid #2c3e50; } .rpt-kpi--itbis   .rpt-kpi-accent { background:#2c3e50; } .rpt-kpi--itbis   .rpt-kpi-value { color:#2c3e50; }
+            .rpt-kpi--dev     { border-left:4px solid #e74c3c; } .rpt-kpi--dev     .rpt-kpi-accent { background:#e74c3c; } .rpt-kpi--dev     .rpt-kpi-value { color:#e74c3c; }
+
+            /* Chart / sub-cards */
+            .rpt-sub-card { background:var(--clr-bg-surface); border-radius:12px; padding:16px; }
+            .rpt-sub-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--clr-muted); margin-bottom:12px; }
+
+            /* Cuadre stat row */
+            .ci-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
+            .ci-kpi { border-radius:10px; padding:14px 16px; border-left:3px solid; }
+            .ci-kpi-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--clr-muted); margin-bottom:6px; }
+            .ci-kpi-val { font-size:20px; font-weight:800; }
+            .ci-kpi--cnt    { background:color-mix(in srgb,#3498db 8%,transparent); border-color:#3498db; }
+            .ci-kpi--cnt    .ci-kpi-val { color:#3498db; }
+            .ci-kpi--neto   { background:color-mix(in srgb,#3498db 8%,transparent); border-color:#3498db; }
+            .ci-kpi--neto   .ci-kpi-val { color:#3498db; }
+            .ci-kpi--gan    { background:color-mix(in srgb,#27ae60 8%,transparent); border-color:#27ae60; }
+            .ci-kpi--gan    .ci-kpi-val { color:#27ae60; }
+            .ci-kpi--caja   { background:color-mix(in srgb,#1abc9c 8%,transparent); border-color:#1abc9c; }
+            .ci-kpi--caja   .ci-kpi-val { color:#1abc9c; }
+            .ci-kpi--sal    { background:color-mix(in srgb,#e67e22 8%,transparent); border-color:#e67e22; }
+            .ci-kpi--sal    .ci-kpi-val { color:#e67e22; }
+            .ci-kpi--ing    { background:color-mix(in srgb,#9b59b6 8%,transparent); border-color:#9b59b6; }
+            .ci-kpi--ing    .ci-kpi-val { color:#9b59b6; }
+          </style>
+
+          <!-- ── Top bar: título + periodo + acciones ── -->
+          <div class="card" style="margin-bottom:12px;">
+            <div class="rpt-header">
+              <div class="rpt-periodo">
+                <span class="rpt-periodo-label">Periodo:</span>
+                <button id="reporteHoy"    class="btn btn-primary periodo-btn active">Hoy</button>
+                <button id="reporteSemana" class="btn btn-primary periodo-btn">Semana</button>
+                <button id="reporteMes"    class="btn btn-primary periodo-btn">Este Mes</button>
+              </div>
+              <div class="rpt-actions">
+                <button id="btnDescargarExcel" class="btn btn-success" onclick="ReportesModule.descargarExcel()">↓ Excel</button>
+                <button class="btn btn-primary"  onclick="ReportesModule.abrirCuadre()">Cuadre (Modal)</button>
+                <button class="btn btn-danger"   onclick="ReportesModule.abrirReporteSalidas()">Reporte Salidas</button>
+              </div>
+            </div>
+            <div id="loaderReportes" class="loader-reportes" style="margin-top:10px;">
+              <span class="loader-reportes-texto">Cargando reporte...</span>
+            </div>
           </div>
 
-          <!-- FILTROS + BOTÓN EXCEL -->
-          <div class="card">
-            <div class="reportes-filtros-header">
-              <div class="reportes-periodo-grupo">
-                <h3 class="reportes-periodo-titulo">Periodo:</h3>
-                <button
-                  id="reporteHoy"
-                  class="btn btn-primary periodo-btn active"
-                >
-                  Hoy
+          <!-- ── Tab navigation ── -->
+          <div class="card" style="padding:5px;margin-bottom:16px;">
+            <div class="rpt-tab-bar">
+              <button class="rpt-tab active" data-tab="resumen">📊 Resumen</button>
+              <button class="rpt-tab"        data-tab="ventas">🧾 Ventas</button>
+              <button class="rpt-tab"        data-tab="cuadre">💰 Cuadre del Día</button>
+              <button class="rpt-tab"        data-tab="categorias">📂 Categorías</button>
+            </div>
+          </div>
+
+          <!-- ══════════ TAB: RESUMEN ══════════ -->
+          <div class="rpt-panel active" id="rpt-panel-resumen">
+
+            <!-- KPI cards -->
+            <div class="rpt-kpi-grid">
+              <div class="rpt-kpi rpt-kpi--ventas">
+                <div class="rpt-kpi-accent"></div>
+                <div class="rpt-kpi-icon">💵</div>
+                <div class="rpt-kpi-label">Total Ventas (Neto)</div>
+                <div id="reporteTotalVentas" class="rpt-kpi-value">RD$0.00</div>
+                <div id="reporteTotalVentasNota" class="rpt-kpi-sub" style="display:none;"></div>
+              </div>
+
+              <div class="rpt-kpi rpt-kpi--gan">
+                <div class="rpt-kpi-accent"></div>
+                <div class="rpt-kpi-icon">📈</div>
+                <div class="rpt-kpi-label">Ganancias</div>
+                <div id="reporteGanancias" class="rpt-kpi-value">RD$0.00</div>
+              </div>
+
+              <div class="rpt-kpi rpt-kpi--gastos">
+                <div class="rpt-kpi-accent"></div>
+                <div class="rpt-kpi-icon">📤</div>
+                <div class="rpt-kpi-label">Gastos Operativos</div>
+                <div id="reporteCostosOperativos" class="rpt-kpi-value">RD$0.00</div>
+              </div>
+
+              <div class="rpt-kpi rpt-kpi--cnt">
+                <div class="rpt-kpi-accent"></div>
+                <div class="rpt-kpi-icon">🧾</div>
+                <div class="rpt-kpi-label">Cantidad Ventas</div>
+                <div id="reporteCantidadVentas" class="rpt-kpi-value">0</div>
+              </div>
+
+              <div class="rpt-kpi rpt-kpi--margen">
+                <div class="rpt-kpi-accent"></div>
+                <div class="rpt-kpi-icon">%</div>
+                <div class="rpt-kpi-label">Margen</div>
+                <div id="reporteMargen" class="rpt-kpi-value" style="color:#1abc9c;">0%</div>
+              </div>
+
+              <div class="rpt-kpi rpt-kpi--itbis">
+                <div class="rpt-kpi-accent"></div>
+                <div class="rpt-kpi-icon">🏛</div>
+                <div class="rpt-kpi-label">ITBIS Recaudado</div>
+                <div id="reporteITBIS" class="rpt-kpi-value">RD$0.00</div>
+              </div>
+
+              <div id="cardDevolucionesResumen" class="rpt-kpi rpt-kpi--dev" style="display:none;">
+                <div class="rpt-kpi-accent"></div>
+                <div class="rpt-kpi-icon">↩</div>
+                <div class="rpt-kpi-label">Devoluciones</div>
+                <div id="reporteTotalDevoluciones" class="rpt-kpi-value">RD$0.00</div>
+              </div>
+            </div>
+
+            <!-- Distribución financiera -->
+            <div class="card">
+              <h3 class="card-reporte-titulo">Distribución Financiera</h3>
+              <div id="topProductosVendidos"></div>
+            </div>
+
+            <!-- Métodos de pago -->
+            <div class="card">
+              <h3 class="card-reporte-titulo">Distribución por Método de Pago</h3>
+              <div id="metodosPagoChart"></div>
+            </div>
+
+          </div><!-- /panel resumen -->
+
+          <!-- ══════════ TAB: VENTAS ══════════ -->
+          <div class="rpt-panel" id="rpt-panel-ventas">
+
+            <!-- Exportar rango personalizado -->
+            <div class="card card-exportar-personalizado" style="margin-bottom:14px;">
+              <h3 class="exportar-personalizado-titulo">Exportar Rango Personalizado</h3>
+              <div class="exportar-personalizado-fila">
+                <div class="form-group form-group-inline">
+                  <label class="exportar-fecha-label">Desde:</label>
+                  <input type="date" id="excelFechaDesde" class="exportar-fecha-input" />
+                </div>
+                <div class="form-group form-group-inline">
+                  <label class="exportar-fecha-label">Hasta:</label>
+                  <input type="date" id="excelFechaHasta" class="exportar-fecha-input" />
+                </div>
+                <button class="btn btn-primary btn-excel-personalizado" onclick="ReportesModule.buscarRangoCompleto()">Buscar</button>
+                <button id="btnDescargarExcelPersonalizado" class="btn btn-success btn-excel-personalizado"
+                  onclick="ReportesModule.descargarExcelPersonalizado(document.getElementById('excelFechaDesde').value, document.getElementById('excelFechaHasta').value)">
+                  ↓ Excel
                 </button>
-                <button id="reporteSemana" class="btn btn-primary periodo-btn">
-                  Semana
-                </button>
-                <button id="reporteMes" class="btn btn-primary periodo-btn">
-                  Este Mes
-                </button>
               </div>
-              <button
-                id="btnDescargarExcel"
-                class="btn btn-success btn-excel-principal"
-                onclick="ReportesModule.descargarExcel()"
-              >
-                Descargar Excel
-              </button>
-              <button
-                class="btn btn-primary"
-                onclick="ReportesModule.abrirCuadre()"
-                style="margin-left: 8px"
-              >
-                Cuadre de Turno
-              </button>
-              <button
-                class="btn btn-danger"
-                onclick="ReportesModule.abrirReporteSalidas()"
-                style="margin-left: 8px"
-              >
-                Reporte de Salidas
-              </button>
+              <small class="exportar-excel-hint"><strong>Excel con 2 hojas:</strong> Hoja 1 = Detalle productos · Hoja 2 = Resumen y Top 5</small>
             </div>
-            <div id="loaderReportes" class="loader-reportes">
-              <span class="loader-reportes-texto"> Cargando reporte...</span>
-            </div>
-          </div>
 
-          <!-- DESCARGA PERSONALIZADA -->
-          <div class="card card-exportar-personalizado">
-            <h3 class="exportar-personalizado-titulo">
-              Exportar Rango Personalizado
-            </h3>
-            <div class="exportar-personalizado-fila">
-              <div class="form-group form-group-inline">
-                <label class="exportar-fecha-label">Fecha Desde:</label>
-                <input
-                  type="date"
-                  id="excelFechaDesde"
-                  class="exportar-fecha-input"
-                />
+            <!-- Tabla de ventas -->
+            <div class="card">
+              <h3 class="card-reporte-titulo">Detalle de Ventas</h3>
+              <div class="tabla-scroll-horizontal">
+                <table class="tabla-facturas">
+                  <thead>
+                    <tr class="tabla-header-oscuro">
+                      <th class="th-tabla-izquierda">Ticket</th>
+                      <th class="th-tabla-izquierda">Fecha</th>
+                      <th class="th-tabla-izquierda">Hora</th>
+                      <th class="th-tabla-izquierda">Cliente</th>
+                      <th class="th-tabla-derecha">Subtotal</th>
+                      <th class="th-tabla-derecha">Total</th>
+                      <th class="th-tabla-izquierda">Método</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaReporteVentas">
+                    <tr><td colspan="7" class="td-tabla-vacia"><p>Cargando reporte...</p></td></tr>
+                  </tbody>
+                </table>
               </div>
-              <div class="form-group form-group-inline">
-                <label class="exportar-fecha-label">Fecha Hasta:</label>
-                <input
-                  type="date"
-                  id="excelFechaHasta"
-                  class="exportar-fecha-input"
-                />
-              </div>
-              <button
-                class="btn btn-primary btn-excel-personalizado"
-                onclick="ReportesModule.buscarRangoCompleto()"
-              >
-                Buscar
-              </button>
-              <button
-                id="btnDescargarExcelPersonalizado"
-                class="btn btn-success btn-excel-personalizado"
-                onclick="
-                  ReportesModule.descargarExcelPersonalizado(
-                    document.getElementById('excelFechaDesde').value,
-                    document.getElementById('excelFechaHasta').value,
-                  )
-                "
-              >
-                Descargar Excel
-              </button>
             </div>
-            <small class="exportar-excel-hint">
-              <strong> Excel con 2 hojas:</strong> Hoja 1 = Detalle productos ·
-              Hoja 2 = Resumen y Top 5
-            </small>
-          </div>
 
-          <!-- RESUMEN -->
-          <div class="reportes-stats-grid">
-            <div class="card stat-card-ventas">
-              <div class="stat-card-fila">
+            <!-- Devoluciones -->
+            <div id="cardDevoluciones" class="card" style="display:none;border-left:4px solid var(--clr-danger);">
+              <h3 class="card-reporte-titulo" style="color:var(--clr-danger);">↩ Devoluciones del Período</h3>
+              <div class="tabla-scroll-horizontal">
+                <table class="tabla-facturas">
+                  <thead>
+                    <tr class="tabla-header-oscuro">
+                      <th class="th-tabla-izquierda">Devolución</th>
+                      <th class="th-tabla-izquierda">Ticket</th>
+                      <th class="th-tabla-izquierda">Factura</th>
+                      <th class="th-tabla-izquierda">Fecha</th>
+                      <th class="th-tabla-izquierda">Cliente</th>
+                      <th class="th-tabla-izquierda">Motivo</th>
+                      <th class="th-tabla-derecha">Monto Devuelto</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaReporteDevoluciones"></tbody>
+                </table>
+              </div>
+            </div>
+
+          </div><!-- /panel ventas -->
+
+          <!-- ══════════ TAB: CUADRE DEL DÍA ══════════ -->
+          <div class="rpt-panel" id="rpt-panel-cuadre">
+            <div class="card">
+
+              <!-- Controles -->
+              <div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--clr-border);">
                 <div>
-                  <p class="stat-card-etiqueta">Total Ventas (Neto)</p>
-                  <h2 id="reporteTotalVentas" class="stat-card-valor-reportes">
-                    RD$0.00
-                  </h2>
-                  <p
-                    id="reporteTotalVentasNota"
-                    style="
-                      display: none;
-                      font-size: 11px;
-                      opacity: 0.78;
-                      margin-top: 5px;
-                      line-height: 1.5;
-                    "
-                  ></p>
+                  <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--clr-muted);margin-bottom:5px;">Fecha</div>
+                  <input type="date" id="ciFecha" style="padding:7px 11px;border:1px solid var(--clr-border);border-radius:8px;font-size:14px;" />
                 </div>
-                <div class="stat-card-icono"></div>
-              </div>
-            </div>
-
-            <div class="card stat-card-ganancias">
-              <div class="stat-card-fila">
                 <div>
-                  <p class="stat-card-etiqueta">Ganancias</p>
-                  <h2 id="reporteGanancias" class="stat-card-valor-reportes">
-                    RD$0.00
-                  </h2>
-                </div>
-                <div class="stat-card-icono"></div>
-              </div>
-            </div>
-
-            <div class="card stat-card-costos-operativos">
-              <div class="stat-card-fila">
-                <div>
-                  <p class="stat-card-etiqueta">Gastos</p>
-                  <h2
-                    id="reporteCostosOperativos"
-                    class="stat-card-valor-reportes"
-                  >
-                    RD$0.00
-                  </h2>
-                </div>
-                <div class="stat-card-icono"></div>
-              </div>
-            </div>
-
-            <div class="card stat-card-cantidad-ventas">
-              <div class="stat-card-fila">
-                <div>
-                  <p class="stat-card-etiqueta">Cantidad Ventas</p>
-                  <h2 id="reporteCantidadVentas" class="stat-card-valor-grande">
-                    0
-                  </h2>
-                </div>
-                <div class="stat-card-icono"></div>
-              </div>
-            </div>
-
-            <div class="card stat-card-margen">
-              <div class="stat-card-fila">
-                <div>
-                  <p class="stat-card-etiqueta">Margen</p>
-                  <h2 id="reporteMargen" class="stat-card-valor-grande">0%</h2>
-                </div>
-                <div class="stat-card-icono"></div>
-              </div>
-            </div>
-
-            <div class="card stat-card-itbis">
-              <div class="stat-card-fila">
-                <div>
-                  <p class="stat-card-etiqueta">ITBIS Recaudado</p>
-                  <h2 id="reporteITBIS" class="stat-card-valor-itbis">
-                    RD$0.00
-                  </h2>
-                </div>
-                <div class="stat-card-icono"></div>
-              </div>
-            </div>
-
-            <div
-              id="cardDevolucionesResumen"
-              class="card stat-card-costos-mercancia"
-              style="display: none"
-            >
-              <div class="stat-card-fila">
-                <div>
-                  <p class="stat-card-etiqueta">Devoluciones</p>
-                  <h2
-                    id="reporteTotalDevoluciones"
-                    class="stat-card-valor-reportes"
-                  >
-                    RD$0.00
-                  </h2>
-                </div>
-                <div class="stat-card-icono">↩</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- GRAFICO FINANCIERO -->
-          <div class="card">
-            <h3 class="card-reporte-titulo">Distribucion Financiera</h3>
-            <div id="topProductosVendidos"></div>
-          </div>
-
-          <!-- MÉTODOS PAGO -->
-          <div class="card">
-            <h3 class="card-reporte-titulo">Distribución por Método de Pago</h3>
-            <div id="metodosPagoChart"></div>
-          </div>
-
-          <!-- DETALLE VENTAS -->
-          <div class="card">
-            <h3 class="card-reporte-titulo">Detalle de Ventas</h3>
-            <div class="tabla-scroll-horizontal">
-              <table class="tabla-facturas">
-                <thead>
-                  <tr class="tabla-header-oscuro">
-                    <th class="th-tabla-izquierda">Ticket</th>
-                    <th class="th-tabla-izquierda">Fecha</th>
-                    <th class="th-tabla-izquierda">Hora</th>
-                    <th class="th-tabla-izquierda">Cliente</th>
-                    <th class="th-tabla-derecha">Subtotal</th>
-                    <th class="th-tabla-derecha">Total</th>
-                    <th class="th-tabla-izquierda">Método</th>
-                  </tr>
-                </thead>
-                <tbody id="tablaReporteVentas">
-                  <tr>
-                    <td colspan="7" class="td-tabla-vacia">
-                      <div class="td-tabla-vacia-icono"></div>
-                      <p>Cargando reporte...</p>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- DEVOLUCIONES DEL PERÍODO -->
-          <div
-            id="cardDevoluciones"
-            class="card"
-            style="display: none; border-left: 4px solid var(--clr-danger)"
-          >
-            <h3 class="card-reporte-titulo" style="color: var(--clr-danger)">
-              ↩ Devoluciones del Período
-            </h3>
-            <div class="tabla-scroll-horizontal">
-              <table class="tabla-facturas">
-                <thead>
-                  <tr class="tabla-header-oscuro">
-                    <th class="th-tabla-izquierda">Devolución</th>
-                    <th class="th-tabla-izquierda">Ticket</th>
-                    <th class="th-tabla-izquierda">Factura</th>
-                    <th class="th-tabla-izquierda">Fecha</th>
-                    <th class="th-tabla-izquierda">Cliente</th>
-                    <th class="th-tabla-izquierda">Motivo</th>
-                    <th class="th-tabla-derecha">Monto Devuelto</th>
-                  </tr>
-                </thead>
-                <tbody id="tablaReporteDevoluciones"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- ==================== CUADRE DEL DÍA INLINE ==================== -->
-          <div class="card" style="margin-top:1.5rem;">
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-              <h3 style="margin:0;">Cuadre del Día</h3>
-              <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-                <div class="form-group" style="margin:0;">
-                  <label style="font-size:12px;margin-bottom:3px;display:block;">Fecha</label>
-                  <input type="date" id="ciFecha" style="padding:6px 10px;border:1px solid var(--clr-border);border-radius:6px;font-size:14px;" />
-                </div>
-                <div class="form-group" style="margin:0;">
-                  <label style="font-size:12px;margin-bottom:3px;display:block;">Fondo de Caja (RD$)</label>
-                  <input type="number" id="ciFondo" value="0" min="0" style="width:120px;padding:6px 10px;border:1px solid var(--clr-border);border-radius:6px;font-size:14px;" />
+                  <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--clr-muted);margin-bottom:5px;">Fondo de Caja (RD$)</div>
+                  <input type="number" id="ciFondo" value="0" min="0" style="width:130px;padding:7px 11px;border:1px solid var(--clr-border);border-radius:8px;font-size:14px;" />
                 </div>
                 <button class="btn btn-primary" onclick="ReportesModule.cargarCuadreDia()">Consultar</button>
               </div>
-            </div>
 
-            <div id="ciLoader" style="display:none;text-align:center;padding:20px;color:var(--clr-muted);">Cargando cuadre...</div>
-            <div id="ciContenido" style="display:none;">
+              <div id="ciLoader" style="display:none;text-align:center;padding:30px;color:var(--clr-muted);">Cargando cuadre...</div>
+              <div id="ciContenido" style="display:none;">
 
-              <!-- Stats principales -->
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px;">
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
-                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;"># Ventas</div>
-                  <div id="ciCantVentas" style="font-size:26px;font-weight:700;color:var(--clr-primary);">0</div>
-                </div>
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
-                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Ventas Neto</div>
-                  <div id="ciVentasNeto" style="font-size:22px;font-weight:700;color:var(--clr-primary);">RD$0</div>
-                </div>
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
-                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Ganancia</div>
-                  <div id="ciGanancia" style="font-size:22px;font-weight:700;color:var(--clr-success);">RD$0</div>
-                </div>
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
-                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Efectivo en Caja</div>
-                  <div id="ciEfectivoCaja" style="font-size:22px;font-weight:700;color:var(--clr-success);">RD$0</div>
-                </div>
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
-                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Total Salidas</div>
-                  <div id="ciTotalSalidas" style="font-size:22px;font-weight:700;color:var(--clr-danger);">RD$0</div>
-                </div>
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;text-align:center;">
-                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Total Ingresos</div>
-                  <div id="ciTotalIngresos" style="font-size:22px;font-weight:700;color:var(--clr-primary);">RD$0</div>
-                </div>
-              </div>
-
-              <!-- Fila: Métodos de pago | Efectivo en caja | Salidas -->
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px;">
-
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
-                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Métodos de Pago</div>
-                  <table style="width:100%;font-size:13px;">
-                    <tbody id="ciMetodos">
-                      <tr><td style="padding:3px 0;">Efectivo</td><td id="ciMetEfectivo" style="text-align:right;font-weight:600;">RD$0</td></tr>
-                      <tr><td style="padding:3px 0;">Tarjeta</td><td id="ciMetTarjeta" style="text-align:right;font-weight:600;">RD$0</td></tr>
-                      <tr><td style="padding:3px 0;">Transferencia</td><td id="ciMetTransferencia" style="text-align:right;font-weight:600;">RD$0</td></tr>
-                      <tr><td style="padding:3px 0;">Cheque</td><td id="ciMetCheque" style="text-align:right;font-weight:600;">RD$0</td></tr>
-                      <tr><td style="padding:3px 0;color:var(--clr-warning);">Crédito</td><td id="ciMetCredito" style="text-align:right;font-weight:600;color:var(--clr-warning);">RD$0</td></tr>
-                      <tr><td style="padding:3px 0;color:var(--clr-danger);">Devoluciones</td><td id="ciMetDev" style="text-align:right;font-weight:600;color:var(--clr-danger);">RD$0</td></tr>
-                      <tr style="border-top:2px solid var(--clr-border);font-weight:700;">
-                        <td style="padding:5px 0;">Total</td>
-                        <td id="ciMetTotal" style="text-align:right;color:var(--clr-primary);">RD$0</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
-                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Efectivo en Caja</div>
-                  <table style="width:100%;font-size:13px;">
-                    <tbody>
-                      <tr><td style="padding:3px 0;">Fondo inicial</td><td id="ciFondoCaja" style="text-align:right;">RD$0</td></tr>
-                      <tr><td style="padding:3px 0;">+ Ventas efectivo</td><td id="ciIngEfectivo" style="text-align:right;">RD$0</td></tr>
-                      <tr><td style="padding:3px 0;">+ Abonos efectivo</td><td id="ciAbonos" style="text-align:right;">RD$0</td></tr>
-                      <tr><td style="padding:3px 0;color:var(--clr-danger);">− Salidas efectivo</td><td id="ciSalidasEf" style="text-align:right;color:var(--clr-danger);">RD$0</td></tr>
-                      <tr><td style="padding:3px 0;color:var(--clr-danger);">− Dev. efectivo</td><td id="ciDevEf" style="text-align:right;color:var(--clr-danger);">RD$0</td></tr>
-                      <tr style="border-top:2px solid var(--clr-border);font-weight:700;">
-                        <td style="padding:5px 0;">= Efectivo en caja</td>
-                        <td id="ciEfectivoCaja2" style="text-align:right;color:var(--clr-success);font-size:15px;">RD$0</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
-                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Salidas del Día</div>
-                  <div id="ciSalidasLista" style="font-size:13px;max-height:160px;overflow-y:auto;">
-                    <span style="color:var(--clr-muted);">Sin salidas</span>
+                <!-- KPIs del cuadre -->
+                <div class="ci-kpi-grid">
+                  <div class="ci-kpi ci-kpi--cnt">
+                    <div class="ci-kpi-lbl"># Ventas</div>
+                    <div id="ciCantVentas" class="ci-kpi-val">0</div>
+                  </div>
+                  <div class="ci-kpi ci-kpi--neto">
+                    <div class="ci-kpi-lbl">Ventas Neto</div>
+                    <div id="ciVentasNeto" class="ci-kpi-val">RD$0</div>
+                  </div>
+                  <div class="ci-kpi ci-kpi--gan">
+                    <div class="ci-kpi-lbl">Ganancia</div>
+                    <div id="ciGanancia" class="ci-kpi-val">RD$0</div>
+                  </div>
+                  <div class="ci-kpi ci-kpi--caja">
+                    <div class="ci-kpi-lbl">Efectivo en Caja</div>
+                    <div id="ciEfectivoCaja" class="ci-kpi-val">RD$0</div>
+                  </div>
+                  <div class="ci-kpi ci-kpi--sal">
+                    <div class="ci-kpi-lbl">Total Salidas</div>
+                    <div id="ciTotalSalidas" class="ci-kpi-val">RD$0</div>
+                  </div>
+                  <div class="ci-kpi ci-kpi--ing">
+                    <div class="ci-kpi-lbl">Total Ingresos</div>
+                    <div id="ciTotalIngresos" class="ci-kpi-val">RD$0</div>
                   </div>
                 </div>
 
-              </div>
+                <!-- Paneles: Métodos | Efectivo en Caja | Salidas -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px;">
+                  <div class="rpt-sub-card">
+                    <div class="rpt-sub-title">Métodos de Pago</div>
+                    <table style="width:100%;font-size:13px;">
+                      <tbody>
+                        <tr><td style="padding:4px 0;">Efectivo</td><td id="ciMetEfectivo" style="text-align:right;font-weight:600;">RD$0</td></tr>
+                        <tr><td style="padding:4px 0;">Tarjeta</td><td id="ciMetTarjeta" style="text-align:right;font-weight:600;">RD$0</td></tr>
+                        <tr><td style="padding:4px 0;">Transferencia</td><td id="ciMetTransferencia" style="text-align:right;font-weight:600;">RD$0</td></tr>
+                        <tr><td style="padding:4px 0;">Cheque</td><td id="ciMetCheque" style="text-align:right;font-weight:600;">RD$0</td></tr>
+                        <tr><td style="padding:4px 0;color:var(--clr-warning);">Crédito</td><td id="ciMetCredito" style="text-align:right;font-weight:600;color:var(--clr-warning);">RD$0</td></tr>
+                        <tr><td style="padding:4px 0;color:var(--clr-danger);">Devoluciones</td><td id="ciMetDev" style="text-align:right;font-weight:600;color:var(--clr-danger);">RD$0</td></tr>
+                        <tr style="border-top:2px solid var(--clr-border);font-weight:700;"><td style="padding:6px 0;">Total</td><td id="ciMetTotal" style="text-align:right;color:var(--clr-primary);">RD$0</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
 
-              <!-- Fila: Categorías | Pagos crédito | Devoluciones -->
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px;">
+                  <div class="rpt-sub-card">
+                    <div class="rpt-sub-title">Efectivo en Caja</div>
+                    <table style="width:100%;font-size:13px;">
+                      <tbody>
+                        <tr><td style="padding:4px 0;">Fondo inicial</td><td id="ciFondoCaja" style="text-align:right;">RD$0</td></tr>
+                        <tr><td style="padding:4px 0;">+ Ventas efectivo</td><td id="ciIngEfectivo" style="text-align:right;">RD$0</td></tr>
+                        <tr><td style="padding:4px 0;">+ Abonos efectivo</td><td id="ciAbonos" style="text-align:right;">RD$0</td></tr>
+                        <tr><td style="padding:4px 0;color:var(--clr-danger);">− Salidas efectivo</td><td id="ciSalidasEf" style="text-align:right;color:var(--clr-danger);">RD$0</td></tr>
+                        <tr><td style="padding:4px 0;color:var(--clr-danger);">− Dev. efectivo</td><td id="ciDevEf" style="text-align:right;color:var(--clr-danger);">RD$0</td></tr>
+                        <tr style="border-top:2px solid var(--clr-border);font-weight:700;"><td style="padding:6px 0;">= Efectivo en caja</td><td id="ciEfectivoCaja2" style="text-align:right;color:var(--clr-success);font-size:15px;">RD$0</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
 
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
-                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Ventas por Categoría</div>
-                  <table style="width:100%;font-size:13px;">
-                    <tbody id="ciCategorias">
-                      <tr><td colspan="2" style="color:var(--clr-muted);">Sin datos</td></tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
-                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Abonos Recibidos (Crédito)</div>
-                  <div id="ciPagosLista" style="font-size:13px;max-height:160px;overflow-y:auto;">
-                    <span style="color:var(--clr-muted);">Sin abonos</span>
+                  <div class="rpt-sub-card">
+                    <div class="rpt-sub-title">Salidas del Día</div>
+                    <div id="ciSalidasLista" style="font-size:13px;max-height:180px;overflow-y:auto;">
+                      <span style="color:var(--clr-muted);">Sin salidas</span>
+                    </div>
                   </div>
                 </div>
 
-                <div style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
-                  <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Devoluciones</div>
-                  <div id="ciDevoluciones" style="font-size:13px;max-height:160px;overflow-y:auto;">
-                    <span style="color:var(--clr-muted);">Sin devoluciones</span>
+                <!-- Paneles: Categorías | Abonos | Devoluciones -->
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px;">
+                  <div class="rpt-sub-card">
+                    <div class="rpt-sub-title">Ventas por Categoría</div>
+                    <table style="width:100%;font-size:13px;">
+                      <tbody id="ciCategorias">
+                        <tr><td colspan="2" style="color:var(--clr-muted);">Sin datos</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="rpt-sub-card">
+                    <div class="rpt-sub-title">Abonos Recibidos (Crédito)</div>
+                    <div id="ciPagosLista" style="font-size:13px;max-height:180px;overflow-y:auto;">
+                      <span style="color:var(--clr-muted);">Sin abonos</span>
+                    </div>
+                  </div>
+
+                  <div class="rpt-sub-card">
+                    <div class="rpt-sub-title">Devoluciones</div>
+                    <div id="ciDevoluciones" style="font-size:13px;max-height:180px;overflow-y:auto;">
+                      <span style="color:var(--clr-muted);">Sin devoluciones</span>
+                    </div>
                   </div>
                 </div>
 
-              </div>
-
-              <!-- Ventas a crédito del día -->
-              <div id="ciCreditosCard" style="background:var(--clr-bg-surface);border-radius:10px;padding:14px;">
-                <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-warning);">Ventas a Crédito del Día</div>
-                <div style="overflow-x:auto;">
-                  <table style="width:100%;font-size:13px;border-collapse:collapse;">
-                    <thead>
-                      <tr style="color:var(--clr-muted);font-size:11px;text-transform:uppercase;">
-                        <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Ticket</th>
-                        <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Factura</th>
-                        <th style="text-align:left;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Cliente</th>
-                        <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Total</th>
-                        <th style="text-align:right;padding:4px 8px;border-bottom:1px solid var(--clr-border);">Saldo</th>
-                      </tr>
-                    </thead>
-                    <tbody id="ciCreditosCuerpo">
-                      <tr><td colspan="5" style="padding:8px;color:var(--clr-muted);">Sin ventas a crédito hoy</td></tr>
-                    </tbody>
-                  </table>
+                <!-- Ventas a crédito del día -->
+                <div id="ciCreditosCard" class="rpt-sub-card">
+                  <div class="rpt-sub-title" style="color:var(--clr-warning);">Ventas a Crédito del Día</div>
+                  <div style="overflow-x:auto;">
+                    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+                      <thead>
+                        <tr style="color:var(--clr-muted);font-size:11px;text-transform:uppercase;">
+                          <th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--clr-border);">Ticket</th>
+                          <th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--clr-border);">Factura</th>
+                          <th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--clr-border);">Cliente</th>
+                          <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--clr-border);">Total</th>
+                          <th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--clr-border);">Saldo</th>
+                        </tr>
+                      </thead>
+                      <tbody id="ciCreditosCuerpo">
+                        <tr><td colspan="5" style="padding:10px;color:var(--clr-muted);">Sin ventas a crédito hoy</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
+
+              </div><!-- /ciContenido -->
+            </div><!-- /card -->
+          </div><!-- /panel cuadre -->
+
+          <!-- ══════════ TAB: CATEGORÍAS ══════════ -->
+          <div class="rpt-panel" id="rpt-panel-categorias">
+
+            <!-- Ventas por Categoría -->
+            <div class="card" id="rgVentasCatCard">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <h3 style="margin:0;">Ventas por Categoría</h3>
+                <button class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">↓ Excel Categorías</button>
               </div>
-
-            </div>
-          </div>
-
-          <!-- Ventas por Categoría -->
-          <div class="card" id="rgVentasCatCard" style="display:none;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-              <h3 style="margin:0;">Ventas por Categoría</h3>
-              <button class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">Descargar Excel</button>
-            </div>
-            <div id="rgVentasPorCategoria"></div>
-          </div>
-
-          <!-- Reporte de Gastos por Categoría (Inline Reportes) -->
-          <div class="card" id="rgCard" style="display:none;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-              <h3 style="margin:0;">Reporte de Gastos por Categoría</h3>
-              <button id="rgBtnExcel" class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">Descargar Excel</button>
-            </div>
-            <div id="rgContenido">
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
-                <div style="background:var(--clr-bg-surface);padding:14px;border-radius:10px;text-align:center;">
-                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Total Gastos</div>
-                  <div id="rgTotal" style="font-size:22px;font-weight:700;color:var(--clr-danger);">RD$0</div>
-                </div>
-                <div style="background:var(--clr-bg-surface);padding:14px;border-radius:10px;text-align:center;">
-                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Cantidad</div>
-                  <div id="rgCantidad" style="font-size:22px;font-weight:700;">0</div>
-                </div>
+              <div id="rgVentasPorCategoria">
+                <p style="color:var(--clr-muted);text-align:center;">Usa el rango personalizado en la pestaña Ventas para cargar datos.</p>
               </div>
-              <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Por Categoría</div>
-              <div id="rgPorCategoria"></div>
-              <div style="font-weight:700;margin:14px 0 10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Por Método de Pago</div>
-              <div id="rgPorMetodo"></div>
             </div>
-          </div>
+
+            <!-- Gastos por Categoría -->
+            <div class="card" id="rgCard" style="display:none;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <h3 style="margin:0;">Gastos por Categoría</h3>
+                <button id="rgBtnExcel" class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">↓ Excel Gastos</button>
+              </div>
+              <div id="rgContenido">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;">
+                  <div class="rpt-kpi rpt-kpi--dev" style="padding:14px 16px;">
+                    <div class="rpt-kpi-accent"></div>
+                    <div class="rpt-kpi-label">Total Gastos</div>
+                    <div id="rgTotal" class="rpt-kpi-value">RD$0</div>
+                  </div>
+                  <div class="rpt-kpi rpt-kpi--cnt" style="padding:14px 16px;">
+                    <div class="rpt-kpi-accent"></div>
+                    <div class="rpt-kpi-label">Cantidad Gastos</div>
+                    <div id="rgCantidad" class="rpt-kpi-value">0</div>
+                  </div>
+                </div>
+                <div class="rpt-sub-title">Por Categoría</div>
+                <div id="rgPorCategoria" style="margin-bottom:16px;"></div>
+                <div class="rpt-sub-title">Por Método de Pago</div>
+                <div id="rgPorMetodo"></div>
+              </div>
+            </div>
+
+          </div><!-- /panel categorias -->
 
         </section>
 
