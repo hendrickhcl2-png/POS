@@ -872,19 +872,27 @@ const VentasModule = {
   const itbis = this.incluirITBIS ? subtotal * 0.18: 0;
   const total = subtotal + itbis;
 
-  this.actualizarTotalesUI(subtotal, itbis, total);
+  const descuentoManual = this.carritoItems.reduce((sum, item) => {
+    return sum + Math.max(0, (item.precio_original || item.precio_unitario) - item.precio_unitario) * item.cantidad;
+  }, 0);
 
-  return { subtotal, itbis, total };
+  this.actualizarTotalesUI(subtotal, itbis, total, descuentoManual);
+
+  return { subtotal, itbis, total, descuentoManual };
   },
 
-  actualizarTotalesUI(subtotal, itbis, total) {
+  actualizarTotalesUI(subtotal, itbis, total, descuentoManual = 0) {
   const subtotalEl = document.getElementById("ventaSubtotal");
   const itbisEl = document.getElementById("ventaITBIS");
   const totalEl = document.getElementById("ventaTotal");
+  const descuentoEl = document.getElementById("ventaDescuento");
+  const descuentoRow = document.getElementById("ventaDescuentoRow");
 
   if (subtotalEl) subtotalEl.textContent = this.formatCurrency(subtotal);
   if (itbisEl) itbisEl.textContent = this.formatCurrency(itbis);
   if (totalEl) totalEl.textContent = this.formatCurrency(total);
+  if (descuentoEl) descuentoEl.textContent = this.formatCurrency(descuentoManual);
+  if (descuentoRow) descuentoRow.style.display = descuentoManual > 0 ? "" : "none";
   },
 
   calcularCambio() {
@@ -1114,6 +1122,7 @@ const VentasModule = {
   const ventaData = {
   cliente_id: clienteId ? parseInt(clienteId): null,
   subtotal: totales.subtotal,
+  descuento: totales.descuentoManual || 0,
   itbis: totales.itbis,
   total: totales.total,
   metodo_pago: esCredito ? "credito": this.metodoPagoActual,
@@ -1123,6 +1132,7 @@ const VentasModule = {
   producto_id: item.producto_id,
   cantidad: item.cantidad,
   precio_unitario: item.precio_unitario,
+  precio_original: item.precio_original || item.precio_unitario,
   descuento: item.descuento,
   subtotal: this.calcularSubtotalItem(item),
   })),

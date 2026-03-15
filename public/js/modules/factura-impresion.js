@@ -103,7 +103,12 @@ const FacturaImpresion = {
   </td>
   <td style="padding:10px;font-size:12px;color:#7f8c8d;">${item.codigo_producto || ""}</td>
   <td style="padding:10px;text-align:center;font-size:13px;">${item.cantidad}</td>
-  <td style="padding:10px;text-align:right;font-size:13px;">${this.formatCurrency(item.precio_unitario)}</td>
+  <td style="padding:10px;text-align:right;font-size:13px;">
+    ${item.precio_original && parseFloat(item.precio_original) > parseFloat(item.precio_unitario)
+      ? `<span style="text-decoration:line-through;color:#bdc3c7;font-size:11px;display:block;">${this.formatCurrency(item.precio_original)}</span>`
+      : ""}
+    ${this.formatCurrency(item.precio_unitario)}
+  </td>
   <td style="padding:10px;text-align:right;font-size:13px;font-weight:600;color:#27ae60;">${this.formatCurrency(item.subtotal)}</td>
   </tr>
   `,
@@ -163,8 +168,8 @@ const FacturaImpresion = {
   ${factura.descuento && parseFloat(factura.descuento) > 0
         ? `
   <tr style="border-bottom:1px solid #ecf0f1;">
-  <td style="padding:8px 10px;color:#e74c3c;font-size:14px;">Descuento:</td>
-  <td style="padding:8px 10px;text-align:right;font-size:14px;color:#e74c3c;">-${this.formatCurrency(factura.descuento)}</td>
+  <td style="padding:8px 10px;color:#27ae60;font-size:14px;font-weight:600;">Descuento aplicado:</td>
+  <td style="padding:8px 10px;text-align:right;font-size:14px;color:#27ae60;font-weight:600;">${this.formatCurrency(factura.descuento)}</td>
   </tr>`
         : ""
       }
@@ -333,8 +338,11 @@ const FacturaImpresion = {
       // Vendedor
       vendedor_nombre: data.vendedor_nombre || data.usuario_nombre || null,
 
-      // Items
-      items: data.items || [],
+      // Items (precio_original pasado desde el carrito para mostrar descuento en factura)
+      items: (data.items || []).map((item) => ({
+        ...item,
+        precio_original: item.precio_original || item.precio_unitario,
+      })),
       servicios: data.servicios || [],
 
       // Devoluciones
