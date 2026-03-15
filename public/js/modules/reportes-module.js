@@ -154,9 +154,9 @@ const ReportesModule = {
     const el = document.getElementById("rptDesglose");
     if (!el) return;
 
-    const r = this.reporteActual.ventas.resumen;
-    const f = (n) => this.formatCurrency(n || 0);
-    const pct = (n, base) => base > 0 ? ((Math.abs(n) / base) * 100).toFixed(1) + "%" : "—";
+    const r  = this.reporteActual.ventas.resumen;
+    const productos = this.reporteActual.productos?.productos || [];
+    const f  = (n) => this.formatCurrency(n || 0);
 
     const hayDevoluciones = r.total_devoluciones > 0;
     const margenBruto = r.total_ventas > 0 ? ((r.ganancia / r.total_ventas) * 100).toFixed(1) : 0;
@@ -165,35 +165,95 @@ const ReportesModule = {
     const fila = (label, valor, opts = {}) => {
       const { color = "inherit", bold = false, indent = false, bg = "transparent", borderTop = false, large = false } = opts;
       return `
-        <div style="
-          display:flex; justify-content:space-between; align-items:baseline;
-          padding:${large ? "10px 14px" : "7px 14px"};
-          background:${bg};
+        <div style="display:flex;justify-content:space-between;align-items:baseline;
+          padding:${large ? "10px 14px" : "7px 14px"};background:${bg};
           border-top:${borderTop ? "2px solid var(--clr-border)" : "none"};
-          border-radius:6px; margin-bottom:2px;
-        ">
-          <span style="color:var(--clr-text);font-size:${large ? "14px" : "13px"};font-weight:${bold ? "700" : "400"};padding-left:${indent ? "18px" : "0"};">${label}</span>
+          border-radius:6px;margin-bottom:2px;">
+          <span style="font-size:${large ? "14px" : "13px"};font-weight:${bold ? "700" : "400"};padding-left:${indent ? "18px" : "0"};">${label}</span>
           <span style="color:${color};font-size:${large ? "15px" : "13px"};font-weight:${bold ? "700" : "600"};white-space:nowrap;">${valor}</span>
         </div>`;
     };
 
-    el.innerHTML = `
+    // ── Resumen global ──────────────────────────────────────────
+    const resumenHtml = `
       ${fila("Ventas brutas", f(r.total_ventas_bruto), { bold: true })}
       ${hayDevoluciones ? fila("(−) Devoluciones", f(r.total_devoluciones), { indent: true, color: "var(--clr-danger)" }) : ""}
       ${fila("= Ventas neto", f(r.total_ventas), { bold: true, bg: "color-mix(in srgb,#3498db 8%,transparent)", borderTop: hayDevoluciones })}
-
       ${fila("(−) Costo de productos vendidos", f(r.costos), { indent: true, color: "var(--clr-danger)" })}
-
-      ${fila(`= Ganancia bruta &nbsp;<small style="font-weight:400;font-size:11px;color:var(--clr-muted);">(margen ${margenBruto}%)</small>`,
-        f(r.ganancia), { bold: true, bg: "color-mix(in srgb,#27ae60 8%,transparent)", borderTop: true, large: true,
+      ${fila(`= Ganancia bruta <small style="font-weight:400;font-size:11px;color:var(--clr-muted);margin-left:6px;">${margenBruto}% margen</small>`,
+        f(r.ganancia), { bold: true, large: true, borderTop: true,
+        bg: "color-mix(in srgb,#27ae60 8%,transparent)",
         color: r.ganancia >= 0 ? "#27ae60" : "var(--clr-danger)" })}
-
       ${r.costos_salidas > 0 ? fila("(−) Gastos operativos (salidas)", f(r.costos_salidas), { indent: true, color: "var(--clr-danger)" }) : ""}
-
-      ${fila(`= Ganancia neta &nbsp;<small style="font-weight:400;font-size:11px;color:var(--clr-muted);">(margen ${margenNeto}%)</small>`,
-        f(r.ganancia_neta), { bold: true, bg: r.ganancia_neta >= 0 ? "color-mix(in srgb,#27ae60 12%,transparent)" : "color-mix(in srgb,#e74c3c 10%,transparent)",
-        borderTop: r.costos_salidas > 0, large: true,
+      ${fila(`= Ganancia neta <small style="font-weight:400;font-size:11px;color:var(--clr-muted);margin-left:6px;">${margenNeto}% margen</small>`,
+        f(r.ganancia_neta), { bold: true, large: true, borderTop: r.costos_salidas > 0,
+        bg: r.ganancia_neta >= 0 ? "color-mix(in srgb,#27ae60 12%,transparent)" : "color-mix(in srgb,#e74c3c 10%,transparent)",
         color: r.ganancia_neta >= 0 ? "#27ae60" : "var(--clr-danger)" })}
+    `;
+
+    // ── Detalle por producto ────────────────────────────────────
+    const thStyle = "padding:8px 10px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--clr-muted);white-space:nowrap;";
+    const thL     = thStyle.replace("text-align:right;", "text-align:left;");
+
+    const filasProd = productos.length === 0
+      ? `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--clr-muted);">Sin productos en este periodo</td></tr>`
+      : productos.map((p, i) => {
+          const ganancia   = parseFloat(p.ganancia || 0);
+          const totalVenta = parseFloat(p.total_ventas || 0);
+          const totalCosto = parseFloat(p.total_costo || 0);
+          const margen     = totalVenta > 0 ? ((ganancia / totalVenta) * 100).toFixed(1) : "0.0";
+          const clrMargen  = ganancia < 0 ? "var(--clr-danger)" : ganancia === 0 ? "var(--clr-muted)" : "#27ae60";
+          const bg         = i % 2 === 0 ? "var(--clr-bg-surface)" : "transparent";
+          return `
+            <tr style="background:${bg};">
+              <td style="padding:8px 10px;font-size:13px;font-weight:600;">${p.nombre}</td>
+              <td style="padding:8px 10px;font-size:12px;color:var(--clr-muted);">${p.categoria_nombre || "—"}</td>
+              <td style="padding:8px 10px;text-align:right;font-size:13px;">${p.cantidad_vendida}</td>
+              <td style="padding:8px 10px;text-align:right;font-size:13px;">${f(totalVenta)}</td>
+              <td style="padding:8px 10px;text-align:right;font-size:13px;color:var(--clr-danger);">${f(totalCosto)}</td>
+              <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:${clrMargen};">${f(ganancia)}</td>
+              <td style="padding:8px 10px;text-align:right;font-size:12px;font-weight:600;color:${clrMargen};">${margen}%</td>
+            </tr>`;
+        }).join("");
+
+    const totalGanProd = productos.reduce((s, p) => s + parseFloat(p.ganancia || 0), 0);
+    const totalVtaProd = productos.reduce((s, p) => s + parseFloat(p.total_ventas || 0), 0);
+    const totalCstProd = productos.reduce((s, p) => s + parseFloat(p.total_costo || 0), 0);
+    const margenProd   = totalVtaProd > 0 ? ((totalGanProd / totalVtaProd) * 100).toFixed(1) : "0.0";
+
+    const tablaHtml = `
+      <div style="overflow-x:auto;margin-top:4px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="border-bottom:2px solid var(--clr-border);">
+              <th style="${thL}">Producto</th>
+              <th style="${thL}">Categoría</th>
+              <th style="${thStyle}">Cant.</th>
+              <th style="${thStyle}">Venta Total</th>
+              <th style="${thStyle}">Costo Total</th>
+              <th style="${thStyle}">Ganancia</th>
+              <th style="${thStyle}">Margen</th>
+            </tr>
+          </thead>
+          <tbody>${filasProd}</tbody>
+          <tfoot>
+            <tr style="border-top:2px solid var(--clr-border);background:color-mix(in srgb,#27ae60 8%,transparent);">
+              <td colspan="3" style="padding:9px 10px;font-weight:700;font-size:13px;">TOTAL PRODUCTOS</td>
+              <td style="padding:9px 10px;text-align:right;font-weight:700;font-size:13px;">${f(totalVtaProd)}</td>
+              <td style="padding:9px 10px;text-align:right;font-weight:700;font-size:13px;color:var(--clr-danger);">${f(totalCstProd)}</td>
+              <td style="padding:9px 10px;text-align:right;font-weight:700;font-size:13px;color:#27ae60;">${f(totalGanProd)}</td>
+              <td style="padding:9px 10px;text-align:right;font-weight:700;font-size:13px;color:#27ae60;">${margenProd}%</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>`;
+
+    el.innerHTML = `
+      <div style="margin-bottom:20px;">${resumenHtml}</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--clr-muted);margin-bottom:8px;padding-top:4px;border-top:1px solid var(--clr-border);">
+        Detalle por Producto
+      </div>
+      ${tablaHtml}
     `;
   },
 
