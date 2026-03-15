@@ -2548,3 +2548,20 @@ tbody tr:hover {
   color: var(--clr-muted);
   font-size: 13px;
 }
+
+/* ==================== REPORTES — LAYOUT & TABS ==================== */
+.rpt-header       { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:0; }
+.rpt-periodo      { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.rpt-periodo-label{ font-size:12px; font-weight:600; color:var(--clr-muted); text-transform:uppercase; letter-spacing:.5px; }
+.rpt-actions      { display:flex; gap:8px; flex-wrap:wrap; }
+
+.rpt-tab-bar { display:flex; gap:4px; background:var(--clr-bg-surface); border-radius:12px; padding:5px; }
+.rpt-tab     { flex:1; padding:9px 14px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; background:transparent; color:var(--clr-muted); transition:all .18s; white-space:nowrap; }
+.rpt-tab:hover  { background:color-mix(in srgb, var(--clr-primary) 10%, transparent); color:var(--clr-primary); }
+.rpt-tab.active { background:var(--clr-primary); color:#fff; box-shadow:0 2px 10px rgba(52,152,219,.35); }
+
+.rpt-panel        { display:none; }
+.rpt-panel.active { display:block; }
+
+.rpt-sub-card  { background:var(--clr-bg-surface); border-radius:12px; padding:16px; }
+.rpt-sub-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--clr-muted); margin-bottom:12px; }
