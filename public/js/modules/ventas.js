@@ -686,6 +686,73 @@ const VentasModule = {
 
   // ==================== SERVICIOS ====================
 
+  _customItemCounter: 0,
+
+  mostrarFormItemNoRegistrado() {
+  const existente = document.getElementById("formItemNoRegistrado");
+  if (existente) { existente.remove(); return; }
+
+  const container = document.getElementById("serviciosEnVenta");
+  if (!container) return;
+
+  const form = document.createElement("div");
+  form.id = "formItemNoRegistrado";
+  form.style.cssText = "background:#fff8e1;border:2px dashed #ffc107;border-radius:8px;padding:14px;margin-bottom:10px";
+  form.innerHTML = `
+    <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+      <div style="flex:2;min-width:160px">
+        <label style="font-size:12px;color:#555;display:block;margin-bottom:4px">Descripción</label>
+        <input id="itemCustomNombre" type="text" placeholder="Ej: Silla no registrada"
+          style="width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px"/>
+      </div>
+      <div style="flex:1;min-width:110px">
+        <label style="font-size:12px;color:#555;display:block;margin-bottom:4px">Precio de venta</label>
+        <input id="itemCustomPrecio" type="number" min="0" step="0.01" placeholder="0.00"
+          style="width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px"/>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="btn btn-primary btn-small"
+          onclick="VentasModule.confirmarItemNoRegistrado()">Agregar</button>
+        <button type="button" class="btn btn-secondary btn-small"
+          onclick="document.getElementById('formItemNoRegistrado').remove()">Cancelar</button>
+      </div>
+    </div>
+  `;
+  container.insertAdjacentElement("beforebegin", form);
+  document.getElementById("itemCustomNombre").focus();
+  },
+
+  confirmarItemNoRegistrado() {
+  const nombre = document.getElementById("itemCustomNombre")?.value.trim();
+  const precio = parseFloat(document.getElementById("itemCustomPrecio")?.value) || 0;
+
+  if (!nombre) {
+    this.mostrarAlerta("Ingresa una descripción para el ítem", "warning");
+    return;
+  }
+
+  this._customItemCounter--;
+  const item = {
+    id: this._customItemCounter,
+    servicio_id: null,
+    nombre,
+    descripcion: "",
+    precio,
+    es_gratuito: false,
+    es_custom: true,
+  };
+
+  this.serviciosEnVenta.push(item);
+  this.renderizarServiciosEnVenta();
+  this.calcularTotales();
+  document.getElementById("formItemNoRegistrado")?.remove();
+  },
+
+  actualizarNombreItemCustom(id, valor) {
+  const item = this.serviciosEnVenta.find((s) => s.id === id);
+  if (item) item.nombre = valor;
+  },
+
   async agregarServicioRapido(servicioId) {
   try {
   const servicio = await API.Servicios.getById(servicioId);
@@ -735,11 +802,17 @@ const VentasModule = {
   container.innerHTML = this.serviciosEnVenta
 .map(
   (servicio) => `
-  <div style="background: ${servicio.es_gratuito ? "#e8f5e9": "#fff3cd"}; padding: 12px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${servicio.es_gratuito ? "#4caf50": "#ffc107"};">
-  <div>
-  <strong>${servicio.nombre}</strong>
+  <div style="background: ${servicio.es_custom ? "#fff8e1" : servicio.es_gratuito ? "#e8f5e9": "#fff3cd"}; padding: 12px; border-radius: 5px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${servicio.es_custom ? "#ff9800" : servicio.es_gratuito ? "#4caf50": "#ffc107"};">
+  <div style="flex:1;margin-right:10px">
+  ${servicio.es_custom
+    ? `<input type="text" value="${servicio.nombre.replace(/"/g, '&quot;')}"
+         style="font-weight:bold;font-size:14px;border:1px solid #ffc107;border-radius:4px;padding:3px 7px;width:100%;max-width:260px"
+         oninput="VentasModule.actualizarNombreItemCustom(${servicio.id}, this.value)"
+         placeholder="Descripción del ítem"/>`
+    : `<strong>${servicio.nombre}</strong>`
+  }
   <br>
-  <small style="color: #555;">${servicio.descripcion || ""}</small>
+  <small style="color: #555;">${servicio.es_custom ? "Ítem no registrado" : (servicio.descripcion || "")}</small>
   </div>
   <div style="display: flex; align-items: center; gap: 15px;">
   ${servicio.es_gratuito
@@ -1035,7 +1108,7 @@ const VentasModule = {
   subtotal: this.calcularSubtotalItem(item),
   })),
   servicios: this.serviciosEnVenta.map((s) => ({
-  servicio_id: s.id,
+  servicio_id: s.es_custom ? null : s.id,
   nombre: s.nombre,
   precio: s.es_gratuito ? 0: parseFloat(s.precio),
   es_gratis: s.es_gratuito,
@@ -1102,6 +1175,7 @@ const VentasModule = {
   limpiarVenta() {
   this.carritoItems = [];
   this.serviciosEnVenta = [];
+  this._customItemCounter = 0;
   this.incluirITBIS = false;
   this.generarFacturaElectronica = false;
   this.metodoPagoActual = "efectivo";
