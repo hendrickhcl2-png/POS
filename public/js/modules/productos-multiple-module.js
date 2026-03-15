@@ -114,13 +114,15 @@ const ProductosMultipleModule = {
 
     const costoTotalCalculado = parseFloat(document.getElementById("loteCostoTotal").value) || 0;
 
+    const registrarGasto = document.getElementById("loteRegistrarGasto").checked;
     const payload = {
       proveedor_id: parseInt(document.getElementById("loteProveedor").value) || null,
       factura_proveedor_numero: document.getElementById("loteFacturaNumero").value.trim() || null,
       factura_proveedor_fecha: document.getElementById("loteFacturaFecha").value || null,
       ncf: document.getElementById("loteNcf").value.trim() || null,
       costo_total_factura: costoTotalCalculado,
-      registrar_como_gasto: document.getElementById("loteRegistrarGasto").checked,
+      registrar_como_gasto: registrarGasto,
+      metodo_pago_gasto: registrarGasto ? (document.getElementById("loteMetodoPago").value || "efectivo") : null,
       productos,
     };
 

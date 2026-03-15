@@ -121,6 +121,7 @@ router.post("/lote", requireAdmin, async (req, res) => {
       ncf,
       costo_total_factura,
       registrar_como_gasto,
+      metodo_pago_gasto,
       productos: items,
     } = req.body;
 
@@ -199,9 +200,9 @@ router.post("/lote", requireAdmin, async (req, res) => {
         : `Compra de inventario (${creados.length} producto(s))`;
 
       await client.query(
-        `INSERT INTO salidas (numero_salida, fecha, concepto, monto, categoria_gasto, beneficiario, ncf)
-         VALUES ($1, CURRENT_DATE, $2, $3, 'Compras de Inventario', $4, $5)`,
-        [numeroSalida, concepto, costoTotal, proveedorNombre, ncf || null],
+        `INSERT INTO salidas (numero_salida, fecha, concepto, monto, categoria_gasto, metodo_pago, beneficiario, ncf)
+         VALUES ($1, CURRENT_DATE, $2, $3, 'Compras de Inventario', $4, $5, $6)`,
+        [numeroSalida, concepto, costoTotal, metodo_pago_gasto || 'efectivo', proveedorNombre, ncf || null],
       );
     }
 
