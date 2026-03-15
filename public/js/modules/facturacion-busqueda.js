@@ -210,13 +210,15 @@ const FacturacionModule = {
   },
 
   actualizarEstadisticas() {
-  // Total facturas
-  const totalFacturas = this.facturas.length;
+  const facturasActivas = this.facturas.filter((f) => f.estado !== "anulada");
+
+  // Total facturas (excluye anuladas)
+  const totalFacturas = facturasActivas.length;
   const totalFacturasEl = document.getElementById("totalFacturas");
   if (totalFacturasEl) totalFacturasEl.textContent = totalFacturas;
 
-  // Total monto
-  const totalMonto = this.facturas.reduce(
+  // Total monto (excluye anuladas)
+  const totalMonto = facturasActivas.reduce(
   (sum, f) => sum + parseFloat(f.total || 0),
   0,
   );
@@ -224,17 +226,19 @@ const FacturacionModule = {
   if (totalMontoEl)
   totalMontoEl.textContent = this.formatCurrency(totalMonto);
 
-  // Facturas pendientes
-  const pendientes = this.facturas.filter(
-  (f) => f.estado === "pendiente",
-  ).length;
+  // Monto crédito
+  const montoCredito = facturasActivas
+  .filter((f) => f.tipo_factura === "credito")
+  .reduce((sum, f) => sum + parseFloat(f.total || 0), 0);
   const pendientesEl = document.getElementById("facturasPendientes");
-  if (pendientesEl) pendientesEl.textContent = pendientes;
+  if (pendientesEl) pendientesEl.textContent = this.formatCurrency(montoCredito);
 
-  // Facturas pagadas
-  const pagadas = this.facturas.filter((f) => f.estado === "pagada").length;
+  // Monto contado
+  const montoContado = facturasActivas
+  .filter((f) => f.tipo_factura === "contado")
+  .reduce((sum, f) => sum + parseFloat(f.total || 0), 0);
   const pagadasEl = document.getElementById("facturasPagadas");
-  if (pagadasEl) pagadasEl.textContent = pagadas;
+  if (pagadasEl) pagadasEl.textContent = this.formatCurrency(montoContado);
   },
 
   // ==================== FILTROS ====================
