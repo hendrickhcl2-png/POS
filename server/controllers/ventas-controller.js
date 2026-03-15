@@ -276,32 +276,15 @@ const VentasController = {
       let tipoFactura = "contado";
       let fechaVencimiento = null;
 
-      // Si tiene cliente, verificar si es a crédito
-      if (cliente_id) {
-        const clienteResult = await client.query(
-          "SELECT limite_credito FROM clientes WHERE id = $1",
-          [cliente_id],
-        );
+      // Si se marca como crédito, configurar la factura como pendiente
+      if (metodo_pago === "credito" || req.body.es_credito === true) {
+        estadoFactura = "pendiente";
+        tipoFactura = "credito";
 
-        if (clienteResult.rows.length > 0) {
-          const cliente = clienteResult.rows[0];
-
-          // Si tiene límite de crédito y se marca como crédito
-          if (
-            cliente.limite_credito &&
-            parseFloat(cliente.limite_credito) > 0
-          ) {
-            if (metodo_pago === "credito" || req.body.es_credito === true) {
-              estadoFactura = "pendiente";
-              tipoFactura = "credito";
-
-              const diasCredito = req.body.dias_credito || 30;
-              const fecha = new Date();
-              fecha.setDate(fecha.getDate() + diasCredito);
-              fechaVencimiento = fecha.toISOString().split("T")[0];
-            }
-          }
-        }
+        const diasCredito = req.body.dias_credito || 30;
+        const fecha = new Date();
+        fecha.setDate(fecha.getDate() + diasCredito);
+        fechaVencimiento = fecha.toISOString().split("T")[0];
       }
 
       // Crear factura
@@ -315,12 +298,17 @@ const VentasController = {
           descuento,
           itbis,
           total,
+          monto_pagado,
+          saldo_pendiente,
           fecha,
           fecha_vencimiento,
           estado,
           tipo_factura,
           venta_id
-        ) VALUES ($1, $2, 'B02', $3, $4, $5, $6, $7, COALESCE($12::date, CURRENT_DATE), $8, $9, $10, $11)
+        ) VALUES ($1, $2, 'B02', $3, $4, $5, $6, $7,
+            CASE WHEN $9 = 'pendiente' THEN 0 ELSE $7 END,
+            CASE WHEN $9 = 'pendiente' THEN $7 ELSE 0 END,
+            COALESCE($12::date, CURRENT_DATE), $8, $9, $10, $11)
         RETURNING *`,
         [
           numeroFactura,
