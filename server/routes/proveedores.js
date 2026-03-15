@@ -82,8 +82,8 @@ router.get("/facturas/listado", async (req, res) => {
 
     const result = await pool.query(`
       SELECT
-        p.factura_proveedor_numero AS numero,
-        p.factura_proveedor_fecha  AS fecha,
+        p.factura_proveedor_numero                          AS numero,
+        TO_CHAR(p.factura_proveedor_fecha, 'YYYY-MM-DD')   AS fecha,
         p.ncf,
         p.proveedor_id,
         pr.nombre                  AS proveedor_nombre,
