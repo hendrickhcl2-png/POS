@@ -578,6 +578,7 @@ const VentasModule = {
   codigo: producto.codigo_barras || producto.imei || `ID-${producto.id}`,
   nombre: producto.nombre,
   precio_unitario: producto.precio_venta,
+  precio_original: producto.precio_venta,
   cantidad: 1,
   stock_disponible: producto.stock_actual,
   descuento: producto.descuento_porcentaje || 0,
@@ -612,6 +613,13 @@ const VentasModule = {
   }
 
   item.cantidad = nuevaCantidad;
+  this.renderizarCarrito();
+  this.calcularTotales();
+  },
+
+  actualizarPrecioItem(index, nuevoPrecio) {
+  if (isNaN(nuevoPrecio) || nuevoPrecio < 0) return;
+  this.carritoItems[index].precio_unitario = nuevoPrecio;
   this.renderizarCarrito();
   this.calcularTotales();
   },
@@ -654,7 +662,18 @@ const VentasModule = {
   <small style="color: #7f8c8d;">Stock: ${item.stock_disponible}</small>
   </div>
   <div style="text-align: right;">
-  <strong>${this.formatCurrency(item.precio_unitario)}</strong>
+  <input
+    type="number"
+    value="${item.precio_unitario}"
+    step="0.01"
+    min="0"
+    onchange="VentasModule.actualizarPrecioItem(${index}, parseFloat(this.value))"
+    style="width:90px;padding:4px 6px;text-align:right;font-weight:bold;border:1px solid #ccc;border-radius:4px;font-size:14px"
+    title="Editar precio de venta"
+  />
+  ${item.precio_unitario < item.precio_original
+    ? `<br><small style="color:#95a5a6;text-decoration:line-through">${this.formatCurrency(item.precio_original)}</small>`
+    : ""}
   </div>
   <div style="text-align: right;">
   <strong style="color: #27ae60; font-size: 18px;">
