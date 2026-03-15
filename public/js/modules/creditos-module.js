@@ -558,7 +558,7 @@ const CreditosModule = {
     overlay.style.cssText = "display:none;padding:20px;";
 
     overlay.innerHTML = `
-      <div style="background:var(--clr-bg);border-radius:12px;width:100%;max-width:${maxWidth};max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+      <div style="background:var(--clr-bg-white);border-radius:12px;width:100%;max-width:${maxWidth};max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--clr-border);">
           <h3 style="margin:0;font-size:16px;color:var(--clr-dark);">${titulo}</h3>
           <button onclick="CreditosModule._cerrarModal('${id}')"

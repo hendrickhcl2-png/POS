@@ -238,6 +238,7 @@ case "proveedores":
       break;
     case "salidas":
       cargarSalidas();
+      actualizarSelectCategoriasGasto();
       break;
     case "configuracion":
       cargarConfiguracion();

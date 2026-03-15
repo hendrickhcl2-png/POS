@@ -3,6 +3,22 @@
 let _salidasData = [];
 let salidaEnEdicion = null;
 
+async function actualizarSelectCategoriasGasto() {
+  const select = document.getElementById("salidaCategoria");
+  if (!select) return;
+  const valorActual = select.value;
+  try {
+    const cats = await window.API.CategoriasGasto.getAll();
+    select.innerHTML = '<option value="">Seleccionar...</option>' +
+      cats.map((c) => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
+    if (valorActual) select.value = valorActual;
+  } catch (e) {
+    // si falla, dejar el select vacío
+  }
+}
+
+window.actualizarSelectCategoriasGasto = actualizarSelectCategoriasGasto;
+
 async function cargarSalidas() {
   try {
     const salidas = await window.API.Salidas.getAll();

@@ -80,7 +80,7 @@ window.detectarImpresoras = async function () {
 
 async function cargarConfiguracion() {
   precargarInfoNegocio();
-  await Promise.all([cargarServiciosConfig(), cargarCategoriasConfig()]);
+  await Promise.all([cargarServiciosConfig(), cargarCategoriasConfig(), cargarCategoriasGastoConfig()]);
 }
 
 async function cargarServiciosConfig() {
@@ -247,6 +247,69 @@ window.eliminarCategoriaConfig = async function (id, nombre, totalProductos) {
     await window.API.Categorias.delete(id);
     mostrarAlerta("Categoría eliminada", "success");
     await cargarCategoriasConfig();
+  } catch (e) {
+    mostrarAlerta("Error al eliminar categoría: " + e.message, "danger");
+  }
+};
+
+// ==================== CATEGORÍAS DE GASTOS ====================
+
+async function cargarCategoriasGastoConfig() {
+  const lista = document.getElementById("listaCategoriasGastoConfig");
+  if (!lista) return;
+  lista.innerHTML = "<p style='color:#95a5a6'>Cargando...</p>";
+  try {
+    const cats = await window.API.CategoriasGasto.getAll();
+    if (cats.length === 0) {
+      lista.innerHTML = "<p class='config-lista-vacia'>No hay categorías de gastos registradas</p>";
+      return;
+    }
+    lista.innerHTML = `
+      <table class="config-tabla">
+        <thead><tr>
+          <th>Nombre</th>
+          <th class="th-acciones-centrado">Acciones</th>
+        </tr></thead>
+        <tbody>
+          ${cats.map((c) => `
+            <tr>
+              <td><strong>${c.nombre}</strong></td>
+              <td class="text-center">
+                <button class="btn btn-danger btn-small" onclick="eliminarCategoriaGastoConfig(${c.id}, '${c.nombre.replace(/'/g, "\\'")}')">Eliminar</button>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>`;
+  } catch (e) {
+    lista.innerHTML = "<p class='config-lista-vacia'>Error al cargar categorías de gastos</p>";
+  }
+}
+
+window.agregarCategoriaGastoConfig = async function () {
+  const nombre = document.getElementById("nuevaCatGastoNombre").value.trim();
+  if (!nombre) {
+    mostrarAlerta("El nombre de la categoría es obligatorio", "warning");
+    return;
+  }
+  try {
+    await window.API.CategoriasGasto.create(nombre);
+    document.getElementById("nuevaCatGastoNombre").value = "";
+    mostrarAlerta("Categoría de gasto agregada", "success");
+    await cargarCategoriasGastoConfig();
+    await actualizarSelectCategoriasGasto();
+  } catch (e) {
+    mostrarAlerta("Error al agregar categoría: " + (e.message || "Error"), "danger");
+  }
+};
+
+window.eliminarCategoriaGastoConfig = async function (id, nombre) {
+  if (!confirm(`¿Eliminar la categoría de gasto "${nombre}"?`)) return;
+  try {
+    await window.API.CategoriasGasto.delete(id);
+    mostrarAlerta("Categoría eliminada", "success");
+    await cargarCategoriasGastoConfig();
+    await actualizarSelectCategoriasGasto();
   } catch (e) {
     mostrarAlerta("Error al eliminar categoría: " + e.message, "danger");
   }

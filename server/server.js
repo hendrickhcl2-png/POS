@@ -41,6 +41,7 @@ const reportesRoutes = require("./routes/reportes");
 const devolucionesRoutes = require("./routes/devoluciones-routes");
 const pagosRoutes = require("./routes/pagos-routes");
 const salidasRoutes = require("./routes/salidas");
+const categoriasGastoRoutes = require("./routes/categorias-gasto");
 const imprimirRoutes = require("./routes/imprimir");
 
 const { requireAuth } = require("./middleware/auth-middleware");
@@ -60,6 +61,7 @@ app.use("/api/reportes", requireAuth, reportesRoutes);
 app.use("/api/devoluciones", requireAuth, devolucionesRoutes);
 app.use("/api/pagos", requireAuth, pagosRoutes);
 app.use("/api/salidas", requireAuth, salidasRoutes);
+app.use("/api/categorias-gasto", requireAuth, categoriasGastoRoutes);
 app.use("/api/imprimir", requireAuth, imprimirRoutes);
 
 // ==================== RUTA RAÍZ ====================
@@ -159,6 +161,23 @@ async function initAuth() {
     await pool.query(`
       ALTER TABLE salidas ADD COLUMN IF NOT EXISTS numero_referencia VARCHAR(100)
     `);
+
+    // Migración: tabla categorías de gasto con valores por defecto
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS categorias_gasto (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(100) UNIQUE NOT NULL
+      )
+    `);
+    const catGastoCount = await pool.query("SELECT COUNT(*) FROM categorias_gasto");
+    if (parseInt(catGastoCount.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO categorias_gasto (nombre) VALUES
+          ('Alquiler'), ('Servicios'), ('Salarios'),
+          ('Compras de Inventario'), ('Mantenimiento'),
+          ('Transporte'), ('Otros')
+      `);
+    }
 
     // Corrección: facturas de ventas a crédito que quedaron como contado/pagada por bug anterior
     const correccionCreditos = await pool.query(`

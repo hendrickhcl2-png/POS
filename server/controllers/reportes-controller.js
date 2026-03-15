@@ -821,7 +821,7 @@ const ReportesController = {
           p.creado_por
         FROM productos p
         LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE p.activo = true
+        WHERE p.activo = true AND p.disponible = true
         ORDER BY p.nombre ASC
       `);
 

@@ -9,5 +9,6 @@ window.API = {
   Proveedores: window.ProveedoresAPI,
   Configuracion: window.ConfiguracionAPI,
   Salidas: window.SalidasAPI,
+  CategoriasGasto: window.CategoriasGastoAPI,
 };
 
