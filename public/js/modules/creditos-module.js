@@ -273,6 +273,13 @@ const CreditosModule = {
       `
       <form id="formCreditoPago" onsubmit="event.preventDefault(); CreditosModule._submitPago();">
         <div class="form-group" style="margin-bottom:16px;">
+          <label style="font-weight:600;display:block;margin-bottom:6px;">Fecha del pago:</label>
+          <input type="date" id="cpFecha"
+            value="${new Date().toISOString().split("T")[0]}"
+            style="width:100%;padding:10px;border:1px solid var(--clr-border);border-radius:8px;font-size:14px;" required />
+        </div>
+
+        <div class="form-group" style="margin-bottom:16px;">
           <label style="font-weight:600;display:block;margin-bottom:6px;">Factura:</label>
           <select id="cpFacturaId" class="form-control" style="width:100%;padding:10px;border:1px solid var(--clr-border);border-radius:8px;font-size:14px;"
             onchange="CreditosModule._onFacturaCambio(this)">
@@ -328,6 +335,7 @@ const CreditosModule = {
     const monto = parseFloat(document.getElementById("cpMonto")?.value || 0);
     const metodo = document.getElementById("cpMetodo")?.value;
     const referencia = document.getElementById("cpReferencia")?.value || "";
+    const fecha = document.getElementById("cpFecha")?.value || "";
 
     if (!facturaId || !monto || monto <= 0) {
       alert("Complete todos los campos requeridos.");
@@ -343,6 +351,7 @@ const CreditosModule = {
         monto,
         metodo_pago: metodo,
         referencia: referencia || null,
+        fecha: fecha || null,
       });
 
       this._cerrarModal("modalCreditoPago");

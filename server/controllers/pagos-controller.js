@@ -22,6 +22,7 @@ const PagosController = {
         referencia,
         numero_cheque,
         notas,
+        fecha,
       } = req.body;
 
       // Validaciones
@@ -89,8 +90,9 @@ const PagosController = {
           banco,
           referencia,
           numero_cheque,
-          notas
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          notas,
+          fecha
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING *`,
         [
           numeroPago,
@@ -110,6 +112,7 @@ const PagosController = {
           referencia || null,
           numero_cheque || null,
           notas || null,
+          fecha || null,
         ],
       );
 
