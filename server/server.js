@@ -152,6 +152,13 @@ async function initAuth() {
     await pool.query(`
       ALTER TABLE detalle_venta ADD COLUMN IF NOT EXISTS imei VARCHAR(50)
     `);
+    // Migración: columnas ncf y numero_referencia en salidas
+    await pool.query(`
+      ALTER TABLE salidas ADD COLUMN IF NOT EXISTS ncf VARCHAR(20)
+    `);
+    await pool.query(`
+      ALTER TABLE salidas ADD COLUMN IF NOT EXISTS numero_referencia VARCHAR(100)
+    `);
 
     // Corrección: facturas de ventas a crédito que quedaron como contado/pagada por bug anterior
     const correccionCreditos = await pool.query(`
