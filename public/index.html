@@ -1,2154 +1,3118 @@
-
 <!doctype html>
 <html lang="es">
   <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fifty Tech SRL</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fifty Tech SRL</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-
-  <!-- LOGIN OVERLAY -->
-  <div id="loginOverlay" class="login-overlay">
-    <div class="login-card">
-      <div class="login-logo">
-        <h2>Fifty Tech SRL</h2>
-        <p>Sistema de Facturación</p>
-      </div>
-      <div class="form-group">
-        <label>Usuario</label>
-        <input type="text" id="loginUsername" placeholder="Usuario" autocomplete="username" />
-      </div>
-      <div class="form-group">
-        <label>Contraseña</label>
-        <input type="password" id="loginPassword" placeholder="Contraseña" autocomplete="current-password" />
-      </div>
-      <button class="btn btn-primary" style="width:100%;" onclick="handleLoginSubmit()">Entrar</button>
-      <p id="loginError" class="login-error"></p>
-    </div>
-  </div>
-
-  <div class="container">
-  <!-- Sidebar Navigation -->
-  <nav class="sidebar">
-  <div class="logo">
-  <h2>Fifty Tech</h2>
-  <p class="logo-subtitulo">Sistema de Facturación</p>
-  </div>
-
-  <!-- Usuario logueado -->
-  <div class="usuario-sidebar">
-    <div class="usuario-sidebar-info">
-      <span class="usuario-sidebar-nombre" id="usuarioNombreSidebar"></span>
-      <span class="usuario-sidebar-rol" id="usuarioRolSidebar"></span>
-    </div>
-    <button class="btn-logout" onclick="Auth.logout()" title="Cerrar sesión">&#x2715;</button>
-  </div>
-
-  <div class="nav-group-label">Ventas</div>
-
-  <div class="nav-item active" onclick="showSection('ventas')">
-    <span class="nav-label">Ventas</span><kbd class="nav-kbd">1</kbd>
-  </div>
-
-  <div class="nav-item" onclick="showSection('creditos')">
-    <span class="nav-label">Créditos</span><kbd class="nav-kbd">2</kbd>
-  </div>
-
-  <div class="nav-item" onclick="showSection('clientes')">
-    <span class="nav-label">Clientes</span><kbd class="nav-kbd">3</kbd>
-  </div>
-
-  <div id="nav-group-inventario" class="nav-group-label">Inventario</div>
-
-  <div id="nav-productos" class="nav-item" onclick="showSection('productos')">
-    <span class="nav-label">Productos</span><kbd class="nav-kbd">4</kbd>
-  </div>
-
-  <div id="nav-proveedores" class="nav-item" onclick="showSection('proveedores')">
-    <span class="nav-label">Proveedores</span>
-  </div>
-
-  <div id="nav-salidas" class="nav-item" onclick="showSection('salidas')">
-    <span class="nav-label">Salidas / Gastos</span>
-  </div>
-
-  <div id="nav-reporte-inventario" class="nav-item" onclick="showSection('reporte-inventario')">
-    <span class="nav-label">Reporte Inventario</span>
-  </div>
-
-  <div id="nav-inventario-vendido" class="nav-item" onclick="showSection('inventario-vendido')">
-    <span class="nav-label">Inventario Vendido</span>
-  </div>
-
-  <div id="nav-group-admin" class="nav-group-label">Admin</div>
-
-  <div id="nav-facturacion" class="nav-item" onclick="showSection('facturacion')">
-    <span class="nav-label">Facturación</span><kbd class="nav-kbd">6</kbd>
-  </div>
-
-  <div class="nav-item" onclick="showSection('reportes')">
-    <span class="nav-label">Reportes</span><kbd class="nav-kbd">5</kbd>
-  </div>
-
-  <div id="nav-configuracion" class="nav-item" onclick="showSection('configuracion')">
-    <span class="nav-label">Configuración</span>
-  </div>
-  </nav>
-
-  <!-- Main Content -->
-  <main class="main-content">
-  <!-- VENTAS SECTION -->
-  <!-- VENTAS SECTION - REEMPLAZAR EN INDEX.HTML -->
-  <section id="ventas" class="section active">
-  <div class="header">
-  <h1>Punto de Venta</h1>
-  <div>
-  <button
-  class="btn btn-warning"
-  onclick="showSection('verificador')"
-  >
-  Verificador de Precios
-  </button>
-  </div>
-  </div>
-
-  <div class="card">
-  <div class="search-bar">
-  <input
-  type="text"
-  id="buscarProductoVenta"
-  placeholder="Buscar por código de barras, IMEI o nombre del producto..."
-  autofocus
-  />
-  <button class="btn btn-primary" onclick="buscarProductoVenta()">
-  Buscar
-  </button>
-  <button class="btn btn-warning" onclick="escanearProductoVenta()" title="Escanear código de barras y agregar al carrito" style="display:flex;align-items:center;gap:6px;">
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="4" height="18"/><rect x="9" y="3" width="2" height="18"/><rect x="13" y="3" width="4" height="18"/><rect x="19" y="3" width="2" height="18"/></svg>
-  Escanear
-  </button>
-  </div>
-
-  <form id="formVenta">
-  <div class="form-group">
-  <label>Cliente (Opcional):</label>
-  <select id="ventaCliente">
-  <option value="">Cliente General</option>
-  </select>
-  </div>
-
-  <div id="fechaRetroactivaContainer" style="margin-bottom:10px;">
-  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9em;color:#856404;">
-  <input type="checkbox" id="activarFechaRetroactiva" onchange="VentasModule.toggleFechaRetroactiva(this.checked)" style="cursor:pointer;">
-  Registrar venta con fecha anterior
-  </label>
-  <div id="fechaRetroactivaPanel" style="display:none;margin-top:8px;padding:10px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;">
-  <label style="font-size:0.85em;font-weight:600;color:#856404;display:block;margin-bottom:4px;">Fecha de la venta:</label>
-  <input type="date" id="fechaVentaRetroactiva" style="width:100%;padding:6px;border:1px solid #ffc107;border-radius:4px;font-size:0.9em;">
-  <small style="color:#856404;display:block;margin-top:4px;">Esta venta no aparecerá en el cuadre de turno de hoy.</small>
-  </div>
-  </div>
-
-  <h4 class="seccion-titulo-simple"> Artículos en la venta</h4>
-  <div class="invoice-items" id="ventaItems">
-  <!-- Items will be added here dynamically -->
-  </div>
-
-  <button
-  type="button"
-  class="btn btn-secondary"
-  onclick="VentasModule.mostrarModalAgregarManual()"
-  >
-  + Agregar Artículo Manual
-  </button>
-
-  <!-- ==================== SERVICIOS ADICIONALES ==================== -->
-  <h4 class="servicios-adicionales-titulo">
-  <span class="servicios-adicionales-label">
-  Servicios Adicionales
-  <small class="servicios-adicionales-hint">
-  (Instalación, protector, configuración, etc.)
-  </small>
-  </span>
-  <button
-  type="button"
-  class="btn btn-success btn-small btn-agregar-servicio"
-  onclick="agregarServicioAVenta()"
-  >
-  Agregar Servicio
-  </button>
-  </h4>
-
-  <!-- Servicios Rápidos (Accesos Directos) -->
-  <div class="servicios-rapidos-contenedor">
-  <p class="servicios-rapidos-label">
-  Servicios Rápidos:
-  </p>
-  <div
-  id="serviciosRapidos"
-  class="servicios-rapidos-lista"
-  >
-  <!-- Se llenarán dinámicamente -->
-  </div>
-  </div>
-
-  <!-- Contenedor de Servicios Agregados -->
-  <div
-  id="serviciosEnVenta"
-  class="servicios-en-venta"
-  >
-  <!-- Los servicios se agregarán aquí dinámicamente -->
-  </div>
-
-  <!-- Nota Informativa -->
-  <div class="servicios-nota-info">
-  <p class="servicios-nota-info-texto">
-  <strong>Tip:</strong> Los servicios marcados con son
-  gratuitos (cortesía). Los servicios pagados se incluyen en el
-  total de la venta.
-  </p>
-  </div>
-  <!-- ==================== FIN SERVICIOS ==================== -->
-
-  <!-- ==================== OPCIONES DE FACTURACIÓN ==================== -->
-  <div class="panel-opciones-facturacion">
-  <h4 class="panel-opciones-facturacion-titulo">
-  Opciones de Facturación
-  </h4>
-
-  <div class="opciones-facturacion-fila">
-  <!-- Checkbox ITBIS -->
-  <label class="opcion-facturacion-label">
-  <input
-  type="checkbox"
-  id="incluirITBIS"
-  class="opcion-facturacion-checkbox"
-  />
-  <div>
-  <strong class="opcion-facturacion-nombre"
-  >Incluir ITBIS (18%)</strong
-  >
-  <br />
-  <small class="opcion-facturacion-descripcion"
-  >Desmarcar si la venta está exenta de ITBIS</small
-  >
-  </div>
-  </label>
-
-  <!-- Checkbox Factura Electrónica -->
-  <label class="opcion-facturacion-label">
-  <input
-  type="checkbox"
-  id="generarFacturaElectronica"
-  class="opcion-facturacion-checkbox"
-  />
-  <div>
-  <strong class="opcion-facturacion-nombre"
-  >Generar Factura Electrónica</strong
-  >
-  <br />
-  <small class="opcion-facturacion-descripcion"
-  >Se abrirá el formulario de facturación después de la
-  venta</small
-  >
-  </div>
-  </label>
-  <!-- ==================== NUEVO: Checkbox Venta a Crédito ==================== -->
-  <label class="opcion-facturacion-label">
-  <input
-  type="checkbox"
-  id="ventaCredito"
-  onchange="VentasModule.toggleCamposCredito()"
-  class="opcion-facturacion-checkbox"
-  />
-  <div>
-  <strong class="opcion-facturacion-nombre"> Venta a Crédito</strong
-  ><br />
-  <small class="opcion-facturacion-descripcion"
-  >Permitir pago a plazos con abonos posteriores</small
-  >
-  </div>
-  </label>
-  </div>
-  </div>
-
-  <!-- ==================== NUEVO: Campos de Crédito (Agregar DESPUÉS de Opciones) ==================== -->
-  <div
-  id="camposCredito"
-  class="panel-credito"
-  >
-  <h4 class="panel-credito-titulo">
-  Configuración de Crédito
-  </h4>
-
-  <div class="credito-campos-grid">
-  <!-- Días de crédito -->
-  <div>
-  <label class="credito-campo-label">Plazo de Crédito:</label>
-  <select
-  id="diasCredito"
-  class="credito-select"
-  >
-  <option value="15">15 días</option>
-  <option value="30" selected>30 días</option>
-  <option value="60">60 días</option>
-  <option value="90">90 días</option>
-  <option value="120">120 días</option>
-  </select>
-  </div>
-
-  <!-- Pago inicial -->
-  <div>
-  <label class="credito-campo-label">Pago Inicial (Opcional):</label>
-  <input
-  type="number"
-  id="pagoInicialCredito"
-  step="0.01"
-  min="0"
-  placeholder="0.00"
-  class="credito-input"
-  />
-  <small class="campo-ayuda"
-  >Dejar en 0 para pagar todo a crédito</small
-  >
-  </div>
-  </div>
-  </div>
-  <!-- ==================== FIN OPCIONES ==================== -->
-
-  <div class="invoice-total-section">
-  <div class="total-row">
-  <span>Subtotal:</span>
-  <span id="ventaSubtotal">$0.00</span>
-  </div>
-  <div class="total-row">
-  <span>ITBIS (18%):</span>
-  <span id="ventaITBIS">$0.00</span>
-  </div>
-  <div class="total-row final">
-  <span>TOTAL:</span>
-  <span id="ventaTotal">$0.00</span>
-  </div>
-  </div>
-
-  <h4 class="seccion-titulo-simple">Método de Pago</h4>
-  <div class="payment-methods">
-  <div
-  class="payment-method active"
-  onclick="selectPaymentMethod('efectivo', this)"
-  >
-  <h4>Efectivo</h4>
-  </div>
-  <div
-  class="payment-method"
-  onclick="selectPaymentMethod('tarjeta', this)"
-  >
-  <h4>Tarjeta</h4>
-  </div>
-  <div
-  class="payment-method"
-  onclick="selectPaymentMethod('transferencia', this)"
-  >
-  <h4>Transferencia</h4>
-  </div>
-  <div
-  class="payment-method"
-  onclick="selectPaymentMethod('mixto', this)"
-  >
-  <h4>Mixto</h4>
-  </div>
-  </div>
-
-  <div id="pagoEfectivo" class="payment-details">
-  <div class="form-row-2">
-  <div class="form-group">
-  <label>Monto Recibido:</label>
-  <input
-  type="number"
-  id="montoRecibido"
-  step="0.01"
-  placeholder="0.00"
-  />
-  </div>
-  <div class="form-group">
-  <label>Cambio:</label>
-  <input
-  type="number"
-  id="cambio"
-  readonly
-  class="input-cambio"
-  />
-  </div>
-  </div>
-  </div>
-
-  <div
-  id="pagoTarjeta"
-  class="payment-details payment-details-oculto"
-  >
-  <div class="form-group">
-  <label>Banco:</label>
-  <select id="bancoTarjeta">
-  <option value="">Seleccione banco</option>
-  <option value="Banreservas">Banreservas</option>
-  <option value="Popular">Banco Popular</option>
-  <option value="BHD León">BHD León</option>
-  <option value="Scotiabank">Scotiabank</option>
-  <option value="López de Haro">López de Haro</option>
-  </select>
-  </div>
-  <div class="form-group">
-  <label>Referencia:</label>
-  <input
-  type="text"
-  id="referenciaTarjeta"
-  placeholder="Número de referencia"
-  />
-  </div>
-  </div>
-
-  <div
-  id="pagoTransferencia"
-  class="payment-details payment-details-oculto"
-  >
-  <div class="form-group">
-  <label>Monto Transferido:</label>
-  <input
-  type="number"
-  id="montoTransferenciaDirecta"
-  step="0.01"
-  placeholder="0.00"
-  />
-  </div>
-  <div class="form-group">
-  <label>Banco:</label>
-  <select id="bancoTransferencia">
-  <option value="">Seleccione banco</option>
-  <option value="Banreservas">Banreservas</option>
-  <option value="Popular">Banco Popular</option>
-  <option value="BHD León">BHD León</option>
-  <option value="Scotiabank">Scotiabank</option>
-  <option value="López de Haro">López de Haro</option>
-  </select>
-  </div>
-  <div class="form-group">
-  <label>Referencia:</label>
-  <input
-  type="text"
-  id="referenciaTransferencia"
-  placeholder="Número de referencia"
-  />
-  </div>
-  </div>
-
-  <div id="pagoMixto" class="payment-details payment-details-oculto">
-  <div class="form-row-3">
-  <div class="form-group">
-  <label>Efectivo:</label>
-  <input
-  type="number"
-  id="montoEfectivo"
-  step="0.01"
-  placeholder="0.00"
-  />
-  </div>
-  <div class="form-group">
-  <label>Tarjeta:</label>
-  <input
-  type="number"
-  id="montoTarjeta"
-  step="0.01"
-  placeholder="0.00"
-  />
-  </div>
-  <div class="form-group">
-  <label>Transferencia:</label>
-  <input
-  type="number"
-  id="montoTransferencia"
-  step="0.01"
-  placeholder="0.00"
-  />
-  </div>
-  </div>
-  </div>
-
-  <div class="venta-acciones">
-  <button type="submit" class="btn btn-success btn-procesar-venta">
-  Procesar Venta
-  </button>
-  <button
-  type="button"
-  class="btn btn-danger"
-  onclick="cancelarVenta()"
-  >
-  Cancelar
-  </button>
-  </div>
-  </form>
-  </div>
-
-  <div class="card">
-  <h3>Historial de Ventas de Hoy</h3>
-  <table id="historialVentas">
-  <thead>
-  <tr>
-  <th>Ticket</th>
-  <th>Hora</th>
-  <th>Cliente</th>
-  <th>Total</th>
-  <th>Método Pago</th>
-  <th>Acciones</th>
-  </tr>
-  </thead>
-  <tbody id="tablaVentasHoy">
-  <tr>
-  <td colspan="6" class="text-center tabla-vacia-mensaje">
-  No hay ventas registradas hoy
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
-  </section>
-
-  <!-- VERIFICADOR DE PRECIOS SECTION -->
-  <section id="verificador" class="section">
-  <div class="header">
-  <h1>Verificador de Precios</h1>
-  </div>
-
-  <div class="card" style="max-width:560px;margin:0 auto;">
-  <div class="search-bar">
-  <input
-  type="text"
-  id="verificadorInput"
-  placeholder="Buscar por código de barras, IMEI o nombre..."
-  autocomplete="off"
-  />
-  <button class="btn btn-primary" onclick="VerificadorModule.buscar()">
-  Buscar
-  </button>
-  <button class="btn btn-warning" onclick="VerificadorModule.escanear()" title="Escanear con lector de código de barras" style="display:flex;align-items:center;gap:6px;">
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="4" height="18"/><rect x="9" y="3" width="2" height="18"/><rect x="13" y="3" width="4" height="18"/><rect x="19" y="3" width="2" height="18"/></svg>
-  Escanear
-  </button>
-  </div>
-  </div>
-
-  <div id="verificadorResultado" style="max-width:560px;margin:20px auto;display:none;"></div>
-  </section>
-
-  <!-- CRÉDITOS SECTION -->
-  <section id="creditos" class="section">
-    <div class="clientes-header">
-      <h2>Créditos</h2>
-      <div class="clientes-acciones">
-        <input
-          type="text"
-          id="filtroCreditos"
-          placeholder="Filtrar por nombre o teléfono..."
-          class="clientes-buscador"
-          oninput="CreditosModule.filtrar(this.value)"
-        />
-        <button class="btn btn-secondary" onclick="CreditosModule.actualizarTabActivo()">
-          Actualizar
+    <!-- LOGIN OVERLAY -->
+    <div id="loginOverlay" class="login-overlay">
+      <div class="login-card">
+        <div class="login-logo">
+          <h2>Fifty Tech SRL</h2>
+          <p>Sistema de Facturación</p>
+        </div>
+        <div class="form-group">
+          <label>Usuario</label>
+          <input
+            type="text"
+            id="loginUsername"
+            placeholder="Usuario"
+            autocomplete="username"
+          />
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input
+            type="password"
+            id="loginPassword"
+            placeholder="Contraseña"
+            autocomplete="current-password"
+          />
+        </div>
+        <button
+          class="btn btn-primary"
+          style="width: 100%"
+          onclick="handleLoginSubmit()"
+        >
+          Entrar
         </button>
+        <p id="loginError" class="login-error"></p>
       </div>
     </div>
 
-    <div class="tabs">
-      <button class="tab active" id="tabCuentasCobrar" onclick="CreditosModule.switchTab('pendientes')">Cuentas por Cobrar</button>
-      <button class="tab" id="tabHistorialPagados" onclick="CreditosModule.switchTab('pagados')">Historial Pagados</button>
-    </div>
-
-    <!-- Tab pendientes -->
-    <div class="tab-content active" id="tabContentPendientes">
-      <!-- Stats bar -->
-      <div id="creditosStats" style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;"></div>
-
-      <div class="card" style="padding:0;overflow:hidden;">
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Teléfono</th>
-              <th style="text-align:center;">Facturas</th>
-              <th style="text-align:right;">Saldo Pendiente</th>
-              <th style="text-align:center;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaClientesCredito">
-            <tr>
-              <td colspan="5" class="text-center tabla-vacia-mensaje">Cargando...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Tab pagados -->
-    <div class="tab-content" id="tabContentPagados">
-      <div id="creditosPagadosStats" style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;"></div>
-
-      <div class="card" style="padding:0;overflow:hidden;">
-        <table>
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Teléfono</th>
-              <th>N° Factura</th>
-              <th style="text-align:right;">Total</th>
-              <th style="text-align:center;">Último Pago</th>
-              <th style="text-align:center;">Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaHistorialPagados">
-            <tr><td colspan="6" class="text-center tabla-vacia-mensaje">Selecciona este tab para cargar</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sección Clientes -->
-  <section id="clientes" class="section">
-    <div class="clientes-header">
-      <h2>Clientes</h2>
-      <div class="clientes-acciones">
-        <input
-          type="text"
-          id="buscarCliente"
-          placeholder="Buscar por nombre, cédula, teléfono..."
-          class="clientes-buscador"
-          oninput="ClientesModule.filtrarLocal(this.value)"
-        />
-        <button id="btnAgregarCliente" class="btn btn-primary">
-          + Nuevo Cliente
-        </button>
-      </div>
-    </div>
-
-    <!-- Stats bar -->
-    <div id="clientesStats" style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;"></div>
-
-    <div class="card" style="padding:0;overflow:hidden;">
-      <table>
-        <thead>
-          <tr>
-            <th>Cliente</th>
-            <th>Contacto</th>
-            <th style="text-align:right;">Saldo</th>
-            <th style="text-align:center;">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tablaClientes">
-          <tr>
-            <td colspan="4" class="text-center tabla-cargando">
-              <div class="tabla-cargando-icono"></div>
-              Cargando clientes...
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- PRODUCTOS SECTION -->
-  <section id="productos" class="section">
-  <div class="header">
-  <h1>Gestión de Productos</h1>
-  </div>
-
-  <div class="card">
-  <h3>Nuevo Producto</h3>
-  <form id="formProducto">
-  <div class="form-row-3">
-  <div class="form-group">
-  <label
-  >Código de Barras: <span class="campo-requerido">*</span></label
-  >
-  <div class="barcode-field-wrapper">
-  <input
-  type="text"
-  id="productoCodigo"
-  required
-  class="barcode-input"
-  placeholder="Escanear o escribir código"
-  />
-  <button
-  type="button"
-  class="btn-barcode-scan"
-  onclick="BarcodeScanner.escanear('productoCodigo')"
-  title="Escanear código de barras"
-  >
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-  <path d="M2 4v3h2V4h3V2H4a2 2 0 0 0-2 2zm3 16H2v-3H0v3a2 2 0 0 0 2 2h3v-2zm16 2h-3v2h3a2 2 0 0 0 2-2v-3h-2v3zM20 2h-3v2h3v3h2V4a2 2 0 0 0-2-2zM7 6h2v12H7zm4 0h1v12h-1zm3 0h1v12h-1zm3 0h2v12h-2z"/>
-  </svg>
-  </button>
-  </div>
-  </div>
-  <div class="form-group">
-  <label>IMEI (Opcional):</label>
-  <input type="text" id="productoIMEI" />
-  </div>
-  <div class="form-group">
-  <label>Categoría:</label>
-  <select id="productoCategoria" onchange="toggleStockPorCategoria()">
-  <option value="">Seleccione una categoría</option>
-  </select>
-  </div>
-  </div>
-  <div class="form-group">
-  <label
-  >Descripción del Producto:
-  <span class="campo-requerido">*</span></label
-  >
-  <input type="text" id="productoNombre" required />
-  </div>
-
-  <!-- ==================== CARACTERÍSTICAS ==================== -->
-  <h4 class="producto-seccion-titulo">
-  <span>Características del Producto</span>
-  <button
-  type="button"
-  class="btn btn-info btn-small"
-  onclick="agregarCaracteristica()"
-  >
-  Agregar Característica
-  </button>
-  </h4>
-
-  <div id="caracteristicasContainer" class="caracteristicas-contenedor">
-  <!-- Las características se agregarán aquí dinámicamente -->
-  </div>
-
-  <div class="caja-info-azul">
-  <p class="caja-info-azul-texto">
-  <strong>Ejemplos:</strong> Batería: 80% | Pantalla:
-  Original | Cámara: Funcionando
-  </p>
-  </div>
-
-  <!-- ==================== COSTOS ==================== -->
-  <h4 class="producto-seccion-titulo">
-  <span>Costos (Desglose opcional)</span>
-  <button
-  type="button"
-  class="btn btn-success btn-small"
-  onclick="agregarLineaCosto()"
-  >
-  Agregar Costo
-  </button>
-  </h4>
-
-  <div id="costosContainer" class="cost-breakdown">
-  <!-- Las líneas de costo se agregarán aquí dinámicamente -->
-  </div>
-
-  <!-- Costo Total (calculado automáticamente) -->
-  <div class="costo-total-fila">
-  <span class="costo-total-etiqueta">COSTO TOTAL:</span>
-  <input
-  type="number"
-  id="productoCosto"
-  step="0.01"
-  readonly
-  class="costo-total-input"
-  />
-  </div>
-
-  <!-- Registrar como gasto -->
-  <div class="caja-disponibilidad" style="margin-top: 10px;">
-  <label class="disponibilidad-label">
-  <input type="checkbox" id="productoRegistrarGasto" class="disponibilidad-checkbox" checked />
-  <div>
-  <strong class="disponibilidad-titulo">Registrar como gasto</strong>
-  <p class="disponibilidad-descripcion">Los costos se registrarán automáticamente como salidas en el módulo de gastos, con el proveedor como beneficiario</p>
-  </div>
-  </label>
-  </div>
-
-  <div class="form-row-2 precios-grid">
-  <div class="form-group">
-  <label
-  >Precio de Venta: <span class="campo-requerido">*</span></label
-  >
-  <input
-  type="number"
-  id="productoPrecio"
-  step="0.01"
-  required
-  />
-  </div>
-  <div class="form-group">
-  <label>Precio Mayoreo:</label>
-  <input type="number" id="productoMayoreo" step="0.01" />
-  </div>
-  </div>
-
-  <!-- ==================== DESCUENTOS ==================== -->
-  <h4 class="seccion-titulo-simple">Descuentos</h4>
-
-  <div class="form-row-2">
-  <div class="form-group">
-  <label>Descuento (%):</label>
-  <input
-  type="number"
-  id="descuentoPorcentaje"
-  step="0.01"
-  min="0"
-  max="100"
-  value="0"
-  />
-  <small class="campo-ayuda"
-  >Ej: 10 para 10% de descuento</small
-  >
-  </div>
-  <div class="form-group">
-  <label>Descuento ($):</label>
-  <input
-  type="number"
-  id="descuentoMonto"
-  step="0.01"
-  min="0"
-  value="0"
-  />
-  <small class="campo-ayuda">Monto fijo de descuento</small>
-  </div>
-  </div>
-
-  <!-- Precio Final con Descuento -->
-  <div class="panel-precio-final">
-  <div class="panel-precio-final-fila">
-  <span class="precio-final-etiqueta">
-  Precio Final:
-  </span>
-  <span
-  id="precioConDescuento"
-  class="precio-final-valor"
-  >
-  $0.00
-  </span>
-  </div>
-  </div>
-
-  <!-- ==================== DISPONIBILIDAD ==================== -->
-  <h4 class="seccion-titulo-simple">Disponibilidad y Stock</h4>
-
-  <div id="seccionStock" class="form-row-3">
-  <div class="form-group">
-  <label>Stock Inicial:</label>
-  <input type="number" id="productoStock" value="0" />
-  </div>
-  <div class="form-group">
-  <label>Stock Mínimo:</label>
-  <input type="number" id="productoStockMin" value="0" />
-  </div>
-  <div class="form-group">
-  <label>Stock Máximo:</label>
-  <input type="number" id="productoStockMax" value="999" />
-  </div>
-  </div>
-
-  <div class="caja-disponibilidad">
-  <label class="disponibilidad-label">
-  <input
-  type="checkbox"
-  id="productoDisponible"
-  checked
-  class="disponibilidad-checkbox"
-  />
-  <div>
-  <strong class="disponibilidad-titulo">
-  Producto Disponible para Venta
-  </strong>
-  <p class="disponibilidad-descripcion">
-  Desmarcar cuando el producto sea vendido o no esté
-  disponible
-  </p>
-  </div>
-  </label>
-  </div>
-
-  <div class="caja-nota-stock">
-  <p class="caja-info-azul-texto">
-  <strong>Nota:</strong> Para productos usados/reparados,
-  cada producto es único. Usa el stock para productos genéricos
-  y la disponibilidad para productos individuales.
-  </p>
-  </div>
-
-  <!-- ==================== PROVEEDOR ==================== -->
-  <h4 class="seccion-titulo-simple">Proveedor</h4>
-
-  <div class="form-row-3">
-  <div class="form-group">
-  <label>Proveedor:</label>
-  <select id="productoProveedor">
-  <option value="">Sin proveedor</option>
-  </select>
-  </div>
-  <div class="form-group">
-  <label>N° Factura del Proveedor:</label>
-  <input type="text" id="productoFacturaProveedorNumero" placeholder="Ej: FAC-0001" />
-  </div>
-  <div class="form-group">
-  <label>Fecha Factura del Proveedor:</label>
-  <input type="date" id="productoFacturaProveedorFecha" />
-  </div>
-  </div>
-  <div class="form-group" style="max-width:260px;">
-  <label>NCF:</label>
-  <input type="text" id="productoNcf" placeholder="Ej: B0100000001" maxlength="20" />
-  </div>
-
-  <button type="submit" class="btn btn-primary">
-  Guardar Producto
-  </button>
-  </form>
-  </div>
-
-  <div class="card">
-  <h3>Lista de Productos</h3>
-  <div class="search-bar">
-  <input
-  type="text"
-  id="buscarProducto"
-  placeholder="Buscar por código, IMEI o nombre..."
-  onkeyup="filtrarProductos()"
-  />
-  </div>
-  <table>
-  <thead>
-  <tr>
-  <th>Código</th>
-  <th>Producto</th>
-  <th>Categoria</th>
-  <th>Precio Venta</th>
-  <th>Stock</th>
-  <th>Estado</th>
-  <th>Acciones</th>
-  </tr>
-  </thead>
-  <tbody id="tablaProductos">
-  <tr>
-  <td colspan="7" class="text-center tabla-vacia-mensaje">
-  No hay productos registrados
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
-  </section>
-
-  <!-- INVENTARIO VENDIDO SECTION -->
-  <section id="inventario-vendido" class="section">
-  <div class="header">
-  <h1>Inventario Vendido</h1>
-  </div>
-
-  <div class="card">
-  <!-- Filtros -->
-  <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px;">
-  <div>
-  <label style="display:block;font-size:13px;font-weight:600;color:#7f8c8d;margin-bottom:4px;">Desde</label>
-  <input type="date" id="ivFechaDesde" style="padding:8px 12px;border:1px solid #ddd;border-radius:5px;">
-  </div>
-  <div>
-  <label style="display:block;font-size:13px;font-weight:600;color:#7f8c8d;margin-bottom:4px;">Hasta</label>
-  <input type="date" id="ivFechaHasta" style="padding:8px 12px;border:1px solid #ddd;border-radius:5px;">
-  </div>
-  <button onclick="InventarioVendidoModule.cargar()" style="background:#3498db;color:white;border:none;padding:9px 20px;border-radius:5px;cursor:pointer;font-weight:600;">Buscar</button>
-  <div style="flex:1;min-width:200px;">
-  <label style="display:block;font-size:13px;font-weight:600;color:#7f8c8d;margin-bottom:4px;">Buscar</label>
-  <input type="text" id="ivBuscador" placeholder="Producto, ticket, cliente, IMEI..." oninput="InventarioVendidoModule.filtrar()" style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:5px;box-sizing:border-box;">
-  </div>
-  </div>
-
-  <!-- Cards resumen -->
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
-  <div style="background:#eaf4fb;border:1px solid #aed6f1;border-radius:8px;padding:16px;text-align:center;">
-  <div style="font-size:13px;color:#7f8c8d;font-weight:600;">Total Ítems Vendidos</div>
-  <div id="ivCardItems" style="font-size:28px;font-weight:bold;color:#2980b9;">0</div>
-  </div>
-  <div style="background:#fef9e7;border:1px solid #f9e79f;border-radius:8px;padding:16px;text-align:center;">
-  <div style="font-size:13px;color:#7f8c8d;font-weight:600;">Total Devueltos</div>
-  <div id="ivCardDevueltos" style="font-size:28px;font-weight:bold;color:#d4ac0d;">0</div>
-  </div>
-  <div style="background:#eafaf1;border:1px solid #a9dfbf;border-radius:8px;padding:16px;text-align:center;">
-  <div style="font-size:13px;color:#7f8c8d;font-weight:600;">Valor Vendido</div>
-  <div id="ivCardValor" style="font-size:28px;font-weight:bold;color:#1e8449;">RD$0.00</div>
-  </div>
-  </div>
-
-  <!-- Tabla -->
-  <div class="tbl-scroll">
-  <table style="width:100%;border-collapse:collapse;">
-  <thead>
-  <tr style="background:#2c3e50;color:white;">
-  <th style="padding:11px 12px;text-align:left;">N° Ticket</th>
-  <th style="padding:11px 12px;text-align:left;">Fecha</th>
-  <th style="padding:11px 12px;text-align:left;">Producto</th>
-  <th style="padding:11px 12px;text-align:center;">Cant. Vendida</th>
-  <th style="padding:11px 12px;text-align:center;">Devuelto</th>
-  <th style="padding:11px 12px;text-align:right;">Precio Unit.</th>
-  <th style="padding:11px 12px;text-align:right;">Subtotal</th>
-  <th style="padding:11px 12px;text-align:left;">Cliente</th>
-  <th style="padding:11px 12px;text-align:left;">Método Pago</th>
-  <th style="padding:11px 12px;text-align:center;">Estado</th>
-  </tr>
-  </thead>
-  <tbody id="ivTbody">
-  <tr><td colspan="10" style="text-align:center;padding:30px;color:#7f8c8d;">Seleccione un período y presione Buscar</td></tr>
-  </tbody>
-  </table>
-  </div>
-  </div>
-  </section>
-
-  <!-- PROVEEDORES SECTION -->
-  <section id="proveedores" class="section">
-  <div class="header">
-  <h1>Gestión de Proveedores</h1>
-  </div>
-
-  <div class="card">
-  <h3>Nuevo Proveedor</h3>
-  <form id="formProveedor">
-  <div class="form-row-2">
-  <div class="form-group">
-  <label
-  >Nombre del Proveedor:
-  <span class="campo-requerido">*</span></label
-  >
-  <input type="text" id="proveedorNombre" required />
-  </div>
-  <div class="form-group">
-  <label>RNC:</label>
-  <input type="text" id="proveedorRNC" />
-  </div>
-  </div>
-  <div class="form-row-3">
-  <div class="form-group">
-  <label>Teléfono:</label>
-  <input type="tel" id="proveedorTelefono" />
-  </div>
-  <div class="form-group">
-  <label>Email:</label>
-  <input type="email" id="proveedorEmail" />
-  </div>
-  <div class="form-group">
-  <label>Contacto:</label>
-  <input type="text" id="proveedorContacto" />
-  </div>
-  </div>
-  <div class="form-group">
-  <label>Dirección:</label>
-  <textarea id="proveedorDireccion" rows="2"></textarea>
-  </div>
-  <div class="form-group">
-  <label>Descripción:</label>
-  <input type="text" id="proveedorDescripcion" placeholder="Ej: Compra de celulares, accesorios..." />
-  </div>
-  <button type="submit" class="btn btn-primary">
-  Guardar Proveedor
-  </button>
-  </form>
-  </div>
-
-  <div class="card">
-  <h3>Lista de Proveedores</h3>
-  <table>
-  <thead>
-  <tr>
-  <th>Código</th>
-  <th>Nombre</th>
-  <th>Descripción</th>
-  <th>Contacto</th>
-  <th>Teléfono</th>
-  <th>Email</th>
-  <th>Acciones</th>
-  </tr>
-  </thead>
-  <tbody id="tablaProveedores">
-  <tr>
-  <td colspan="7" class="text-center tabla-vacia-mensaje">
-  No hay proveedores registrados
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
-  </section>
-
-  <!-- SALIDAS/GASTOS SECTION -->
-  <section id="salidas" class="section">
-  <div class="header">
-  <h1>Salidas y Gastos del Negocio</h1>
-  </div>
-
-  <div class="card">
-  <h3>Registrar Nueva Salida/Gasto</h3>
-  <form id="formSalida">
-  <div class="form-row-2">
-  <div class="form-group">
-  <label>Fecha:</label>
-  <input type="date" id="salidaFecha" required />
-  </div>
-  <div class="form-group">
-  <label>Categoría:</label>
-  <select id="salidaCategoria" required>
-  <option value="">Seleccionar...</option>
-  <option value="Alquiler">Alquiler</option>
-  <option value="Servicios">
-  Servicios (Luz, Agua, Internet)
-  </option>
-  <option value="Salarios">Salarios</option>
-  <option value="Compras">Compras de Inventario</option>
-  <option value="Mantenimiento">Mantenimiento</option>
-  <option value="Transporte">Transporte</option>
-  <option value="Otros">Otros</option>
-  </select>
-  </div>
-  </div>
-  <div class="form-group">
-  <label>Concepto:</label>
-  <input
-  type="text"
-  id="salidaConcepto"
-  required
-  placeholder="Concepto del gasto"
-  />
-  </div>
-  <div class="form-group">
-  <label>Descripción:</label>
-  <textarea
-  id="salidaDescripcion"
-  rows="2"
-  placeholder="Detalle adicional..."
-  ></textarea>
-  </div>
-  <div class="form-row-2">
-  <div class="form-group">
-  <label>Monto: <span class="campo-requerido">*</span></label>
-  <input type="number" id="salidaMonto" step="0.01" required />
-  </div>
-  <div class="form-group">
-  <label>Método de Pago:</label>
-  <select id="salidaMetodoPago">
-  <option value="efectivo">Efectivo</option>
-  <option value="tarjeta">Tarjeta</option>
-  <option value="transferencia">Transferencia</option>
-  <option value="cheque">Cheque</option>
-  </select>
-  </div>
-  </div>
-  <div class="form-row-2">
-  <div class="form-group">
-  <label>Beneficiario:</label>
-  <input type="text" id="salidaBeneficiario" placeholder="Nombre del beneficiario" />
-  </div>
-  <div class="form-group">
-  <label>NCF:</label>
-  <input type="text" id="salidaNcf" placeholder="Ej: B0100000001" maxlength="20" />
-  </div>
-  </div>
-  <button type="submit" class="btn btn-primary">
-  Registrar Salida
-  </button>
-  </form>
-  </div>
-
-  <div class="card">
-  <h3>Historial de Salidas y Gastos</h3>
-  <table>
-  <thead>
-  <tr>
-  <th>Fecha</th>
-  <th>Categoría</th>
-  <th>Concepto</th>
-  <th>Monto</th>
-  <th>Método</th>
-  <th>Beneficiario</th>
-  <th>NCF</th>
-  <th>Acciones</th>
-  </tr>
-  </thead>
-  <tbody id="tablaSalidas">
-  <tr>
-  <td colspan="8" class="text-center tabla-vacia-mensaje">
-  No hay salidas registradas
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
-  </section>
-
-  <!-- ==================== SECCIÓN DE FACTURACIÓN (REEMPLAZAR EN INDEX.HTML) ==================== -->
-
-  <section id="facturacion" class="section">
-  <div class="header">
-  <h1> Facturación</h1>
-  </div>
-
-  <!-- ESTADÍSTICAS RÁPIDAS -->
-  <div class="facturacion-stats-grid">
-  <div class="card stat-card-total-facturas">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">
-  Total Facturas
-  </p>
-  <h2 id="totalFacturas" class="stat-card-valor-grande">
-  0
-  </h2>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-
-  <div class="card stat-card-monto-total">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">
-  Monto Total
-  </p>
-  <h2 id="totalMonto" class="stat-card-valor-mediano">
-  RD$0.00
-  </h2>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-
-  <div class="card stat-card-pendientes">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">
-  Pendientes
-  </p>
-  <h2 id="facturasPendientes" class="stat-card-valor-grande">
-  0
-  </h2>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-
-  <div class="card stat-card-pagadas">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">
-  Pagadas
-  </p>
-  <h2 id="facturasPagadas" class="stat-card-valor-grande">
-  0
-  </h2>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-  </div>
-
-  <!-- FILTROS -->
-  <div class="card">
-  <h3 class="facturacion-busqueda-titulo">
-  Buscar Facturas
-  </h3>
-
-  <!-- FILTROS RÁPIDOS -->
-  <div class="filtros-rapidos-fila">
-  <button
-  type="button"
-  id="filtroHoy"
-  class="btn btn-secondary btn-small"
-  >
-  Hoy
-  </button>
-  <button
-  type="button"
-  id="filtroSemana"
-  class="btn btn-secondary btn-small"
-  >
-  Última Semana
-  </button>
-  <button
-  type="button"
-  id="filtroMes"
-  class="btn btn-secondary btn-small"
-  >
-  Este Mes
-  </button>
-  <button
-  type="button"
-  id="filtroTodo"
-  class="btn btn-secondary btn-small"
-  >
-  Todas
-  </button>
-  </div>
-
-  <!-- FILTROS AVANZADOS -->
-  <form id="formFiltrosFacturas">
-  <div class="filtros-avanzados-grid">
-  <div class="form-group">
-  <label>Fecha Desde:</label>
-  <input
-  type="date"
-  id="filtroFechaDesde"
-  class="form-control"
-  />
-  </div>
-
-  <div class="form-group">
-  <label>Fecha Hasta:</label>
-  <input
-  type="date"
-  id="filtroFechaHasta"
-  class="form-control"
-  />
-  </div>
-
-  <div class="form-group">
-  <label>Cliente:</label>
-  <select id="filtroCliente" class="form-control">
-  <option value="">Todos los clientes</option>
-  </select>
-  </div>
-
-  <div class="form-group">
-  <label>Estado:</label>
-  <select id="filtroEstado" class="form-control">
-  <option value="">Todos los estados</option>
-  <option value="pendiente"> Pendiente</option>
-  <option value="pagada"> Pagada</option>
-  <option value="vencida"> Vencida</option>
-  <option value="anulada"> Anulada</option>
-  </select>
-  </div>
-
-  <div class="form-group">
-  <label>Código / IMEI:</label>
-  <input
-  type="text"
-  id="filtroCodigoProducto"
-  class="form-control"
-  placeholder="Buscar por código o IMEI..."
-  />
-  </div>
-  </div>
-
-  <div class="filtros-acciones-fila">
-  <button type="submit" class="btn btn-primary"> Buscar</button>
-  <button
-  type="button"
-  id="limpiarFiltros"
-  class="btn btn-secondary"
-  >
-  Limpiar
-  </button>
-  </div>
-  </form>
-  </div>
-
-  <!-- TABLA DE FACTURAS -->
-  <div class="card">
-  <div class="facturacion-tabla-header">
-  <h3 class="facturacion-tabla-titulo"> Listado de Facturas</h3>
-  <div id="loaderFacturas" class="loader-facturas">
-  <span class="loader-texto"> Cargando...</span>
-  </div>
-  </div>
-
-  <div class="tabla-scroll-horizontal">
-  <table class="tabla-facturas">
-  <thead>
-  <tr class="tabla-header-oscuro">
-  <th class="th-tabla-izquierda">N° Factura</th>
-  <th class="th-tabla-izquierda">Fecha</th>
-  <th class="th-tabla-izquierda">Cliente</th>
-  <th class="th-tabla-derecha">Total</th>
-  <th class="th-tabla-centro">Tipo</th>
-  <th class="th-tabla-centro">Estado</th>
-  <th class="th-tabla-centro">Acciones</th>
-  </tr>
-  </thead>
-  <tbody id="tablaFacturas">
-  <tr>
-  <td colspan="8" class="td-tabla-vacia">
-  <div class="td-tabla-vacia-icono"></div>
-  <p class="td-tabla-vacia-texto">
-  Cargando facturas...
-  </p>
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
-  </div>
-  </section>
-
-  <!-- REPORTES SECTION -->
-
-  <!-- ==================== SECCIÓN DE REPORTES ==================== -->
-  <!-- ==================== SECCIÓN DE REPORTES CON EXCEL ==================== -->
-  <section id="reportes" class="section">
-  <div class="header">
-  <h1> Reportes y Análisis</h1>
-  </div>
-
-  <!-- FILTROS + BOTÓN EXCEL -->
-  <div class="card">
-  <div class="reportes-filtros-header">
-  <div class="reportes-periodo-grupo">
-  <h3 class="reportes-periodo-titulo">Periodo:</h3>
-  <button
-  id="reporteHoy"
-  class="btn btn-primary periodo-btn active"
-  >
-  Hoy
-  </button>
-  <button id="reporteSemana" class="btn btn-primary periodo-btn">
-  Semana
-  </button>
-  <button id="reporteMes" class="btn btn-primary periodo-btn">
-  Este Mes
-  </button>
-  </div>
-  <button
-  id="btnDescargarExcel"
-  class="btn btn-success btn-excel-principal"
-  onclick="ReportesModule.descargarExcel()"
-  >
-  Descargar Excel
-  </button>
-  <button
-  class="btn btn-primary"
-  onclick="ReportesModule.abrirCuadre()"
-  style="margin-left:8px;"
-  >
-  Cuadre de Turno
-  </button>
-  <button
-  class="btn btn-danger"
-  onclick="ReportesModule.abrirReporteSalidas()"
-  style="margin-left:8px;"
-  >
-  Reporte de Salidas
-  </button>
-  </div>
-  <div id="loaderReportes" class="loader-reportes">
-  <span class="loader-reportes-texto"> Cargando reporte...</span>
-  </div>
-  </div>
-
-  <!-- DESCARGA PERSONALIZADA -->
-  <div class="card card-exportar-personalizado">
-  <h3 class="exportar-personalizado-titulo">
-  Exportar Rango Personalizado
-  </h3>
-  <div class="exportar-personalizado-fila">
-  <div class="form-group form-group-inline">
-  <label class="exportar-fecha-label">Fecha Desde:</label>
-  <input
-  type="date"
-  id="excelFechaDesde"
-  class="exportar-fecha-input"
-  />
-  </div>
-  <div class="form-group form-group-inline">
-  <label class="exportar-fecha-label">Fecha Hasta:</label>
-  <input
-  type="date"
-  id="excelFechaHasta"
-  class="exportar-fecha-input"
-  />
-  </div>
-  <button
-  class="btn btn-primary btn-excel-personalizado"
-  onclick="ReportesModule.buscarPorRango(
-  document.getElementById('excelFechaDesde').value,
-  document.getElementById('excelFechaHasta').value
-  )"
-  >
-  Buscar
-  </button>
-  <button
-  id="btnDescargarExcelPersonalizado"
-  class="btn btn-success btn-excel-personalizado"
-  onclick="ReportesModule.descargarExcelPersonalizado(
-  document.getElementById('excelFechaDesde').value,
-  document.getElementById('excelFechaHasta').value
-  )"
-  >
-  Descargar Excel
-  </button>
-  </div>
-  <small class="exportar-excel-hint">
-  <strong> Excel con 2 hojas:</strong> Hoja 1 = Detalle productos
-  · Hoja 2 = Resumen y Top 5
-  </small>
-  </div>
-
-  <!-- RESUMEN -->
-  <div class="reportes-stats-grid">
-  <div class="card stat-card-ventas">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">Total Ventas (Neto)</p>
-  <h2 id="reporteTotalVentas" class="stat-card-valor-reportes">RD$0.00</h2>
-  <p id="reporteTotalVentasNota" style="display:none;font-size:11px;opacity:0.78;margin-top:5px;line-height:1.5;"></p>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-
-  <div class="card stat-card-ganancias">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">
-  Ganancias
-  </p>
-  <h2 id="reporteGanancias" class="stat-card-valor-reportes">
-  RD$0.00
-  </h2>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-
-  <div class="card stat-card-costos-operativos">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">
-  Gastos
-  </p>
-  <h2 id="reporteCostosOperativos" class="stat-card-valor-reportes">
-  RD$0.00
-  </h2>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-
-  <div class="card stat-card-cantidad-ventas">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">
-  Cantidad Ventas
-  </p>
-  <h2 id="reporteCantidadVentas" class="stat-card-valor-grande">
-  0
-  </h2>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-
-  <div class="card stat-card-margen">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">Margen</p>
-  <h2 id="reporteMargen" class="stat-card-valor-grande">
-  0%
-  </h2>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-
-  <div class="card stat-card-itbis">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">ITBIS Recaudado</p>
-  <h2 id="reporteITBIS" class="stat-card-valor-itbis">RD$0.00</h2>
-  </div>
-  <div class="stat-card-icono"></div>
-  </div>
-  </div>
-
-  <div id="cardDevolucionesResumen" class="card stat-card-costos-mercancia" style="display:none;">
-  <div class="stat-card-fila">
-  <div>
-  <p class="stat-card-etiqueta">Devoluciones</p>
-  <h2 id="reporteTotalDevoluciones" class="stat-card-valor-reportes">RD$0.00</h2>
-  </div>
-  <div class="stat-card-icono">↩</div>
-  </div>
-  </div>
-  </div>
-
-  <!-- GRAFICO FINANCIERO -->
-  <div class="card">
-  <h3 class="card-reporte-titulo">
-  Distribucion Financiera
-  </h3>
-  <div id="topProductosVendidos"></div>
-  </div>
-
-  <!-- MÉTODOS PAGO -->
-  <div class="card">
-  <h3 class="card-reporte-titulo">
-  Distribución por Método de Pago
-  </h3>
-  <div id="metodosPagoChart"></div>
-  </div>
-
-  <!-- DETALLE VENTAS -->
-  <div class="card">
-  <h3 class="card-reporte-titulo">Detalle de Ventas</h3>
-  <div class="tabla-scroll-horizontal">
-  <table class="tabla-facturas">
-  <thead>
-  <tr class="tabla-header-oscuro">
-  <th class="th-tabla-izquierda">Ticket</th>
-  <th class="th-tabla-izquierda">Fecha</th>
-  <th class="th-tabla-izquierda">Hora</th>
-  <th class="th-tabla-izquierda">Cliente</th>
-  <th class="th-tabla-derecha">Subtotal</th>
-  <th class="th-tabla-derecha">Total</th>
-  <th class="th-tabla-izquierda">Método</th>
-  </tr>
-  </thead>
-  <tbody id="tablaReporteVentas">
-  <tr>
-  <td colspan="7" class="td-tabla-vacia">
-  <div class="td-tabla-vacia-icono"></div>
-  <p>Cargando reporte...</p>
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  </div>
-  </div>
-
-  <!-- DEVOLUCIONES DEL PERÍODO -->
-  <div id="cardDevoluciones" class="card" style="display:none; border-left:4px solid var(--clr-danger);">
-  <h3 class="card-reporte-titulo" style="color:var(--clr-danger);">↩ Devoluciones del Período</h3>
-  <div class="tabla-scroll-horizontal">
-  <table class="tabla-facturas">
-  <thead>
-  <tr class="tabla-header-oscuro">
-  <th class="th-tabla-izquierda">Devolución</th>
-  <th class="th-tabla-izquierda">Ticket</th>
-  <th class="th-tabla-izquierda">Factura</th>
-  <th class="th-tabla-izquierda">Fecha</th>
-  <th class="th-tabla-izquierda">Cliente</th>
-  <th class="th-tabla-izquierda">Motivo</th>
-  <th class="th-tabla-derecha">Monto Devuelto</th>
-  </tr>
-  </thead>
-  <tbody id="tablaReporteDevoluciones"></tbody>
-  </table>
-  </div>
-  </div>
-  </section>
-
-  <!-- REPORTE INVENTARIO SECTION -->
-  <section id="reporte-inventario" class="section">
-  <div class="header">
-    <h1>Reporte de Inventario</h1>
-    <button id="invReporteBtnExportar" class="btn btn-success">Exportar CSV</button>
-  </div>
-
-  <!-- Resumen -->
-  <div class="inv-resumen-grid">
-    <div class="card inv-stat-card">
-      <span class="inv-stat-label">Costo Total del Inventario</span>
-      <span id="invResumenCostoTotal" class="inv-stat-valor">$0.00</span>
-    </div>
-    <div class="card inv-stat-card">
-      <span class="inv-stat-label">Total de Productos</span>
-      <span id="invResumenTotalProductos" class="inv-stat-valor">0</span>
-    </div>
-    <div class="card inv-stat-card">
-      <span class="inv-stat-label">Unidades en Stock</span>
-      <span id="invResumenUnidades" class="inv-stat-valor">0</span>
-    </div>
-    <div class="card inv-stat-card">
-      <span class="inv-stat-label">Valor Total de Venta</span>
-      <span id="invResumenValorVenta" class="inv-stat-valor">$0.00</span>
-    </div>
-    <div class="card inv-stat-card">
-      <span class="inv-stat-label">Ganancia Potencial</span>
-      <span id="invResumenGanancia" class="inv-stat-valor">$0.00</span>
-    </div>
-  </div>
-
-  <!-- Filtros -->
-  <div class="card" style="margin-bottom:1rem">
-    <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
-      <div class="form-group" style="flex:1;min-width:200px;margin:0">
-        <label>Buscar:</label>
-        <input type="text" id="invReporteBusqueda" placeholder="Nombre, código, IMEI..." />
-      </div>
-      <div class="form-group" style="flex:1;min-width:180px;margin:0">
-        <label>Categoría:</label>
-        <select id="invReporteCategoria">
-          <option value="">Todas las categorías</option>
-        </select>
-      </div>
-      <button class="btn btn-primary" onclick="ReporteInventarioModule.cargar()">Actualizar</button>
-    </div>
-  </div>
-
-  <!-- Loader -->
-  <div id="invReporteLoader" style="display:none;justify-content:center;align-items:center;padding:3rem">
-    <span class="loader-reportes-texto">Cargando inventario...</span>
-  </div>
-
-  <!-- Tabla -->
-  <div id="invReporteTablaWrap" class="card" style="padding:0;overflow:hidden">
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border)">
-      <h3 style="margin:0">Productos</h3>
-      <span id="invReporteConteo" style="font-size:0.85rem;color:var(--text-muted)"></span>
-    </div>
-    <div style="overflow-x:auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Código / IMEI</th>
-            <th>Descripción</th>
-            <th>Costo Total</th>
-            <th>Precio Venta</th>
-            <th>Disponible</th>
-            <th>Cantidad</th>
-            <th>Agregado por</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="invReporteTbody">
-          <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">Cargando...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  </section>
-
-  <!-- CONFIGURACIÓN SECTION -->
-  <section id="configuracion" class="section">
-  <div class="header">
-  <h1> Configuración del Sistema</h1>
-  </div>
-
-  <div class="card">
-  <h3>Información del Negocio</h3>
-  <form id="formConfiguracion">
-  <table class="config-info-tabla">
-  <tbody>
-  <tr>
-  <th>Nombre del Negocio</th>
-  <td><input type="text" id="configNombre" class="form-control" /></td>
-  </tr>
-  <tr>
-  <th>RNC</th>
-  <td><input type="text" id="configRNC" class="form-control" placeholder="000-000000-0" /></td>
-  </tr>
-  <tr>
-  <th>Teléfono</th>
-  <td><input type="tel" id="configTelefono" class="form-control" placeholder="(809) 000-0000" /></td>
-  </tr>
-  <tr>
-  <th>Email</th>
-  <td><input type="email" id="configEmail" class="form-control" placeholder="correo@negocio.com" /></td>
-  </tr>
-  <tr>
-  <th>Dirección</th>
-  <td><textarea id="configDireccion" class="form-control" rows="2" placeholder="Dirección del negocio..."></textarea></td>
-  </tr>
-  <tr>
-  <th>Impresora Térmica</th>
-  <td style="display:flex;gap:8px;align-items:center;">
-    <input type="text" id="configImpresora" class="form-control" placeholder="Nombre exacto de la impresora" style="flex:1;" />
-    <button type="button" class="btn btn-secondary" onclick="detectarImpresoras()" style="white-space:nowrap;">Detectar</button>
-  </td>
-  </tr>
-  </tbody>
-  </table>
-  <div style="margin-top:16px;">
-  <button type="submit" class="btn btn-primary">Guardar</button>
-  </div>
-  </form>
-  </div>
-
-  <div class="card">
-  <h3>Servicios Adicionales</h3>
-  <!-- Inline add form -->
-  <div class="config-add-form">
-    <div class="form-row-3">
-      <div class="form-group mb-0">
-        <label>Nombre del Servicio: <span class="campo-requerido">*</span></label>
-        <input type="text" id="nuevoServicioNombre" placeholder="Ej: Instalación de protector" />
-      </div>
-      <div class="form-group mb-0">
-        <label>Precio (RD$):</label>
-        <input type="number" id="nuevoServicioPrecio" step="0.01" min="0" value="0" placeholder="0.00" />
-      </div>
-      <div class="form-group mb-0">
-        <label>Tipo:</label>
-        <select id="nuevoServicioTipo">
-          <option value="pagado">Pagado</option>
-          <option value="gratuito">Gratuito (Cortesía)</option>
-        </select>
-      </div>
-    </div>
-    <button type="button" class="btn btn-success" onclick="agregarServicioConfig()">Agregar Servicio</button>
-  </div>
-  <div id="listaServiciosConfig"></div>
-  </div>
-
-  <div class="card">
-  <h3>Categorías de Productos</h3>
-  <div class="config-add-form">
-    <div class="form-row-2">
-      <div class="form-group mb-0">
-        <label>Nombre de Categoría: <span class="campo-requerido">*</span></label>
-        <input type="text" id="nuevaCatNombre" placeholder="Ej: Celulares" />
-      </div>
-      <div class="form-group mb-0">
-        <label>Descripción (opcional):</label>
-        <input type="text" id="nuevaCatDescripcion" placeholder="Descripción breve..." />
-      </div>
-    </div>
-    <button type="button" class="btn btn-success" onclick="agregarCategoriaConfig()">Agregar Categoría</button>
-  </div>
-  <div id="listaCategoriasConfig"></div>
-  </div>
-
-  <!-- Gestión de Usuarios (solo admin) -->
-  <div class="card" id="tabUsuarios">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h3 style="margin:0;">Usuarios del Sistema</h3>
-      <button class="btn btn-success btn-small" onclick="UsuariosModule.mostrarModal()">+ Nuevo Usuario</button>
-    </div>
-    <div id="tablaUsuariosContainer">
-      <p style="color:var(--clr-muted);font-size:14px;">Cargando usuarios...</p>
-    </div>
-  </div>
-  </section>
-
-  <!-- Modal Detalle de Producto -->
-  <div class="modal" id="modalDetalleProducto">
-  <div class="modal-content">
-  <div class="modal-header">
-  <h2>Detalle del Producto</h2>
-  <span
-  class="close-modal"
-  onclick="cerrarModal('modalDetalleProducto')"
-  >&times;</span
-  >
-  </div>
-  <div id="detalleProductoContent">
-  <!-- Se llenará dinámicamente -->
-  </div>
-  </div>
-  </div>
-  </main>
-  </div>
-
-  <div id="modales-container"></div>
-  <!-- Modal de usuario -->
-  <div class="modal" id="modalUsuario">
-    <div class="modal-content" style="max-width:420px;">
-      <div class="modal-header">
-        <h2 id="tituloModalUsuario">Nuevo Usuario</h2>
-        <span class="close-modal" onclick="cerrarModal('modalUsuario')">&times;</span>
-      </div>
-      <div class="modal-body">
-        <input type="hidden" id="usuarioId" />
-        <div class="form-group">
-          <label>Nombre de usuario <span class="campo-requerido">*</span></label>
-          <input type="text" id="usuarioUsername" placeholder="Ej: maria" />
+    <div class="container">
+      <!-- Sidebar Navigation -->
+      <nav class="sidebar">
+        <div class="logo">
+          <h2>Fifty Tech</h2>
+          <p class="logo-subtitulo">Sistema de Facturación</p>
         </div>
-        <div class="form-group">
-          <label>Nombre completo</label>
-          <input type="text" id="usuarioNombre" placeholder="Ej: María García" />
-        </div>
-        <div class="form-group">
-          <label>Contraseña <span class="campo-requerido">*</span> <small id="usuarioPasswordHint" style="color:var(--clr-muted);">(requerida)</small></label>
-          <input type="password" id="usuarioPassword" placeholder="Contraseña" />
-        </div>
-        <div class="form-group">
-          <label>Rol <span class="campo-requerido">*</span></label>
-          <select id="usuarioRol">
-            <option value="cajero">Cajero</option>
-            <option value="admin">Administrador</option>
-          </select>
-        </div>
-        <div class="form-group" id="usuarioActivoGroup" style="display:none;">
-          <label>
-            <input type="checkbox" id="usuarioActivo" checked /> Usuario activo
-          </label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="cerrarModal('modalUsuario')">Cancelar</button>
-        <button class="btn btn-primary" onclick="UsuariosModule.guardar()">Guardar</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Modal Cuadre de Turno -->
-  <div class="modal" id="modalCuadre">
-    <div class="modal-content" style="max-width:900px;max-height:90vh;overflow-y:auto;">
-      <div class="modal-header">
-        <h2>Cuadre de Turno</h2>
-        <span class="close-modal" onclick="cerrarModal('modalCuadre')">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-          <div class="form-group" style="margin:0;">
-            <label>Fecha</label>
-            <input type="date" id="cuadreFecha" style="width:160px;" />
+        <!-- Usuario logueado -->
+        <div class="usuario-sidebar">
+          <div class="usuario-sidebar-info">
+            <span
+              class="usuario-sidebar-nombre"
+              id="usuarioNombreSidebar"
+            ></span>
+            <span class="usuario-sidebar-rol" id="usuarioRolSidebar"></span>
           </div>
-          <div class="form-group" style="margin:0;">
-            <label>Fondo de Caja (RD$)</label>
-            <input type="number" id="cuadreFondo" value="0" min="0" style="width:140px;" />
-          </div>
-          <button class="btn btn-primary" onclick="ReportesModule.cargarCuadre()">Consultar</button>
-          <button class="btn btn-success" id="btnCuadreExcel" onclick="ReportesModule.descargarCuadreExcel()" style="display:none;">
-            Descargar Excel
-          </button>
-          <button class="btn btn-secondary" id="btnCuadrePrint" onclick="ReportesModule.imprimirCuadre()" style="display:none;">
-            Imprimir Térmica
-          </button>
-        </div>
-        <div id="cuadreLoader" style="display:none;text-align:center;padding:20px;color:var(--clr-muted);">Cargando cuadre...</div>
-        <div id="cuadreContenido" style="display:none;">
-
-          <!-- Resumen superior -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
-            <div class="card" style="padding:14px;text-align:center;">
-              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;">Ventas (neto)</div>
-              <div id="cVentasNeto" style="font-size:22px;font-weight:700;color:var(--clr-primary);">RD$0</div>
-            </div>
-            <div class="card" style="padding:14px;text-align:center;">
-              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;">Ganancia</div>
-              <div id="cGanancia" style="font-size:22px;font-weight:700;color:var(--clr-success);">RD$0</div>
-            </div>
-            <div class="card" style="padding:14px;text-align:center;">
-              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;">Efectivo en Caja</div>
-              <div id="cEfectivoCaja" style="font-size:22px;font-weight:700;color:var(--clr-warning);">RD$0</div>
-            </div>
-            <div class="card" style="padding:14px;text-align:center;">
-              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;">Ventas</div>
-              <div id="cCantidadVentas" style="font-size:22px;font-weight:700;">0</div>
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-            <!-- Dinero en caja -->
-            <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Dinero en Caja</h4>
-              <table style="width:100%;font-size:13px;">
-                <tr><td>Fondo de Caja</td><td id="cFondoCaja" style="text-align:right;"></td></tr>
-                <tr><td>+ Ventas Efectivo</td><td id="cVentasEfectivo" style="text-align:right;color:var(--clr-success);"></td></tr>
-                <tr><td>+ Abonos Efectivo</td><td id="cAbonos" style="text-align:right;color:var(--clr-success);"></td></tr>
-                <tr><td>- Salidas</td><td id="cSalidas" style="text-align:right;color:var(--clr-danger);"></td></tr>
-                <tr><td>- Dev. Efectivo</td><td id="cDevEfectivo" style="text-align:right;color:var(--clr-danger);"></td></tr>
-                <tr style="font-weight:700;border-top:2px solid #ccc;">
-                  <td>= Efectivo en Caja</td>
-                  <td id="cEfectivoCaja2" style="text-align:right;color:var(--clr-warning);"></td>
-                </tr>
-              </table>
-            </div>
-
-            <!-- Ventas por método -->
-            <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Ventas por Método</h4>
-              <table style="width:100%;font-size:13px;">
-                <tr><td>Efectivo</td><td id="cMetEfectivo" style="text-align:right;"></td></tr>
-                <tr><td>Tarjeta</td><td id="cMetTarjeta" style="text-align:right;"></td></tr>
-                <tr><td>Transferencia</td><td id="cMetTransferencia" style="text-align:right;"></td></tr>
-                <tr><td>Crédito</td><td id="cMetCredito" style="text-align:right;"></td></tr>
-                <tr><td>Cheque</td><td id="cMetCheque" style="text-align:right;"></td></tr>
-                <tr><td style="color:var(--clr-danger);">Dev. de Ventas</td><td id="cDevoluciones" style="text-align:right;color:var(--clr-danger);"></td></tr>
-                <tr style="font-weight:700;border-top:2px solid #ccc;">
-                  <td>Total Ventas</td>
-                  <td id="cTotalVentas" style="text-align:right;"></td>
-                </tr>
-              </table>
-            </div>
-          </div>
-
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-            <!-- Ventas por categoría -->
-            <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Ventas por Depto</h4>
-              <table style="width:100%;font-size:13px;" id="cuadreCategorias"></table>
-            </div>
-
-            <!-- Ingresos contado -->
-            <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Ingresos Contado</h4>
-              <table style="width:100%;font-size:13px;">
-                <tr><td>Ventas Efectivo</td><td id="cIngEfectivo" style="text-align:right;"></td></tr>
-                <tr><td>Pagos Clientes</td><td id="cIngPagos" style="text-align:right;"></td></tr>
-                <tr><td>Ventas Transferencia</td><td id="cIngTransferencia" style="text-align:right;"></td></tr>
-                <tr><td style="color:var(--clr-danger);">Abonos (Dev. ef.)</td><td id="cIngDevEf" style="text-align:right;color:var(--clr-danger);"></td></tr>
-                <tr><td style="color:var(--clr-danger);">Dev. Transferencia</td><td id="cIngDevTra" style="text-align:right;color:var(--clr-danger);"></td></tr>
-                <tr style="font-weight:700;border-top:2px solid #ccc;">
-                  <td>Total Ingresos</td>
-                  <td id="cTotalIngresos" style="text-align:right;"></td>
-                </tr>
-              </table>
-            </div>
-          </div>
-
-          <!-- Salidas -->
-          <div class="card" style="padding:14px;margin-bottom:16px;" id="cuadreSalidasCard">
-            <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Salidas</h4>
-            <table style="width:100%;font-size:13px;" id="cuadreSalidasTabla"></table>
-          </div>
-
-          <!-- Pagos de crédito -->
-          <div class="card" style="padding:14px;margin-bottom:16px;" id="cuadrePagosCard">
-            <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Pagos de Créditos</h4>
-            <table style="width:100%;font-size:13px;" id="cuadrePagosTabla"></table>
-          </div>
-
-          <!-- Devoluciones -->
-          <div class="card" style="padding:14px;" id="cuadreDevCard">
-            <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Devoluciones</h4>
-            <div id="cuadreDevoluciones" style="font-size:13px;"></div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Reporte de Salidas -->
-  <div class="modal" id="modalReporteSalidas">
-    <div class="modal-content" style="max-width:960px;max-height:90vh;overflow-y:auto;">
-      <div class="modal-header">
-        <h2>Reporte de Salidas</h2>
-        <span class="close-modal" onclick="cerrarModal('modalReporteSalidas')">&times;</span>
-      </div>
-      <div class="modal-body">
-        <!-- Filtros -->
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
-          <div class="form-group" style="margin:0;">
-            <label>Fecha desde</label>
-            <input type="date" id="salidasDesde" style="width:160px;" />
-          </div>
-          <div class="form-group" style="margin:0;">
-            <label>Fecha hasta</label>
-            <input type="date" id="salidasHasta" style="width:160px;" />
-          </div>
-          <button class="btn btn-primary" onclick="ReportesModule.cargarReporteSalidas()">Consultar</button>
-          <button class="btn btn-success" id="btnSalidasExcel" onclick="ReportesModule.descargarSalidasExcel()" style="display:none;">
-            Descargar Excel
+          <button
+            class="btn-logout"
+            onclick="Auth.logout()"
+            title="Cerrar sesión"
+          >
+            &#x2715;
           </button>
         </div>
 
-        <div id="salidasLoader" style="display:none;text-align:center;padding:20px;color:var(--clr-muted);">Cargando reporte...</div>
+        <div class="nav-group-label">Ventas</div>
 
-        <div id="salidasContenido" style="display:none;">
+        <div class="nav-item active" onclick="showSection('ventas')">
+          <span class="nav-label">Ventas</span><kbd class="nav-kbd">1</kbd>
+        </div>
 
-          <!-- Tarjetas resumen -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
-            <div class="card" style="padding:14px;text-align:center;">
-              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Total Salidas</div>
-              <div id="sTotalSalidas" style="font-size:22px;font-weight:700;color:var(--clr-danger);">RD$0.00</div>
-            </div>
-            <div class="card" style="padding:14px;text-align:center;">
-              <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Cantidad</div>
-              <div id="sCantidadSalidas" style="font-size:22px;font-weight:700;color:var(--clr-primary);">0</div>
+        <div class="nav-item" onclick="showSection('creditos')">
+          <span class="nav-label">Créditos</span><kbd class="nav-kbd">2</kbd>
+        </div>
+
+        <div class="nav-item" onclick="showSection('clientes')">
+          <span class="nav-label">Clientes</span><kbd class="nav-kbd">3</kbd>
+        </div>
+
+        <div id="nav-group-inventario" class="nav-group-label">Inventario</div>
+
+        <div
+          id="nav-productos"
+          class="nav-item"
+          onclick="showSection('productos')"
+        >
+          <span class="nav-label">Productos</span><kbd class="nav-kbd">4</kbd>
+        </div>
+
+        <div
+          id="nav-proveedores"
+          class="nav-item"
+          onclick="showSection('proveedores')"
+        >
+          <span class="nav-label">Proveedores</span>
+        </div>
+
+        <div id="nav-salidas" class="nav-item" onclick="showSection('salidas')">
+          <span class="nav-label">Salidas / Gastos</span>
+        </div>
+
+        <div
+          id="nav-reporte-inventario"
+          class="nav-item"
+          onclick="showSection('reporte-inventario')"
+        >
+          <span class="nav-label">Reporte Inventario</span>
+        </div>
+
+        <div
+          id="nav-inventario-vendido"
+          class="nav-item"
+          onclick="showSection('inventario-vendido')"
+        >
+          <span class="nav-label">Inventario Vendido</span>
+        </div>
+
+        <div id="nav-group-admin" class="nav-group-label">Admin</div>
+
+        <div
+          id="nav-facturacion"
+          class="nav-item"
+          onclick="showSection('facturacion')"
+        >
+          <span class="nav-label">Facturación</span><kbd class="nav-kbd">6</kbd>
+        </div>
+
+        <div class="nav-item" onclick="showSection('reportes')">
+          <span class="nav-label">Reportes</span><kbd class="nav-kbd">5</kbd>
+        </div>
+
+        <div
+          id="nav-configuracion"
+          class="nav-item"
+          onclick="showSection('configuracion')"
+        >
+          <span class="nav-label">Configuración</span>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- VENTAS SECTION -->
+        <!-- VENTAS SECTION - REEMPLAZAR EN INDEX.HTML -->
+        <section id="ventas" class="section active">
+          <div class="header">
+            <h1>Punto de Venta</h1>
+            <div>
+              <button
+                class="btn btn-warning"
+                onclick="showSection('verificador')"
+              >
+                Verificador de Precios
+              </button>
             </div>
           </div>
 
-          <!-- Gráficas -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-            <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Por Categoría</h4>
-              <div id="salidasPorCategoria"></div>
+          <div class="card">
+            <div class="search-bar">
+              <input
+                type="text"
+                id="buscarProductoVenta"
+                placeholder="Buscar por código de barras, IMEI o nombre del producto..."
+                autofocus
+              />
+              <button class="btn btn-primary" onclick="buscarProductoVenta()">
+                Buscar
+              </button>
+              <button
+                class="btn btn-warning"
+                onclick="escanearProductoVenta()"
+                title="Escanear código de barras y agregar al carrito"
+                style="display: flex; align-items: center; gap: 6px"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="4" height="18" />
+                  <rect x="9" y="3" width="2" height="18" />
+                  <rect x="13" y="3" width="4" height="18" />
+                  <rect x="19" y="3" width="2" height="18" />
+                </svg>
+                Escanear
+              </button>
             </div>
-            <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Por Método de Pago</h4>
-              <div id="salidasPorMetodo"></div>
+
+            <form id="formVenta">
+              <div class="form-group">
+                <label>Cliente (Opcional):</label>
+                <select id="ventaCliente">
+                  <option value="">Cliente General</option>
+                </select>
+              </div>
+
+              <div id="fechaRetroactivaContainer" style="margin-bottom: 10px">
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    cursor: pointer;
+                    font-size: 0.9em;
+                    color: #856404;
+                  "
+                >
+                  <input
+                    type="checkbox"
+                    id="activarFechaRetroactiva"
+                    onchange="VentasModule.toggleFechaRetroactiva(this.checked)"
+                    style="cursor: pointer"
+                  />
+                  Registrar venta con fecha anterior
+                </label>
+                <div
+                  id="fechaRetroactivaPanel"
+                  style="
+                    display: none;
+                    margin-top: 8px;
+                    padding: 10px;
+                    background: #fff3cd;
+                    border: 1px solid #ffc107;
+                    border-radius: 6px;
+                  "
+                >
+                  <label
+                    style="
+                      font-size: 0.85em;
+                      font-weight: 600;
+                      color: #856404;
+                      display: block;
+                      margin-bottom: 4px;
+                    "
+                    >Fecha de la venta:</label
+                  >
+                  <input
+                    type="date"
+                    id="fechaVentaRetroactiva"
+                    style="
+                      width: 100%;
+                      padding: 6px;
+                      border: 1px solid #ffc107;
+                      border-radius: 4px;
+                      font-size: 0.9em;
+                    "
+                  />
+                  <small style="color: #856404; display: block; margin-top: 4px"
+                    >Esta venta no aparecerá en el cuadre de turno de
+                    hoy.</small
+                  >
+                </div>
+              </div>
+
+              <h4 class="seccion-titulo-simple">Artículos en la venta</h4>
+              <div class="invoice-items" id="ventaItems">
+                <!-- Items will be added here dynamically -->
+              </div>
+
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="VentasModule.mostrarModalAgregarManual()"
+              >
+                + Agregar Artículo Manual
+              </button>
+
+              <!-- ==================== SERVICIOS ADICIONALES ==================== -->
+              <h4 class="servicios-adicionales-titulo">
+                <span class="servicios-adicionales-label">
+                  Servicios Adicionales
+                  <small class="servicios-adicionales-hint">
+                    (Instalación, protector, configuración, etc.)
+                  </small>
+                </span>
+                <button
+                  type="button"
+                  class="btn btn-success btn-small btn-agregar-servicio"
+                  onclick="agregarServicioAVenta()"
+                >
+                  Agregar Servicio
+                </button>
+              </h4>
+
+              <!-- Servicios Rápidos (Accesos Directos) -->
+              <div class="servicios-rapidos-contenedor">
+                <p class="servicios-rapidos-label">Servicios Rápidos:</p>
+                <div id="serviciosRapidos" class="servicios-rapidos-lista">
+                  <!-- Se llenarán dinámicamente -->
+                </div>
+              </div>
+
+              <!-- Contenedor de Servicios Agregados -->
+              <div id="serviciosEnVenta" class="servicios-en-venta">
+                <!-- Los servicios se agregarán aquí dinámicamente -->
+              </div>
+
+              <!-- Nota Informativa -->
+              <div class="servicios-nota-info">
+                <p class="servicios-nota-info-texto">
+                  <strong>Tip:</strong> Los servicios marcados con son gratuitos
+                  (cortesía). Los servicios pagados se incluyen en el total de
+                  la venta.
+                </p>
+              </div>
+              <!-- ==================== FIN SERVICIOS ==================== -->
+
+              <!-- ==================== OPCIONES DE FACTURACIÓN ==================== -->
+              <div class="panel-opciones-facturacion">
+                <h4 class="panel-opciones-facturacion-titulo">
+                  Opciones de Facturación
+                </h4>
+
+                <div class="opciones-facturacion-fila">
+                  <!-- Checkbox ITBIS -->
+                  <label class="opcion-facturacion-label">
+                    <input
+                      type="checkbox"
+                      id="incluirITBIS"
+                      class="opcion-facturacion-checkbox"
+                    />
+                    <div>
+                      <strong class="opcion-facturacion-nombre"
+                        >Incluir ITBIS (18%)</strong
+                      >
+                      <br />
+                      <small class="opcion-facturacion-descripcion"
+                        >Desmarcar si la venta está exenta de ITBIS</small
+                      >
+                    </div>
+                  </label>
+
+                  <!-- Checkbox Factura Electrónica -->
+                  <label class="opcion-facturacion-label">
+                    <input
+                      type="checkbox"
+                      id="generarFacturaElectronica"
+                      class="opcion-facturacion-checkbox"
+                    />
+                    <div>
+                      <strong class="opcion-facturacion-nombre"
+                        >Generar Factura Electrónica</strong
+                      >
+                      <br />
+                      <small class="opcion-facturacion-descripcion"
+                        >Se abrirá el formulario de facturación después de la
+                        venta</small
+                      >
+                    </div>
+                  </label>
+                  <!-- ==================== NUEVO: Checkbox Venta a Crédito ==================== -->
+                  <label class="opcion-facturacion-label">
+                    <input
+                      type="checkbox"
+                      id="ventaCredito"
+                      onchange="VentasModule.toggleCamposCredito()"
+                      class="opcion-facturacion-checkbox"
+                    />
+                    <div>
+                      <strong class="opcion-facturacion-nombre">
+                        Venta a Crédito</strong
+                      ><br />
+                      <small class="opcion-facturacion-descripcion"
+                        >Permitir pago a plazos con abonos posteriores</small
+                      >
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <!-- ==================== NUEVO: Campos de Crédito (Agregar DESPUÉS de Opciones) ==================== -->
+              <div id="camposCredito" class="panel-credito">
+                <h4 class="panel-credito-titulo">Configuración de Crédito</h4>
+
+                <div class="credito-campos-grid">
+                  <!-- Días de crédito -->
+                  <div>
+                    <label class="credito-campo-label">Plazo de Crédito:</label>
+                    <select id="diasCredito" class="credito-select">
+                      <option value="15">15 días</option>
+                      <option value="30" selected>30 días</option>
+                      <option value="60">60 días</option>
+                      <option value="90">90 días</option>
+                      <option value="120">120 días</option>
+                    </select>
+                  </div>
+
+                  <!-- Pago inicial -->
+                  <div>
+                    <label class="credito-campo-label"
+                      >Pago Inicial (Opcional):</label
+                    >
+                    <input
+                      type="number"
+                      id="pagoInicialCredito"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      class="credito-input"
+                    />
+                    <small class="campo-ayuda"
+                      >Dejar en 0 para pagar todo a crédito</small
+                    >
+                  </div>
+                </div>
+              </div>
+              <!-- ==================== FIN OPCIONES ==================== -->
+
+              <div class="invoice-total-section">
+                <div class="total-row">
+                  <span>Subtotal:</span>
+                  <span id="ventaSubtotal">$0.00</span>
+                </div>
+                <div class="total-row">
+                  <span>ITBIS (18%):</span>
+                  <span id="ventaITBIS">$0.00</span>
+                </div>
+                <div class="total-row final">
+                  <span>TOTAL:</span>
+                  <span id="ventaTotal">$0.00</span>
+                </div>
+              </div>
+
+              <h4 class="seccion-titulo-simple">Método de Pago</h4>
+              <div class="payment-methods">
+                <div
+                  class="payment-method active"
+                  onclick="selectPaymentMethod('efectivo', this)"
+                >
+                  <h4>Efectivo</h4>
+                </div>
+                <div
+                  class="payment-method"
+                  onclick="selectPaymentMethod('tarjeta', this)"
+                >
+                  <h4>Tarjeta</h4>
+                </div>
+                <div
+                  class="payment-method"
+                  onclick="selectPaymentMethod('transferencia', this)"
+                >
+                  <h4>Transferencia</h4>
+                </div>
+                <div
+                  class="payment-method"
+                  onclick="selectPaymentMethod('mixto', this)"
+                >
+                  <h4>Mixto</h4>
+                </div>
+              </div>
+
+              <div id="pagoEfectivo" class="payment-details">
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label>Monto Recibido:</label>
+                    <input
+                      type="number"
+                      id="montoRecibido"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Cambio:</label>
+                    <input
+                      type="number"
+                      id="cambio"
+                      readonly
+                      class="input-cambio"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div
+                id="pagoTarjeta"
+                class="payment-details payment-details-oculto"
+              >
+                <div class="form-group">
+                  <label>Banco:</label>
+                  <select id="bancoTarjeta">
+                    <option value="">Seleccione banco</option>
+                    <option value="Banreservas">Banreservas</option>
+                    <option value="Popular">Banco Popular</option>
+                    <option value="BHD León">BHD León</option>
+                    <option value="Scotiabank">Scotiabank</option>
+                    <option value="López de Haro">López de Haro</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Referencia:</label>
+                  <input
+                    type="text"
+                    id="referenciaTarjeta"
+                    placeholder="Número de referencia"
+                  />
+                </div>
+              </div>
+
+              <div
+                id="pagoTransferencia"
+                class="payment-details payment-details-oculto"
+              >
+                <div class="form-group">
+                  <label>Monto Transferido:</label>
+                  <input
+                    type="number"
+                    id="montoTransferenciaDirecta"
+                    step="0.01"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Banco:</label>
+                  <select id="bancoTransferencia">
+                    <option value="">Seleccione banco</option>
+                    <option value="Banreservas">Banreservas</option>
+                    <option value="Popular">Banco Popular</option>
+                    <option value="BHD León">BHD León</option>
+                    <option value="Scotiabank">Scotiabank</option>
+                    <option value="López de Haro">López de Haro</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Referencia:</label>
+                  <input
+                    type="text"
+                    id="referenciaTransferencia"
+                    placeholder="Número de referencia"
+                  />
+                </div>
+              </div>
+
+              <div
+                id="pagoMixto"
+                class="payment-details payment-details-oculto"
+              >
+                <div class="form-row-3">
+                  <div class="form-group">
+                    <label>Efectivo:</label>
+                    <input
+                      type="number"
+                      id="montoEfectivo"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Tarjeta:</label>
+                    <input
+                      type="number"
+                      id="montoTarjeta"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label>Transferencia:</label>
+                    <input
+                      type="number"
+                      id="montoTransferencia"
+                      step="0.01"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div class="venta-acciones">
+                <button
+                  type="submit"
+                  class="btn btn-success btn-procesar-venta"
+                >
+                  Procesar Venta
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  onclick="cancelarVenta()"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Historial de Ventas de Hoy</h3>
+            <table id="historialVentas">
+              <thead>
+                <tr>
+                  <th>Ticket</th>
+                  <th>Hora</th>
+                  <th>Cliente</th>
+                  <th>Total</th>
+                  <th>Método Pago</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaVentasHoy">
+                <tr>
+                  <td colspan="6" class="text-center tabla-vacia-mensaje">
+                    No hay ventas registradas hoy
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- VERIFICADOR DE PRECIOS SECTION -->
+        <section id="verificador" class="section">
+          <div class="header">
+            <h1>Verificador de Precios</h1>
+          </div>
+
+          <div class="card" style="max-width: 560px; margin: 0 auto">
+            <div class="search-bar">
+              <input
+                type="text"
+                id="verificadorInput"
+                placeholder="Buscar por código de barras, IMEI o nombre..."
+                autocomplete="off"
+              />
+              <button
+                class="btn btn-primary"
+                onclick="VerificadorModule.buscar()"
+              >
+                Buscar
+              </button>
+              <button
+                class="btn btn-warning"
+                onclick="VerificadorModule.escanear()"
+                title="Escanear con lector de código de barras"
+                style="display: flex; align-items: center; gap: 6px"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="3" y="3" width="4" height="18" />
+                  <rect x="9" y="3" width="2" height="18" />
+                  <rect x="13" y="3" width="4" height="18" />
+                  <rect x="19" y="3" width="2" height="18" />
+                </svg>
+                Escanear
+              </button>
             </div>
           </div>
 
-          <!-- Tabla detalle -->
-          <div class="card" style="padding:14px;">
-            <h4 style="margin:0 0 10px;border-bottom:1px solid #eee;padding-bottom:6px;">Detalle de Salidas</h4>
-            <div style="overflow-x:auto;">
-              <table style="width:100%;font-size:13px;border-collapse:collapse;">
+          <div
+            id="verificadorResultado"
+            style="max-width: 560px; margin: 20px auto; display: none"
+          ></div>
+        </section>
+
+        <!-- CRÉDITOS SECTION -->
+        <section id="creditos" class="section">
+          <div class="clientes-header">
+            <h2>Créditos</h2>
+            <div class="clientes-acciones">
+              <input
+                type="text"
+                id="filtroCreditos"
+                placeholder="Filtrar por nombre o teléfono..."
+                class="clientes-buscador"
+                oninput="CreditosModule.filtrar(this.value)"
+              />
+              <button
+                class="btn btn-secondary"
+                onclick="CreditosModule.actualizarTabActivo()"
+              >
+                Actualizar
+              </button>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <button
+              class="tab active"
+              id="tabCuentasCobrar"
+              onclick="CreditosModule.switchTab('pendientes')"
+            >
+              Cuentas por Cobrar
+            </button>
+            <button
+              class="tab"
+              id="tabHistorialPagados"
+              onclick="CreditosModule.switchTab('pagados')"
+            >
+              Historial Pagados
+            </button>
+          </div>
+
+          <!-- Tab pendientes -->
+          <div class="tab-content active" id="tabContentPendientes">
+            <!-- Stats bar -->
+            <div
+              id="creditosStats"
+              style="
+                display: flex;
+                gap: 16px;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+              "
+            ></div>
+
+            <div class="card" style="padding: 0; overflow: hidden">
+              <table>
                 <thead>
-                  <tr style="background:var(--clr-primary);color:#fff;">
-                    <th style="padding:8px 10px;text-align:left;">N° Salida</th>
-                    <th style="padding:8px 10px;text-align:left;">Fecha</th>
-                    <th style="padding:8px 10px;text-align:left;">Concepto</th>
-                    <th style="padding:8px 10px;text-align:left;">Descripción</th>
-                    <th style="padding:8px 10px;text-align:right;">Monto</th>
-                    <th style="padding:8px 10px;text-align:left;">Categoría</th>
-                    <th style="padding:8px 10px;text-align:left;">Método</th>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Teléfono</th>
+                    <th style="text-align: center">Facturas</th>
+                    <th style="text-align: right">Saldo Pendiente</th>
+                    <th style="text-align: center">Acciones</th>
                   </tr>
                 </thead>
-                <tbody id="salidasTabla"></tbody>
+                <tbody id="tablaClientesCredito">
+                  <tr>
+                    <td colspan="5" class="text-center tabla-vacia-mensaje">
+                      Cargando...
+                    </td>
+                  </tr>
+                </tbody>
               </table>
             </div>
           </div>
 
+          <!-- Tab pagados -->
+          <div class="tab-content" id="tabContentPagados">
+            <div
+              id="creditosPagadosStats"
+              style="
+                display: flex;
+                gap: 16px;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+              "
+            ></div>
+
+            <div class="card" style="padding: 0; overflow: hidden">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Cliente</th>
+                    <th>Teléfono</th>
+                    <th>N° Factura</th>
+                    <th style="text-align: right">Total</th>
+                    <th style="text-align: center">Último Pago</th>
+                    <th style="text-align: center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaHistorialPagados">
+                  <tr>
+                    <td colspan="6" class="text-center tabla-vacia-mensaje">
+                      Selecciona este tab para cargar
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Sección Clientes -->
+        <section id="clientes" class="section">
+          <div class="clientes-header">
+            <h2>Clientes</h2>
+            <div class="clientes-acciones">
+              <input
+                type="text"
+                id="buscarCliente"
+                placeholder="Buscar por nombre, cédula, teléfono..."
+                class="clientes-buscador"
+                oninput="ClientesModule.filtrarLocal(this.value)"
+              />
+              <button id="btnAgregarCliente" class="btn btn-primary">
+                + Nuevo Cliente
+              </button>
+            </div>
+          </div>
+
+          <!-- Stats bar -->
+          <div
+            id="clientesStats"
+            style="
+              display: flex;
+              gap: 16px;
+              margin-bottom: 20px;
+              flex-wrap: wrap;
+            "
+          ></div>
+
+          <div class="card" style="padding: 0; overflow: hidden">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Contacto</th>
+                  <th style="text-align: right">Saldo</th>
+                  <th style="text-align: center">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaClientes">
+                <tr>
+                  <td colspan="4" class="text-center tabla-cargando">
+                    <div class="tabla-cargando-icono"></div>
+                    Cargando clientes...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- PRODUCTOS SECTION -->
+        <section id="productos" class="section">
+          <div class="header">
+            <h1>Gestión de Productos</h1>
+          </div>
+
+          <div class="card">
+            <h3>Nuevo Producto</h3>
+            <form id="formProducto">
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label
+                    >Código de Barras:
+                    <span class="campo-requerido">*</span></label
+                  >
+                  <div class="barcode-field-wrapper">
+                    <input
+                      type="text"
+                      id="productoCodigo"
+                      required
+                      class="barcode-input"
+                      placeholder="Escanear o escribir código"
+                    />
+                    <button
+                      type="button"
+                      class="btn-barcode-scan"
+                      onclick="BarcodeScanner.escanear('productoCodigo')"
+                      title="Escanear código de barras"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        width="20"
+                        height="20"
+                      >
+                        <path
+                          d="M2 4v3h2V4h3V2H4a2 2 0 0 0-2 2zm3 16H2v-3H0v3a2 2 0 0 0 2 2h3v-2zm16 2h-3v2h3a2 2 0 0 0 2-2v-3h-2v3zM20 2h-3v2h3v3h2V4a2 2 0 0 0-2-2zM7 6h2v12H7zm4 0h1v12h-1zm3 0h1v12h-1zm3 0h2v12h-2z"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>IMEI (Opcional):</label>
+                  <input type="text" id="productoIMEI" />
+                </div>
+                <div class="form-group">
+                  <label>Categoría:</label>
+                  <select
+                    id="productoCategoria"
+                    onchange="toggleStockPorCategoria()"
+                  >
+                    <option value="">Seleccione una categoría</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label
+                  >Descripción del Producto:
+                  <span class="campo-requerido">*</span></label
+                >
+                <input type="text" id="productoNombre" required />
+              </div>
+
+              <!-- ==================== CARACTERÍSTICAS ==================== -->
+              <h4 class="producto-seccion-titulo">
+                <span>Características del Producto</span>
+                <button
+                  type="button"
+                  class="btn btn-info btn-small"
+                  onclick="agregarCaracteristica()"
+                >
+                  Agregar Característica
+                </button>
+              </h4>
+
+              <div
+                id="caracteristicasContainer"
+                class="caracteristicas-contenedor"
+              >
+                <!-- Las características se agregarán aquí dinámicamente -->
+              </div>
+
+              <div class="caja-info-azul">
+                <p class="caja-info-azul-texto">
+                  <strong>Ejemplos:</strong> Batería: 80% | Pantalla: Original |
+                  Cámara: Funcionando
+                </p>
+              </div>
+
+              <!-- ==================== COSTOS ==================== -->
+              <h4 class="producto-seccion-titulo">
+                <span>Costos (Desglose opcional)</span>
+                <button
+                  type="button"
+                  class="btn btn-success btn-small"
+                  onclick="agregarLineaCosto()"
+                >
+                  Agregar Costo
+                </button>
+              </h4>
+
+              <div id="costosContainer" class="cost-breakdown">
+                <!-- Las líneas de costo se agregarán aquí dinámicamente -->
+              </div>
+
+              <!-- Costo Total (calculado automáticamente) -->
+              <div class="costo-total-fila">
+                <span class="costo-total-etiqueta">COSTO TOTAL:</span>
+                <input
+                  type="number"
+                  id="productoCosto"
+                  step="0.01"
+                  readonly
+                  class="costo-total-input"
+                />
+              </div>
+
+              <!-- Registrar como gasto -->
+              <div class="caja-disponibilidad" style="margin-top: 10px">
+                <label class="disponibilidad-label">
+                  <input
+                    type="checkbox"
+                    id="productoRegistrarGasto"
+                    class="disponibilidad-checkbox"
+                    checked
+                  />
+                  <div>
+                    <strong class="disponibilidad-titulo"
+                      >Registrar como gasto</strong
+                    >
+                    <p class="disponibilidad-descripcion">
+                      Los costos se registrarán automáticamente como salidas en
+                      el módulo de gastos, con el proveedor como beneficiario
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <div class="form-row-2 precios-grid">
+                <div class="form-group">
+                  <label
+                    >Precio de Venta:
+                    <span class="campo-requerido">*</span></label
+                  >
+                  <input
+                    type="number"
+                    id="productoPrecio"
+                    step="0.01"
+                    required
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Precio Mayoreo:</label>
+                  <input type="number" id="productoMayoreo" step="0.01" />
+                </div>
+              </div>
+
+              <!-- ==================== DESCUENTOS ==================== -->
+              <h4 class="seccion-titulo-simple">Descuentos</h4>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Descuento (%):</label>
+                  <input
+                    type="number"
+                    id="descuentoPorcentaje"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value="0"
+                  />
+                  <small class="campo-ayuda"
+                    >Ej: 10 para 10% de descuento</small
+                  >
+                </div>
+                <div class="form-group">
+                  <label>Descuento ($):</label>
+                  <input
+                    type="number"
+                    id="descuentoMonto"
+                    step="0.01"
+                    min="0"
+                    value="0"
+                  />
+                  <small class="campo-ayuda">Monto fijo de descuento</small>
+                </div>
+              </div>
+
+              <!-- Precio Final con Descuento -->
+              <div class="panel-precio-final">
+                <div class="panel-precio-final-fila">
+                  <span class="precio-final-etiqueta"> Precio Final: </span>
+                  <span id="precioConDescuento" class="precio-final-valor">
+                    $0.00
+                  </span>
+                </div>
+              </div>
+
+              <!-- ==================== DISPONIBILIDAD ==================== -->
+              <h4 class="seccion-titulo-simple">Disponibilidad y Stock</h4>
+
+              <div id="seccionStock" class="form-row-3">
+                <div class="form-group">
+                  <label>Stock Inicial:</label>
+                  <input type="number" id="productoStock" value="1" />
+                </div>
+                <div class="form-group">
+                  <label>Stock Mínimo:</label>
+                  <input type="number" id="productoStockMin" value="0" />
+                </div>
+                <div class="form-group">
+                  <label>Stock Máximo:</label>
+                  <input type="number" id="productoStockMax" value="999" />
+                </div>
+              </div>
+
+              <div class="caja-disponibilidad">
+                <label class="disponibilidad-label">
+                  <input
+                    type="checkbox"
+                    id="productoDisponible"
+                    checked
+                    class="disponibilidad-checkbox"
+                  />
+                  <div>
+                    <strong class="disponibilidad-titulo">
+                      Producto Disponible para Venta
+                    </strong>
+                    <p class="disponibilidad-descripcion">
+                      Desmarcar cuando el producto sea vendido o no esté
+                      disponible
+                    </p>
+                  </div>
+                </label>
+              </div>
+
+              <div class="caja-nota-stock">
+                <p class="caja-info-azul-texto">
+                  <strong>Nota:</strong> Para productos usados/reparados, cada
+                  producto es único. Usa el stock para productos genéricos y la
+                  disponibilidad para productos individuales.
+                </p>
+              </div>
+
+              <!-- ==================== PROVEEDOR ==================== -->
+              <h4 class="seccion-titulo-simple">Proveedor</h4>
+
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label>Proveedor:</label>
+                  <select id="productoProveedor">
+                    <option value="">Sin proveedor</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>N° Factura del Proveedor:</label>
+                  <input
+                    type="text"
+                    id="productoFacturaProveedorNumero"
+                    placeholder="Ej: FAC-0001"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>Fecha Factura del Proveedor:</label>
+                  <input type="date" id="productoFacturaProveedorFecha" />
+                </div>
+              </div>
+              <div class="form-group" style="max-width: 260px">
+                <label>NCF:</label>
+                <input
+                  type="text"
+                  id="productoNcf"
+                  placeholder="Ej: B0100000001"
+                  maxlength="20"
+                />
+              </div>
+
+              <button type="submit" class="btn btn-primary">
+                Guardar Producto
+              </button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Lista de Productos</h3>
+            <div class="search-bar">
+              <input
+                type="text"
+                id="buscarProducto"
+                placeholder="Buscar por código, IMEI o nombre..."
+                onkeyup="filtrarProductos()"
+              />
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Producto</th>
+                  <th>Categoria</th>
+                  <th>Precio Venta</th>
+                  <th>Stock</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaProductos">
+                <tr>
+                  <td colspan="7" class="text-center tabla-vacia-mensaje">
+                    No hay productos registrados
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- INVENTARIO VENDIDO SECTION -->
+        <section id="inventario-vendido" class="section">
+          <div class="header">
+            <h1>Inventario Vendido</h1>
+          </div>
+
+          <div class="card">
+            <!-- Filtros -->
+            <div
+              style="
+                display: flex;
+                gap: 12px;
+                align-items: flex-end;
+                flex-wrap: wrap;
+                margin-bottom: 20px;
+              "
+            >
+              <div>
+                <label
+                  style="
+                    display: block;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #7f8c8d;
+                    margin-bottom: 4px;
+                  "
+                  >Desde</label
+                >
+                <input
+                  type="date"
+                  id="ivFechaDesde"
+                  style="
+                    padding: 8px 12px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                  "
+                />
+              </div>
+              <div>
+                <label
+                  style="
+                    display: block;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #7f8c8d;
+                    margin-bottom: 4px;
+                  "
+                  >Hasta</label
+                >
+                <input
+                  type="date"
+                  id="ivFechaHasta"
+                  style="
+                    padding: 8px 12px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                  "
+                />
+              </div>
+              <button
+                onclick="InventarioVendidoModule.cargar()"
+                style="
+                  background: #3498db;
+                  color: white;
+                  border: none;
+                  padding: 9px 20px;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  font-weight: 600;
+                "
+              >
+                Buscar
+              </button>
+              <div style="flex: 1; min-width: 200px">
+                <label
+                  style="
+                    display: block;
+                    font-size: 13px;
+                    font-weight: 600;
+                    color: #7f8c8d;
+                    margin-bottom: 4px;
+                  "
+                  >Buscar</label
+                >
+                <input
+                  type="text"
+                  id="ivBuscador"
+                  placeholder="Producto, ticket, cliente, IMEI..."
+                  oninput="InventarioVendidoModule.filtrar()"
+                  style="
+                    width: 100%;
+                    padding: 8px 12px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    box-sizing: border-box;
+                  "
+                />
+              </div>
+            </div>
+
+            <!-- Cards resumen -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-bottom: 20px;
+              "
+            >
+              <div
+                style="
+                  background: #eaf4fb;
+                  border: 1px solid #aed6f1;
+                  border-radius: 8px;
+                  padding: 16px;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 13px; color: #7f8c8d; font-weight: 600">
+                  Total Ítems Vendidos
+                </div>
+                <div
+                  id="ivCardItems"
+                  style="font-size: 28px; font-weight: bold; color: #2980b9"
+                >
+                  0
+                </div>
+              </div>
+              <div
+                style="
+                  background: #fef9e7;
+                  border: 1px solid #f9e79f;
+                  border-radius: 8px;
+                  padding: 16px;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 13px; color: #7f8c8d; font-weight: 600">
+                  Total Devueltos
+                </div>
+                <div
+                  id="ivCardDevueltos"
+                  style="font-size: 28px; font-weight: bold; color: #d4ac0d"
+                >
+                  0
+                </div>
+              </div>
+              <div
+                style="
+                  background: #eafaf1;
+                  border: 1px solid #a9dfbf;
+                  border-radius: 8px;
+                  padding: 16px;
+                  text-align: center;
+                "
+              >
+                <div style="font-size: 13px; color: #7f8c8d; font-weight: 600">
+                  Valor Vendido
+                </div>
+                <div
+                  id="ivCardValor"
+                  style="font-size: 28px; font-weight: bold; color: #1e8449"
+                >
+                  RD$0.00
+                </div>
+              </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="tbl-scroll">
+              <table style="width: 100%; border-collapse: collapse">
+                <thead>
+                  <tr style="background: #2c3e50; color: white">
+                    <th style="padding: 11px 12px; text-align: left">
+                      N° Ticket
+                    </th>
+                    <th style="padding: 11px 12px; text-align: left">Fecha</th>
+                    <th style="padding: 11px 12px; text-align: left">
+                      Producto
+                    </th>
+                    <th style="padding: 11px 12px; text-align: center">
+                      Cant. Vendida
+                    </th>
+                    <th style="padding: 11px 12px; text-align: center">
+                      Devuelto
+                    </th>
+                    <th style="padding: 11px 12px; text-align: right">
+                      Precio Unit.
+                    </th>
+                    <th style="padding: 11px 12px; text-align: right">
+                      Subtotal
+                    </th>
+                    <th style="padding: 11px 12px; text-align: left">
+                      Cliente
+                    </th>
+                    <th style="padding: 11px 12px; text-align: left">
+                      Método Pago
+                    </th>
+                    <th style="padding: 11px 12px; text-align: center">
+                      Estado
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="ivTbody">
+                  <tr>
+                    <td
+                      colspan="10"
+                      style="text-align: center; padding: 30px; color: #7f8c8d"
+                    >
+                      Seleccione un período y presione Buscar
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- PROVEEDORES SECTION -->
+        <section id="proveedores" class="section">
+          <div class="header">
+            <h1>Gestión de Proveedores</h1>
+          </div>
+
+          <div class="card">
+            <h3>Nuevo Proveedor</h3>
+            <form id="formProveedor">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label
+                    >Nombre del Proveedor:
+                    <span class="campo-requerido">*</span></label
+                  >
+                  <input type="text" id="proveedorNombre" required />
+                </div>
+                <div class="form-group">
+                  <label>RNC:</label>
+                  <input type="text" id="proveedorRNC" />
+                </div>
+              </div>
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label>Teléfono:</label>
+                  <input type="tel" id="proveedorTelefono" />
+                </div>
+                <div class="form-group">
+                  <label>Email:</label>
+                  <input type="email" id="proveedorEmail" />
+                </div>
+                <div class="form-group">
+                  <label>Contacto:</label>
+                  <input type="text" id="proveedorContacto" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Dirección:</label>
+                <textarea id="proveedorDireccion" rows="2"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Descripción:</label>
+                <input
+                  type="text"
+                  id="proveedorDescripcion"
+                  placeholder="Ej: Compra de celulares, accesorios..."
+                />
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Guardar Proveedor
+              </button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Lista de Proveedores</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>Descripción</th>
+                  <th>Contacto</th>
+                  <th>Teléfono</th>
+                  <th>Email</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaProveedores">
+                <tr>
+                  <td colspan="7" class="text-center tabla-vacia-mensaje">
+                    No hay proveedores registrados
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- SALIDAS/GASTOS SECTION -->
+        <section id="salidas" class="section">
+          <div class="header">
+            <h1>Salidas y Gastos del Negocio</h1>
+          </div>
+
+          <div class="card">
+            <h3>Registrar Nueva Salida/Gasto</h3>
+            <form id="formSalida">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Fecha:</label>
+                  <input type="date" id="salidaFecha" required />
+                </div>
+                <div class="form-group">
+                  <label>Categoría:</label>
+                  <select id="salidaCategoria" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="Alquiler">Alquiler</option>
+                    <option value="Servicios">
+                      Servicios (Luz, Agua, Internet)
+                    </option>
+                    <option value="Salarios">Salarios</option>
+                    <option value="Compras">Compras de Inventario</option>
+                    <option value="Mantenimiento">Mantenimiento</option>
+                    <option value="Transporte">Transporte</option>
+                    <option value="Otros">Otros</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Concepto:</label>
+                <input
+                  type="text"
+                  id="salidaConcepto"
+                  required
+                  placeholder="Concepto del gasto"
+                />
+              </div>
+              <div class="form-group">
+                <label>Descripción:</label>
+                <textarea
+                  id="salidaDescripcion"
+                  rows="2"
+                  placeholder="Detalle adicional..."
+                ></textarea>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Monto: <span class="campo-requerido">*</span></label>
+                  <input type="number" id="salidaMonto" step="0.01" required />
+                </div>
+                <div class="form-group">
+                  <label>Método de Pago:</label>
+                  <select id="salidaMetodoPago">
+                    <option value="efectivo">Efectivo</option>
+                    <option value="tarjeta">Tarjeta</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="cheque">Cheque</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>Beneficiario:</label>
+                  <input
+                    type="text"
+                    id="salidaBeneficiario"
+                    placeholder="Nombre del beneficiario"
+                  />
+                </div>
+                <div class="form-group">
+                  <label>NCF:</label>
+                  <input
+                    type="text"
+                    id="salidaNcf"
+                    placeholder="Ej: B0100000001"
+                    maxlength="20"
+                  />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                Registrar Salida
+              </button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Historial de Salidas y Gastos</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Categoría</th>
+                  <th>Concepto</th>
+                  <th>Monto</th>
+                  <th>Método</th>
+                  <th>Beneficiario</th>
+                  <th>NCF</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tablaSalidas">
+                <tr>
+                  <td colspan="8" class="text-center tabla-vacia-mensaje">
+                    No hay salidas registradas
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ==================== SECCIÓN DE FACTURACIÓN (REEMPLAZAR EN INDEX.HTML) ==================== -->
+
+        <section id="facturacion" class="section">
+          <div class="header">
+            <h1>Facturación</h1>
+          </div>
+
+          <!-- ESTADÍSTICAS RÁPIDAS -->
+          <div class="facturacion-stats-grid">
+            <div class="card stat-card-total-facturas">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Total Facturas</p>
+                  <h2 id="totalFacturas" class="stat-card-valor-grande">0</h2>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+
+            <div class="card stat-card-monto-total">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Monto Total</p>
+                  <h2 id="totalMonto" class="stat-card-valor-mediano">
+                    RD$0.00
+                  </h2>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+
+            <div class="card stat-card-pendientes">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Pendientes</p>
+                  <h2 id="facturasPendientes" class="stat-card-valor-grande">
+                    0
+                  </h2>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+
+            <div class="card stat-card-pagadas">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Pagadas</p>
+                  <h2 id="facturasPagadas" class="stat-card-valor-grande">0</h2>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FILTROS -->
+          <div class="card">
+            <h3 class="facturacion-busqueda-titulo">Buscar Facturas</h3>
+
+            <!-- FILTROS RÁPIDOS -->
+            <div class="filtros-rapidos-fila">
+              <button
+                type="button"
+                id="filtroHoy"
+                class="btn btn-secondary btn-small"
+              >
+                Hoy
+              </button>
+              <button
+                type="button"
+                id="filtroSemana"
+                class="btn btn-secondary btn-small"
+              >
+                Última Semana
+              </button>
+              <button
+                type="button"
+                id="filtroMes"
+                class="btn btn-secondary btn-small"
+              >
+                Este Mes
+              </button>
+              <button
+                type="button"
+                id="filtroTodo"
+                class="btn btn-secondary btn-small"
+              >
+                Todas
+              </button>
+            </div>
+
+            <!-- FILTROS AVANZADOS -->
+            <form id="formFiltrosFacturas">
+              <div class="filtros-avanzados-grid">
+                <div class="form-group">
+                  <label>Fecha Desde:</label>
+                  <input
+                    type="date"
+                    id="filtroFechaDesde"
+                    class="form-control"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label>Fecha Hasta:</label>
+                  <input
+                    type="date"
+                    id="filtroFechaHasta"
+                    class="form-control"
+                  />
+                </div>
+
+                <div class="form-group">
+                  <label>Cliente:</label>
+                  <select id="filtroCliente" class="form-control">
+                    <option value="">Todos los clientes</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Estado:</label>
+                  <select id="filtroEstado" class="form-control">
+                    <option value="">Todos los estados</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="pagada">Pagada</option>
+                    <option value="vencida">Vencida</option>
+                    <option value="anulada">Anulada</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Código / IMEI:</label>
+                  <input
+                    type="text"
+                    id="filtroCodigoProducto"
+                    class="form-control"
+                    placeholder="Buscar por código o IMEI..."
+                  />
+                </div>
+              </div>
+
+              <div class="filtros-acciones-fila">
+                <button type="submit" class="btn btn-primary">Buscar</button>
+                <button
+                  type="button"
+                  id="limpiarFiltros"
+                  class="btn btn-secondary"
+                >
+                  Limpiar
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- TABLA DE FACTURAS -->
+          <div class="card">
+            <div class="facturacion-tabla-header">
+              <h3 class="facturacion-tabla-titulo">Listado de Facturas</h3>
+              <div id="loaderFacturas" class="loader-facturas">
+                <span class="loader-texto"> Cargando...</span>
+              </div>
+            </div>
+
+            <div class="tabla-scroll-horizontal">
+              <table class="tabla-facturas">
+                <thead>
+                  <tr class="tabla-header-oscuro">
+                    <th class="th-tabla-izquierda">N° Factura</th>
+                    <th class="th-tabla-izquierda">Fecha</th>
+                    <th class="th-tabla-izquierda">Cliente</th>
+                    <th class="th-tabla-derecha">Total</th>
+                    <th class="th-tabla-centro">Tipo</th>
+                    <th class="th-tabla-centro">Estado</th>
+                    <th class="th-tabla-centro">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaFacturas">
+                  <tr>
+                    <td colspan="8" class="td-tabla-vacia">
+                      <div class="td-tabla-vacia-icono"></div>
+                      <p class="td-tabla-vacia-texto">Cargando facturas...</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- REPORTES SECTION -->
+
+        <!-- ==================== SECCIÓN DE REPORTES ==================== -->
+        <!-- ==================== SECCIÓN DE REPORTES CON EXCEL ==================== -->
+        <section id="reportes" class="section">
+          <div class="header">
+            <h1>Reportes y Análisis</h1>
+          </div>
+
+          <!-- FILTROS + BOTÓN EXCEL -->
+          <div class="card">
+            <div class="reportes-filtros-header">
+              <div class="reportes-periodo-grupo">
+                <h3 class="reportes-periodo-titulo">Periodo:</h3>
+                <button
+                  id="reporteHoy"
+                  class="btn btn-primary periodo-btn active"
+                >
+                  Hoy
+                </button>
+                <button id="reporteSemana" class="btn btn-primary periodo-btn">
+                  Semana
+                </button>
+                <button id="reporteMes" class="btn btn-primary periodo-btn">
+                  Este Mes
+                </button>
+              </div>
+              <button
+                id="btnDescargarExcel"
+                class="btn btn-success btn-excel-principal"
+                onclick="ReportesModule.descargarExcel()"
+              >
+                Descargar Excel
+              </button>
+              <button
+                class="btn btn-primary"
+                onclick="ReportesModule.abrirCuadre()"
+                style="margin-left: 8px"
+              >
+                Cuadre de Turno
+              </button>
+              <button
+                class="btn btn-danger"
+                onclick="ReportesModule.abrirReporteSalidas()"
+                style="margin-left: 8px"
+              >
+                Reporte de Salidas
+              </button>
+            </div>
+            <div id="loaderReportes" class="loader-reportes">
+              <span class="loader-reportes-texto"> Cargando reporte...</span>
+            </div>
+          </div>
+
+          <!-- DESCARGA PERSONALIZADA -->
+          <div class="card card-exportar-personalizado">
+            <h3 class="exportar-personalizado-titulo">
+              Exportar Rango Personalizado
+            </h3>
+            <div class="exportar-personalizado-fila">
+              <div class="form-group form-group-inline">
+                <label class="exportar-fecha-label">Fecha Desde:</label>
+                <input
+                  type="date"
+                  id="excelFechaDesde"
+                  class="exportar-fecha-input"
+                />
+              </div>
+              <div class="form-group form-group-inline">
+                <label class="exportar-fecha-label">Fecha Hasta:</label>
+                <input
+                  type="date"
+                  id="excelFechaHasta"
+                  class="exportar-fecha-input"
+                />
+              </div>
+              <button
+                class="btn btn-primary btn-excel-personalizado"
+                onclick="
+                  ReportesModule.buscarPorRango(
+                    document.getElementById('excelFechaDesde').value,
+                    document.getElementById('excelFechaHasta').value,
+                  )
+                "
+              >
+                Buscar
+              </button>
+              <button
+                id="btnDescargarExcelPersonalizado"
+                class="btn btn-success btn-excel-personalizado"
+                onclick="
+                  ReportesModule.descargarExcelPersonalizado(
+                    document.getElementById('excelFechaDesde').value,
+                    document.getElementById('excelFechaHasta').value,
+                  )
+                "
+              >
+                Descargar Excel
+              </button>
+            </div>
+            <small class="exportar-excel-hint">
+              <strong> Excel con 2 hojas:</strong> Hoja 1 = Detalle productos ·
+              Hoja 2 = Resumen y Top 5
+            </small>
+          </div>
+
+          <!-- RESUMEN -->
+          <div class="reportes-stats-grid">
+            <div class="card stat-card-ventas">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Total Ventas (Neto)</p>
+                  <h2 id="reporteTotalVentas" class="stat-card-valor-reportes">
+                    RD$0.00
+                  </h2>
+                  <p
+                    id="reporteTotalVentasNota"
+                    style="
+                      display: none;
+                      font-size: 11px;
+                      opacity: 0.78;
+                      margin-top: 5px;
+                      line-height: 1.5;
+                    "
+                  ></p>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+
+            <div class="card stat-card-ganancias">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Ganancias</p>
+                  <h2 id="reporteGanancias" class="stat-card-valor-reportes">
+                    RD$0.00
+                  </h2>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+
+            <div class="card stat-card-costos-operativos">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Gastos</p>
+                  <h2
+                    id="reporteCostosOperativos"
+                    class="stat-card-valor-reportes"
+                  >
+                    RD$0.00
+                  </h2>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+
+            <div class="card stat-card-cantidad-ventas">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Cantidad Ventas</p>
+                  <h2 id="reporteCantidadVentas" class="stat-card-valor-grande">
+                    0
+                  </h2>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+
+            <div class="card stat-card-margen">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Margen</p>
+                  <h2 id="reporteMargen" class="stat-card-valor-grande">0%</h2>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+
+            <div class="card stat-card-itbis">
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">ITBIS Recaudado</p>
+                  <h2 id="reporteITBIS" class="stat-card-valor-itbis">
+                    RD$0.00
+                  </h2>
+                </div>
+                <div class="stat-card-icono"></div>
+              </div>
+            </div>
+
+            <div
+              id="cardDevolucionesResumen"
+              class="card stat-card-costos-mercancia"
+              style="display: none"
+            >
+              <div class="stat-card-fila">
+                <div>
+                  <p class="stat-card-etiqueta">Devoluciones</p>
+                  <h2
+                    id="reporteTotalDevoluciones"
+                    class="stat-card-valor-reportes"
+                  >
+                    RD$0.00
+                  </h2>
+                </div>
+                <div class="stat-card-icono">↩</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GRAFICO FINANCIERO -->
+          <div class="card">
+            <h3 class="card-reporte-titulo">Distribucion Financiera</h3>
+            <div id="topProductosVendidos"></div>
+          </div>
+
+          <!-- MÉTODOS PAGO -->
+          <div class="card">
+            <h3 class="card-reporte-titulo">Distribución por Método de Pago</h3>
+            <div id="metodosPagoChart"></div>
+          </div>
+
+          <!-- DETALLE VENTAS -->
+          <div class="card">
+            <h3 class="card-reporte-titulo">Detalle de Ventas</h3>
+            <div class="tabla-scroll-horizontal">
+              <table class="tabla-facturas">
+                <thead>
+                  <tr class="tabla-header-oscuro">
+                    <th class="th-tabla-izquierda">Ticket</th>
+                    <th class="th-tabla-izquierda">Fecha</th>
+                    <th class="th-tabla-izquierda">Hora</th>
+                    <th class="th-tabla-izquierda">Cliente</th>
+                    <th class="th-tabla-derecha">Subtotal</th>
+                    <th class="th-tabla-derecha">Total</th>
+                    <th class="th-tabla-izquierda">Método</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaReporteVentas">
+                  <tr>
+                    <td colspan="7" class="td-tabla-vacia">
+                      <div class="td-tabla-vacia-icono"></div>
+                      <p>Cargando reporte...</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- DEVOLUCIONES DEL PERÍODO -->
+          <div
+            id="cardDevoluciones"
+            class="card"
+            style="display: none; border-left: 4px solid var(--clr-danger)"
+          >
+            <h3 class="card-reporte-titulo" style="color: var(--clr-danger)">
+              ↩ Devoluciones del Período
+            </h3>
+            <div class="tabla-scroll-horizontal">
+              <table class="tabla-facturas">
+                <thead>
+                  <tr class="tabla-header-oscuro">
+                    <th class="th-tabla-izquierda">Devolución</th>
+                    <th class="th-tabla-izquierda">Ticket</th>
+                    <th class="th-tabla-izquierda">Factura</th>
+                    <th class="th-tabla-izquierda">Fecha</th>
+                    <th class="th-tabla-izquierda">Cliente</th>
+                    <th class="th-tabla-izquierda">Motivo</th>
+                    <th class="th-tabla-derecha">Monto Devuelto</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaReporteDevoluciones"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- REPORTE INVENTARIO SECTION -->
+        <section id="reporte-inventario" class="section">
+          <div class="header">
+            <h1>Reporte de Inventario</h1>
+            <button id="invReporteBtnExportar" class="btn btn-success">
+              Exportar CSV
+            </button>
+          </div>
+
+          <!-- Resumen -->
+          <div class="inv-resumen-grid">
+            <div class="card inv-stat-card">
+              <span class="inv-stat-label">Costo Total del Inventario</span>
+              <span id="invResumenCostoTotal" class="inv-stat-valor"
+                >$0.00</span
+              >
+            </div>
+            <div class="card inv-stat-card">
+              <span class="inv-stat-label">Total de Productos</span>
+              <span id="invResumenTotalProductos" class="inv-stat-valor"
+                >0</span
+              >
+            </div>
+            <div class="card inv-stat-card">
+              <span class="inv-stat-label">Unidades en Stock</span>
+              <span id="invResumenUnidades" class="inv-stat-valor">0</span>
+            </div>
+            <div class="card inv-stat-card">
+              <span class="inv-stat-label">Valor Total de Venta</span>
+              <span id="invResumenValorVenta" class="inv-stat-valor"
+                >$0.00</span
+              >
+            </div>
+            <div class="card inv-stat-card">
+              <span class="inv-stat-label">Ganancia Potencial</span>
+              <span id="invResumenGanancia" class="inv-stat-valor">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Filtros -->
+          <div class="card" style="margin-bottom: 1rem">
+            <div
+              style="
+                display: flex;
+                gap: 1rem;
+                align-items: flex-end;
+                flex-wrap: wrap;
+              "
+            >
+              <div
+                class="form-group"
+                style="flex: 1; min-width: 200px; margin: 0"
+              >
+                <label>Buscar:</label>
+                <input
+                  type="text"
+                  id="invReporteBusqueda"
+                  placeholder="Nombre, código, IMEI..."
+                />
+              </div>
+              <div
+                class="form-group"
+                style="flex: 1; min-width: 180px; margin: 0"
+              >
+                <label>Categoría:</label>
+                <select id="invReporteCategoria">
+                  <option value="">Todas las categorías</option>
+                </select>
+              </div>
+              <button
+                class="btn btn-primary"
+                onclick="ReporteInventarioModule.cargar()"
+              >
+                Actualizar
+              </button>
+            </div>
+          </div>
+
+          <!-- Loader -->
+          <div
+            id="invReporteLoader"
+            style="
+              display: none;
+              justify-content: center;
+              align-items: center;
+              padding: 3rem;
+            "
+          >
+            <span class="loader-reportes-texto">Cargando inventario...</span>
+          </div>
+
+          <!-- Tabla -->
+          <div
+            id="invReporteTablaWrap"
+            class="card"
+            style="padding: 0; overflow: hidden"
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 1.25rem;
+                border-bottom: 1px solid var(--border);
+              "
+            >
+              <h3 style="margin: 0">Productos</h3>
+              <span
+                id="invReporteConteo"
+                style="font-size: 0.85rem; color: var(--text-muted)"
+              ></span>
+            </div>
+            <div style="overflow-x: auto">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Código / IMEI</th>
+                    <th>Descripción</th>
+                    <th>Costo Total</th>
+                    <th>Precio Venta</th>
+                    <th>Disponible</th>
+                    <th>Cantidad</th>
+                    <th>Agregado por</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="invReporteTbody">
+                  <tr>
+                    <td
+                      colspan="8"
+                      style="
+                        text-align: center;
+                        padding: 2rem;
+                        color: var(--text-muted);
+                      "
+                    >
+                      Cargando...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- CONFIGURACIÓN SECTION -->
+        <section id="configuracion" class="section">
+          <div class="header">
+            <h1>Configuración del Sistema</h1>
+          </div>
+
+          <div class="card">
+            <h3>Información del Negocio</h3>
+            <form id="formConfiguracion">
+              <table class="config-info-tabla">
+                <tbody>
+                  <tr>
+                    <th>Nombre del Negocio</th>
+                    <td>
+                      <input
+                        type="text"
+                        id="configNombre"
+                        class="form-control"
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>RNC</th>
+                    <td>
+                      <input
+                        type="text"
+                        id="configRNC"
+                        class="form-control"
+                        placeholder="000-000000-0"
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Teléfono</th>
+                    <td>
+                      <input
+                        type="tel"
+                        id="configTelefono"
+                        class="form-control"
+                        placeholder="(809) 000-0000"
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Email</th>
+                    <td>
+                      <input
+                        type="email"
+                        id="configEmail"
+                        class="form-control"
+                        placeholder="correo@negocio.com"
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Dirección</th>
+                    <td>
+                      <textarea
+                        id="configDireccion"
+                        class="form-control"
+                        rows="2"
+                        placeholder="Dirección del negocio..."
+                      ></textarea>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Impresora Térmica</th>
+                    <td style="display: flex; gap: 8px; align-items: center">
+                      <input
+                        type="text"
+                        id="configImpresora"
+                        class="form-control"
+                        placeholder="Nombre exacto de la impresora"
+                        style="flex: 1"
+                      />
+                      <button
+                        type="button"
+                        class="btn btn-secondary"
+                        onclick="detectarImpresoras()"
+                        style="white-space: nowrap"
+                      >
+                        Detectar
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style="margin-top: 16px">
+                <button type="submit" class="btn btn-primary">Guardar</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Servicios Adicionales</h3>
+            <!-- Inline add form -->
+            <div class="config-add-form">
+              <div class="form-row-3">
+                <div class="form-group mb-0">
+                  <label
+                    >Nombre del Servicio:
+                    <span class="campo-requerido">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="nuevoServicioNombre"
+                    placeholder="Ej: Instalación de protector"
+                  />
+                </div>
+                <div class="form-group mb-0">
+                  <label>Precio (RD$):</label>
+                  <input
+                    type="number"
+                    id="nuevoServicioPrecio"
+                    step="0.01"
+                    min="0"
+                    value="0"
+                    placeholder="0.00"
+                  />
+                </div>
+                <div class="form-group mb-0">
+                  <label>Tipo:</label>
+                  <select id="nuevoServicioTipo">
+                    <option value="pagado">Pagado</option>
+                    <option value="gratuito">Gratuito (Cortesía)</option>
+                  </select>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn btn-success"
+                onclick="agregarServicioConfig()"
+              >
+                Agregar Servicio
+              </button>
+            </div>
+            <div id="listaServiciosConfig"></div>
+          </div>
+
+          <div class="card">
+            <h3>Categorías de Productos</h3>
+            <div class="config-add-form">
+              <div class="form-row-2">
+                <div class="form-group mb-0">
+                  <label
+                    >Nombre de Categoría:
+                    <span class="campo-requerido">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="nuevaCatNombre"
+                    placeholder="Ej: Celulares"
+                  />
+                </div>
+                <div class="form-group mb-0">
+                  <label>Descripción (opcional):</label>
+                  <input
+                    type="text"
+                    id="nuevaCatDescripcion"
+                    placeholder="Descripción breve..."
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                class="btn btn-success"
+                onclick="agregarCategoriaConfig()"
+              >
+                Agregar Categoría
+              </button>
+            </div>
+            <div id="listaCategoriasConfig"></div>
+          </div>
+
+          <!-- Gestión de Usuarios (solo admin) -->
+          <div class="card" id="tabUsuarios">
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+              "
+            >
+              <h3 style="margin: 0">Usuarios del Sistema</h3>
+              <button
+                class="btn btn-success btn-small"
+                onclick="UsuariosModule.mostrarModal()"
+              >
+                + Nuevo Usuario
+              </button>
+            </div>
+            <div id="tablaUsuariosContainer">
+              <p style="color: var(--clr-muted); font-size: 14px">
+                Cargando usuarios...
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Modal Detalle de Producto -->
+        <div class="modal" id="modalDetalleProducto">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Detalle del Producto</h2>
+              <span
+                class="close-modal"
+                onclick="cerrarModal('modalDetalleProducto')"
+                >&times;</span
+              >
+            </div>
+            <div id="detalleProductoContent">
+              <!-- Se llenará dinámicamente -->
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="modales-container"></div>
+    <!-- Modal de usuario -->
+    <div class="modal" id="modalUsuario">
+      <div class="modal-content" style="max-width: 420px">
+        <div class="modal-header">
+          <h2 id="tituloModalUsuario">Nuevo Usuario</h2>
+          <span class="close-modal" onclick="cerrarModal('modalUsuario')"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="usuarioId" />
+          <div class="form-group">
+            <label
+              >Nombre de usuario <span class="campo-requerido">*</span></label
+            >
+            <input type="text" id="usuarioUsername" placeholder="Ej: maria" />
+          </div>
+          <div class="form-group">
+            <label>Nombre completo</label>
+            <input
+              type="text"
+              id="usuarioNombre"
+              placeholder="Ej: María García"
+            />
+          </div>
+          <div class="form-group">
+            <label
+              >Contraseña <span class="campo-requerido">*</span>
+              <small id="usuarioPasswordHint" style="color: var(--clr-muted)"
+                >(requerida)</small
+              ></label
+            >
+            <input
+              type="password"
+              id="usuarioPassword"
+              placeholder="Contraseña"
+            />
+          </div>
+          <div class="form-group">
+            <label>Rol <span class="campo-requerido">*</span></label>
+            <select id="usuarioRol">
+              <option value="cajero">Cajero</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div class="form-group" id="usuarioActivoGroup" style="display: none">
+            <label>
+              <input type="checkbox" id="usuarioActivo" checked /> Usuario
+              activo
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="cerrarModal('modalUsuario')"
+          >
+            Cancelar
+          </button>
+          <button class="btn btn-primary" onclick="UsuariosModule.guardar()">
+            Guardar
+          </button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Cargar en este orden -->
-  <script src="js/utils/toast.js"></script>
-  <script src="js/utils/dom-utils.js"></script>
-  <script src="js/utils/formatters.js"></script>
-  <script src="js/utils/validators.js"></script>
-  <script src="js/api/api-client.js"></script>
-  <script src="js/api/clientes-api.js"></script>
-  <script src="js/api/productos-api.js"></script>
-  <script src="js/api/ventas-api.js"></script>
-  <script src="js/api/facturacion-api.js"></script>
-  <script src="js/api/servicios-api.js"></script>
-<script src="js/api/categorias-api.js"></script>
-  <script src="js/api/proveedores-api.js"></script>
-  <script src="js/api/devoluciones-api.js"></script>
-  <script src="js/api/pagos-api.js"></script>
-  <script src="js/api/configuracion-api.js"></script>
-  <script src="js/api/reportes-api.js"></script>
-  <script src="js/api/salidas-api.js"></script>
-  <!-- Modales script-->
-  <script>
-  Promise.all([
-  fetch("modales/modales.html").then((r) => r.text()),
-  fetch("modales/modales-clientes.html").then((r) => r.text()),
-  ]).then(([modalesFacturacion, modalesClientes]) => {
-  document.getElementById("modales-container").innerHTML =
-  modalesFacturacion + modalesClientes;
-  console.log(" Modales HTML cargados");
-  });
-  </script>
-  <script src="js/api/api-global.js"></script>
-  <script src="js/utils/barcode-scanner.js"></script>
-  <script src="js/modules/productos-module.js"></script>
-  <script src="js/modules/proveedores-module.js"></script>
-  <script src="js/modules/verificador-module.js"></script>
-  <script src="js/modules/salidas-module.js"></script>
-  <script src="js/modules/configuracion-module.js"></script>
-  <script src="js/modules/clientes.js"></script>
-  <script src="js/modules/ventas.js"></script>
-<script src="js/modules/factura-impresion.js"></script>
-  <script src="js/modules/facturacion-busqueda.js"></script>
-  <script src="js/modules/devoluciones-module.js"></script>
-  <script src="js/modules/pagos-module.js"></script>
-  <script src="js/modules/creditos-module.js"></script>
-  <script src="js/modules/reportes-module.js"></script>
-  <script src="js/modules/reporte-inventario-module.js"></script>
-  <script src="js/modules/inventario-vendido-module.js"></script>
-  <script src="js/api/auth-api.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/modules/usuarios-module.js"></script>
-  <script src="index.js"></script>
+    <!-- Modal Cuadre de Turno -->
+    <div class="modal" id="modalCuadre">
+      <div
+        class="modal-content"
+        style="max-width: 900px; max-height: 90vh; overflow-y: auto"
+      >
+        <div class="modal-header">
+          <h2>Cuadre de Turno</h2>
+          <span class="close-modal" onclick="cerrarModal('modalCuadre')"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body">
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              flex-wrap: wrap;
+              align-items: flex-end;
+              margin-bottom: 16px;
+            "
+          >
+            <div class="form-group" style="margin: 0">
+              <label>Fecha</label>
+              <input type="date" id="cuadreFecha" style="width: 160px" />
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label>Fondo de Caja (RD$)</label>
+              <input
+                type="number"
+                id="cuadreFondo"
+                value="0"
+                min="0"
+                style="width: 140px"
+              />
+            </div>
+            <button
+              class="btn btn-primary"
+              onclick="ReportesModule.cargarCuadre()"
+            >
+              Consultar
+            </button>
+            <button
+              class="btn btn-success"
+              id="btnCuadreExcel"
+              onclick="ReportesModule.descargarCuadreExcel()"
+              style="display: none"
+            >
+              Descargar Excel
+            </button>
+            <button
+              class="btn btn-secondary"
+              id="btnCuadrePrint"
+              onclick="ReportesModule.imprimirCuadre()"
+              style="display: none"
+            >
+              Imprimir Térmica
+            </button>
+          </div>
+          <div
+            id="cuadreLoader"
+            style="
+              display: none;
+              text-align: center;
+              padding: 20px;
+              color: var(--clr-muted);
+            "
+          >
+            Cargando cuadre...
+          </div>
+          <div id="cuadreContenido" style="display: none">
+            <!-- Resumen superior -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 12px;
+                margin-bottom: 16px;
+              "
+            >
+              <div class="card" style="padding: 14px; text-align: center">
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--clr-muted);
+                    text-transform: uppercase;
+                  "
+                >
+                  Ventas (neto)
+                </div>
+                <div
+                  id="cVentasNeto"
+                  style="
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: var(--clr-primary);
+                  "
+                >
+                  RD$0
+                </div>
+              </div>
+              <div class="card" style="padding: 14px; text-align: center">
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--clr-muted);
+                    text-transform: uppercase;
+                  "
+                >
+                  Ganancia
+                </div>
+                <div
+                  id="cGanancia"
+                  style="
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: var(--clr-success);
+                  "
+                >
+                  RD$0
+                </div>
+              </div>
+              <div class="card" style="padding: 14px; text-align: center">
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--clr-muted);
+                    text-transform: uppercase;
+                  "
+                >
+                  Efectivo en Caja
+                </div>
+                <div
+                  id="cEfectivoCaja"
+                  style="
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: var(--clr-warning);
+                  "
+                >
+                  RD$0
+                </div>
+              </div>
+              <div class="card" style="padding: 14px; text-align: center">
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--clr-muted);
+                    text-transform: uppercase;
+                  "
+                >
+                  Ventas
+                </div>
+                <div
+                  id="cCantidadVentas"
+                  style="font-size: 22px; font-weight: 700"
+                >
+                  0
+                </div>
+              </div>
+            </div>
+
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-bottom: 16px;
+              "
+            >
+              <!-- Dinero en caja -->
+              <div class="card" style="padding: 14px">
+                <h4
+                  style="
+                    margin: 0 0 10px;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 6px;
+                  "
+                >
+                  Dinero en Caja
+                </h4>
+                <table style="width: 100%; font-size: 13px">
+                  <tr>
+                    <td>Fondo de Caja</td>
+                    <td id="cFondoCaja" style="text-align: right"></td>
+                  </tr>
+                  <tr>
+                    <td>+ Ventas Efectivo</td>
+                    <td
+                      id="cVentasEfectivo"
+                      style="text-align: right; color: var(--clr-success)"
+                    ></td>
+                  </tr>
+                  <tr>
+                    <td>+ Abonos Efectivo</td>
+                    <td
+                      id="cAbonos"
+                      style="text-align: right; color: var(--clr-success)"
+                    ></td>
+                  </tr>
+                  <tr>
+                    <td>- Salidas</td>
+                    <td
+                      id="cSalidas"
+                      style="text-align: right; color: var(--clr-danger)"
+                    ></td>
+                  </tr>
+                  <tr>
+                    <td>- Dev. Efectivo</td>
+                    <td
+                      id="cDevEfectivo"
+                      style="text-align: right; color: var(--clr-danger)"
+                    ></td>
+                  </tr>
+                  <tr style="font-weight: 700; border-top: 2px solid #ccc">
+                    <td>= Efectivo en Caja</td>
+                    <td
+                      id="cEfectivoCaja2"
+                      style="text-align: right; color: var(--clr-warning)"
+                    ></td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Ventas por método -->
+              <div class="card" style="padding: 14px">
+                <h4
+                  style="
+                    margin: 0 0 10px;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 6px;
+                  "
+                >
+                  Ventas por Método
+                </h4>
+                <table style="width: 100%; font-size: 13px">
+                  <tr>
+                    <td>Efectivo</td>
+                    <td id="cMetEfectivo" style="text-align: right"></td>
+                  </tr>
+                  <tr>
+                    <td>Tarjeta</td>
+                    <td id="cMetTarjeta" style="text-align: right"></td>
+                  </tr>
+                  <tr>
+                    <td>Transferencia</td>
+                    <td id="cMetTransferencia" style="text-align: right"></td>
+                  </tr>
+                  <tr>
+                    <td>Crédito</td>
+                    <td id="cMetCredito" style="text-align: right"></td>
+                  </tr>
+                  <tr>
+                    <td>Cheque</td>
+                    <td id="cMetCheque" style="text-align: right"></td>
+                  </tr>
+                  <tr>
+                    <td style="color: var(--clr-danger)">Dev. de Ventas</td>
+                    <td
+                      id="cDevoluciones"
+                      style="text-align: right; color: var(--clr-danger)"
+                    ></td>
+                  </tr>
+                  <tr style="font-weight: 700; border-top: 2px solid #ccc">
+                    <td>Total Ventas</td>
+                    <td id="cTotalVentas" style="text-align: right"></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-bottom: 16px;
+              "
+            >
+              <!-- Ventas por categoría -->
+              <div class="card" style="padding: 14px">
+                <h4
+                  style="
+                    margin: 0 0 10px;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 6px;
+                  "
+                >
+                  Ventas por Depto
+                </h4>
+                <table
+                  style="width: 100%; font-size: 13px"
+                  id="cuadreCategorias"
+                ></table>
+              </div>
+
+              <!-- Ingresos contado -->
+              <div class="card" style="padding: 14px">
+                <h4
+                  style="
+                    margin: 0 0 10px;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 6px;
+                  "
+                >
+                  Ingresos Contado
+                </h4>
+                <table style="width: 100%; font-size: 13px">
+                  <tr>
+                    <td>Ventas Efectivo</td>
+                    <td id="cIngEfectivo" style="text-align: right"></td>
+                  </tr>
+                  <tr>
+                    <td>Pagos Clientes</td>
+                    <td id="cIngPagos" style="text-align: right"></td>
+                  </tr>
+                  <tr>
+                    <td>Ventas Transferencia</td>
+                    <td id="cIngTransferencia" style="text-align: right"></td>
+                  </tr>
+                  <tr>
+                    <td style="color: var(--clr-danger)">Abonos (Dev. ef.)</td>
+                    <td
+                      id="cIngDevEf"
+                      style="text-align: right; color: var(--clr-danger)"
+                    ></td>
+                  </tr>
+                  <tr>
+                    <td style="color: var(--clr-danger)">Dev. Transferencia</td>
+                    <td
+                      id="cIngDevTra"
+                      style="text-align: right; color: var(--clr-danger)"
+                    ></td>
+                  </tr>
+                  <tr style="font-weight: 700; border-top: 2px solid #ccc">
+                    <td>Total Ingresos</td>
+                    <td id="cTotalIngresos" style="text-align: right"></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <!-- Salidas -->
+            <div
+              class="card"
+              style="padding: 14px; margin-bottom: 16px"
+              id="cuadreSalidasCard"
+            >
+              <h4
+                style="
+                  margin: 0 0 10px;
+                  border-bottom: 1px solid #eee;
+                  padding-bottom: 6px;
+                "
+              >
+                Salidas
+              </h4>
+              <table
+                style="width: 100%; font-size: 13px"
+                id="cuadreSalidasTabla"
+              ></table>
+            </div>
+
+            <!-- Pagos de crédito -->
+            <div
+              class="card"
+              style="padding: 14px; margin-bottom: 16px"
+              id="cuadrePagosCard"
+            >
+              <h4
+                style="
+                  margin: 0 0 10px;
+                  border-bottom: 1px solid #eee;
+                  padding-bottom: 6px;
+                "
+              >
+                Pagos de Créditos
+              </h4>
+              <table
+                style="width: 100%; font-size: 13px"
+                id="cuadrePagosTabla"
+              ></table>
+            </div>
+
+            <!-- Devoluciones -->
+            <div class="card" style="padding: 14px" id="cuadreDevCard">
+              <h4
+                style="
+                  margin: 0 0 10px;
+                  border-bottom: 1px solid #eee;
+                  padding-bottom: 6px;
+                "
+              >
+                Devoluciones
+              </h4>
+              <div id="cuadreDevoluciones" style="font-size: 13px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Reporte de Salidas -->
+    <div class="modal" id="modalReporteSalidas">
+      <div
+        class="modal-content"
+        style="max-width: 960px; max-height: 90vh; overflow-y: auto"
+      >
+        <div class="modal-header">
+          <h2>Reporte de Salidas</h2>
+          <span class="close-modal" onclick="cerrarModal('modalReporteSalidas')"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body">
+          <!-- Filtros -->
+          <div
+            style="
+              display: flex;
+              gap: 12px;
+              flex-wrap: wrap;
+              align-items: flex-end;
+              margin-bottom: 16px;
+            "
+          >
+            <div class="form-group" style="margin: 0">
+              <label>Fecha desde</label>
+              <input type="date" id="salidasDesde" style="width: 160px" />
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label>Fecha hasta</label>
+              <input type="date" id="salidasHasta" style="width: 160px" />
+            </div>
+            <button
+              class="btn btn-primary"
+              onclick="ReportesModule.cargarReporteSalidas()"
+            >
+              Consultar
+            </button>
+            <button
+              class="btn btn-success"
+              id="btnSalidasExcel"
+              onclick="ReportesModule.descargarSalidasExcel()"
+              style="display: none"
+            >
+              Descargar Excel
+            </button>
+          </div>
+
+          <div
+            id="salidasLoader"
+            style="
+              display: none;
+              text-align: center;
+              padding: 20px;
+              color: var(--clr-muted);
+            "
+          >
+            Cargando reporte...
+          </div>
+
+          <div id="salidasContenido" style="display: none">
+            <!-- Tarjetas resumen -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+                gap: 12px;
+                margin-bottom: 16px;
+              "
+            >
+              <div class="card" style="padding: 14px; text-align: center">
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--clr-muted);
+                    text-transform: uppercase;
+                    letter-spacing: 0.8px;
+                    margin-bottom: 4px;
+                  "
+                >
+                  Total Salidas
+                </div>
+                <div
+                  id="sTotalSalidas"
+                  style="
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: var(--clr-danger);
+                  "
+                >
+                  RD$0.00
+                </div>
+              </div>
+              <div class="card" style="padding: 14px; text-align: center">
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--clr-muted);
+                    text-transform: uppercase;
+                    letter-spacing: 0.8px;
+                    margin-bottom: 4px;
+                  "
+                >
+                  Cantidad
+                </div>
+                <div
+                  id="sCantidadSalidas"
+                  style="
+                    font-size: 22px;
+                    font-weight: 700;
+                    color: var(--clr-primary);
+                  "
+                >
+                  0
+                </div>
+              </div>
+            </div>
+
+            <!-- Gráficas -->
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+                margin-bottom: 16px;
+              "
+            >
+              <div class="card" style="padding: 14px">
+                <h4
+                  style="
+                    margin: 0 0 10px;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 6px;
+                  "
+                >
+                  Por Categoría
+                </h4>
+                <div id="salidasPorCategoria"></div>
+              </div>
+              <div class="card" style="padding: 14px">
+                <h4
+                  style="
+                    margin: 0 0 10px;
+                    border-bottom: 1px solid #eee;
+                    padding-bottom: 6px;
+                  "
+                >
+                  Por Método de Pago
+                </h4>
+                <div id="salidasPorMetodo"></div>
+              </div>
+            </div>
+
+            <!-- Tabla detalle -->
+            <div class="card" style="padding: 14px">
+              <h4
+                style="
+                  margin: 0 0 10px;
+                  border-bottom: 1px solid #eee;
+                  padding-bottom: 6px;
+                "
+              >
+                Detalle de Salidas
+              </h4>
+              <div style="overflow-x: auto">
+                <table
+                  style="
+                    width: 100%;
+                    font-size: 13px;
+                    border-collapse: collapse;
+                  "
+                >
+                  <thead>
+                    <tr style="background: var(--clr-primary); color: #fff">
+                      <th style="padding: 8px 10px; text-align: left">
+                        N° Salida
+                      </th>
+                      <th style="padding: 8px 10px; text-align: left">Fecha</th>
+                      <th style="padding: 8px 10px; text-align: left">
+                        Concepto
+                      </th>
+                      <th style="padding: 8px 10px; text-align: left">
+                        Descripción
+                      </th>
+                      <th style="padding: 8px 10px; text-align: right">
+                        Monto
+                      </th>
+                      <th style="padding: 8px 10px; text-align: left">
+                        Categoría
+                      </th>
+                      <th style="padding: 8px 10px; text-align: left">
+                        Método
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="salidasTabla"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cargar en este orden -->
+    <script src="js/utils/toast.js"></script>
+    <script src="js/utils/dom-utils.js"></script>
+    <script src="js/utils/formatters.js"></script>
+    <script src="js/utils/validators.js"></script>
+    <script src="js/api/api-client.js"></script>
+    <script src="js/api/clientes-api.js"></script>
+    <script src="js/api/productos-api.js"></script>
+    <script src="js/api/ventas-api.js"></script>
+    <script src="js/api/facturacion-api.js"></script>
+    <script src="js/api/servicios-api.js"></script>
+    <script src="js/api/categorias-api.js"></script>
+    <script src="js/api/proveedores-api.js"></script>
+    <script src="js/api/devoluciones-api.js"></script>
+    <script src="js/api/pagos-api.js"></script>
+    <script src="js/api/configuracion-api.js"></script>
+    <script src="js/api/reportes-api.js"></script>
+    <script src="js/api/salidas-api.js"></script>
+    <!-- Modales script-->
+    <script>
+      Promise.all([
+        fetch("modales/modales.html").then((r) => r.text()),
+        fetch("modales/modales-clientes.html").then((r) => r.text()),
+      ]).then(([modalesFacturacion, modalesClientes]) => {
+        document.getElementById("modales-container").innerHTML =
+          modalesFacturacion + modalesClientes;
+        console.log(" Modales HTML cargados");
+      });
+    </script>
+    <script src="js/api/api-global.js"></script>
+    <script src="js/utils/barcode-scanner.js"></script>
+    <script src="js/modules/productos-module.js"></script>
+    <script src="js/modules/proveedores-module.js"></script>
+    <script src="js/modules/verificador-module.js"></script>
+    <script src="js/modules/salidas-module.js"></script>
+    <script src="js/modules/configuracion-module.js"></script>
+    <script src="js/modules/clientes.js"></script>
+    <script src="js/modules/ventas.js"></script>
+    <script src="js/modules/factura-impresion.js"></script>
+    <script src="js/modules/facturacion-busqueda.js"></script>
+    <script src="js/modules/devoluciones-module.js"></script>
+    <script src="js/modules/pagos-module.js"></script>
+    <script src="js/modules/creditos-module.js"></script>
+    <script src="js/modules/reportes-module.js"></script>
+    <script src="js/modules/reporte-inventario-module.js"></script>
+    <script src="js/modules/inventario-vendido-module.js"></script>
+    <script src="js/api/auth-api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/modules/usuarios-module.js"></script>
+    <script src="index.js"></script>
   </body>
 </html>
