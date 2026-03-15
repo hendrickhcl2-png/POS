@@ -215,15 +215,15 @@ const CreditosModule = {
           ${this._fmt(c.saldo_pendiente)}
         </td>
         <td style="text-align:center;">
-          <div style="display:flex;gap:6px;justify-content:center;">
+          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
             <button
               class="btn btn-primary btn-small"
               onclick="CreditosModule.abrirModalPago(${c.cliente_id})"
             >Pagar</button>
             <button
-              class="btn btn-secondary btn-small"
-              onclick="CreditosModule.abrirModalHistorial(${c.cliente_id}, '${(c.nombre + " " + (c.apellido || "")).trim()}')"
-            >Historial</button>
+              class="btn btn-info btn-small"
+              onclick="CreditosModule.abrirReporteCredito(${c.cliente_id}, '${(c.nombre + " " + (c.apellido || "")).trim().replace(/'/g, "\\'")}')"
+            >Reporte</button>
           </div>
         </td>
       </tr>`,
@@ -429,6 +429,116 @@ const CreditosModule = {
            <button class="btn btn-secondary" onclick="CreditosModule._cerrarModal('modalCreditoHistorial')">Cerrar</button>
          </div>`,
       "660px",
+    );
+
+    document.body.appendChild(modal);
+    modal.style.display = "flex";
+  },
+
+  // ==================== REPORTE CUENTAS POR COBRAR ====================
+
+  async abrirReporteCredito(clienteId, nombreCliente) {
+    let data;
+    try {
+      data = await API.Clientes.getReporteCredito(clienteId);
+    } catch (err) {
+      alert("Error al cargar el reporte.");
+      return;
+    }
+
+    const { cliente, facturas } = data;
+    const nombreCompleto = `${cliente.nombre} ${cliente.apellido || ""}`.trim();
+    const totalPendiente = facturas.reduce((s, f) => s + parseFloat(f.saldo_pendiente || 0), 0);
+    const totalOriginal = facturas.reduce((s, f) => s + parseFloat(f.total || 0), 0);
+    const totalPagado = facturas.reduce((s, f) => s + parseFloat(f.monto_pagado || 0), 0);
+
+    const filasFacturas = facturas.length === 0
+      ? `<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--clr-muted);">No hay facturas de crédito registradas.</td></tr>`
+      : facturas.map((f, idx) => {
+          const estadoColor = f.estado === 'pagada' ? 'var(--clr-success)' : f.estado === 'parcial' ? 'var(--clr-warning)' : 'var(--clr-danger)';
+          const estadoLabel = f.estado === 'pagada' ? 'Pagada' : f.estado === 'parcial' ? 'Parcial' : 'Pendiente';
+          const vencimiento = f.fecha_vencimiento ? this._formatFecha(f.fecha_vencimiento) : '—';
+          const pagosHtml = f.pagos && f.pagos.length > 0
+            ? f.pagos.map(p => `
+                <tr style="background:#f0faf5;">
+                  <td style="padding:6px 12px;font-size:12px;color:var(--clr-muted);">${this._formatFecha(p.fecha)}</td>
+                  <td style="padding:6px 12px;font-size:12px;color:var(--clr-muted);">${p.numero_pago}</td>
+                  <td colspan="2" style="padding:6px 12px;font-size:12px;text-transform:capitalize;">${p.metodo_pago}${p.referencia ? ' — ' + p.referencia : ''}${p.banco ? ' (' + p.banco + ')' : ''}</td>
+                  <td style="padding:6px 12px;font-size:13px;font-weight:700;color:var(--clr-success);text-align:right;">+${this._fmt(p.monto)}</td>
+                  <td></td>
+                </tr>`).join('')
+            : `<tr style="background:#f8f9fa;"><td colspan="6" style="padding:6px 18px;font-size:12px;color:var(--clr-muted);font-style:italic;">Sin abonos registrados</td></tr>`;
+
+          return `
+            <tr style="cursor:pointer;border-top:2px solid var(--clr-border);" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'':'none'">
+              <td style="padding:10px 12px;font-size:13px;font-weight:600;">${f.numero_factura}</td>
+              <td style="padding:10px 12px;font-size:13px;">${this._formatFecha(f.fecha)}</td>
+              <td style="padding:10px 12px;text-align:right;font-size:13px;">${this._fmt(f.total)}</td>
+              <td style="padding:10px 12px;text-align:right;font-size:13px;color:var(--clr-success);">${this._fmt(f.monto_pagado)}</td>
+              <td style="padding:10px 12px;text-align:right;font-size:13px;font-weight:700;color:${estadoColor};">${this._fmt(f.saldo_pendiente)}</td>
+              <td style="padding:10px 12px;text-align:center;">
+                <span style="background:${estadoColor};color:white;padding:2px 10px;border-radius:10px;font-size:11px;">${estadoLabel}</span>
+                <span style="font-size:11px;color:var(--clr-muted);display:block;margin-top:2px;">Vence: ${vencimiento}</span>
+              </td>
+            </tr>
+            <tr>
+              <td colspan="6" style="padding:0;background:#f8f9fa;">
+                <table style="width:100%;border-collapse:collapse;">
+                  <thead>
+                    <tr style="background:#e8f5e9;">
+                      <th style="padding:6px 12px;font-size:11px;color:var(--clr-muted);text-align:left;">Fecha abono</th>
+                      <th style="padding:6px 12px;font-size:11px;color:var(--clr-muted);text-align:left;"># Pago</th>
+                      <th colspan="2" style="padding:6px 12px;font-size:11px;color:var(--clr-muted);text-align:left;">Método / Referencia</th>
+                      <th style="padding:6px 12px;font-size:11px;color:var(--clr-muted);text-align:right;">Monto</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>${pagosHtml}</tbody>
+                </table>
+              </td>
+            </tr>`;
+        }).join('');
+
+    const resumen = `
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+        <div style="flex:1;min-width:130px;background:var(--clr-bg-surface);border-radius:8px;padding:14px;text-align:center;border:1px solid var(--clr-border);">
+          <div style="font-size:12px;color:var(--clr-muted);">Monto original</div>
+          <div style="font-size:18px;font-weight:700;">${this._fmt(totalOriginal)}</div>
+        </div>
+        <div style="flex:1;min-width:130px;background:#f0faf5;border-radius:8px;padding:14px;text-align:center;border:1px solid var(--clr-border);">
+          <div style="font-size:12px;color:var(--clr-muted);">Total abonado</div>
+          <div style="font-size:18px;font-weight:700;color:var(--clr-success);">${this._fmt(totalPagado)}</div>
+        </div>
+        <div style="flex:1;min-width:130px;background:#fff5f5;border-radius:8px;padding:14px;text-align:center;border:1px solid var(--clr-border);">
+          <div style="font-size:12px;color:var(--clr-muted);">Saldo pendiente</div>
+          <div style="font-size:18px;font-weight:700;color:var(--clr-danger);">${this._fmt(totalPendiente)}</div>
+        </div>
+      </div>
+      ${cliente.cedula || cliente.telefono ? `<p style="font-size:13px;color:var(--clr-muted);margin:0 0 16px;">${cliente.cedula ? 'Cédula: ' + cliente.cedula : ''} ${cliente.telefono ? '&nbsp;|&nbsp; Tel: ' + cliente.telefono : ''}</p>` : ''}
+      <p style="font-size:12px;color:var(--clr-muted);margin:0 0 12px;">Haz clic en una factura para ver sus abonos.</p>`;
+
+    const tabla = `
+      <div class="tabla-scroll-horizontal">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:var(--clr-bg-surface);">
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Factura</th>
+              <th style="padding:10px 12px;text-align:left;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Fecha</th>
+              <th style="padding:10px 12px;text-align:right;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Original</th>
+              <th style="padding:10px 12px;text-align:right;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Abonado</th>
+              <th style="padding:10px 12px;text-align:right;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Pendiente</th>
+              <th style="padding:10px 12px;text-align:center;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Estado</th>
+            </tr>
+          </thead>
+          <tbody>${filasFacturas}</tbody>
+        </table>
+      </div>`;
+
+    const modal = this._crearModal(
+      "modalReporteCredito",
+      `Cuentas por Cobrar — ${nombreCompleto}`,
+      resumen + tabla + `<div class="js-modal__actions"><button class="btn btn-secondary" onclick="CreditosModule._cerrarModal('modalReporteCredito')">Cerrar</button></div>`,
+      "780px",
     );
 
     document.body.appendChild(modal);

@@ -342,6 +342,51 @@ router.get(
   }),
 );
 
+// ==================== REPORTE CUENTAS POR COBRAR ====================
+router.get(
+  "/:id/reporte-credito",
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
+
+    const clienteResult = await pool.query(
+      `SELECT id, nombre, apellido, cedula, rnc, telefono, email
+       FROM clientes WHERE id = $1`,
+      [id],
+    );
+    if (clienteResult.rows.length === 0) {
+      return res.status(404).json({ error: "Cliente no encontrado" });
+    }
+
+    const facturasResult = await pool.query(
+      `SELECT f.id, f.numero_factura, f.fecha, f.total,
+              f.monto_pagado, f.saldo_pendiente, f.estado,
+              f.fecha_vencimiento
+       FROM facturas f
+       WHERE f.cliente_id = $1
+         AND f.tipo_factura = 'credito'
+         AND f.estado != 'anulada'
+       ORDER BY f.fecha DESC`,
+      [id],
+    );
+
+    const facturas = facturasResult.rows;
+
+    // Cargar pagos de cada factura
+    for (const f of facturas) {
+      const pagosResult = await pool.query(
+        `SELECT numero_pago, fecha, hora, monto, metodo_pago, referencia, banco, notas
+         FROM pagos_factura
+         WHERE factura_id = $1
+         ORDER BY fecha ASC, hora ASC`,
+        [f.id],
+      );
+      f.pagos = pagosResult.rows;
+    }
+
+    res.json({ cliente: clienteResult.rows[0], facturas });
+  }),
+);
+
 // ==================== CREAR CLIENTE ====================
 router.post(
   "/",

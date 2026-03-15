@@ -75,6 +75,11 @@ const ClientesAPI = {
   async getCreditosPagados() {
     return await APIClient.request("/clientes/creditos-pagados");
   },
+
+  // Reporte completo cuentas por cobrar de un cliente
+  async getReporteCredito(clienteId) {
+    return await APIClient.get(`/clientes/${clienteId}/reporte-credito`);
+  },
 };
 
 // Exportar
