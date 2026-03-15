@@ -1213,28 +1213,50 @@ const VentasModule = {
 
   // ==================== HISTORIAL ====================
 
+  _fechaLocal() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  },
+
   async cargarHistorialHoy() {
+  const hoy = this._fechaLocal();
+  const desde = document.getElementById("historialFechaDesde");
+  const hasta = document.getElementById("historialFechaHasta");
+  // Inicializar los inputs con la fecha de hoy si están vacíos
+  if (desde && !desde.value) desde.value = hoy;
+  if (hasta && !hasta.value) hasta.value = hoy;
+  await this.cargarHistorialPorFechas(
+    desde?.value || hoy,
+    hasta?.value || hoy,
+  );
+  },
+
+  async cargarHistorialPorFechas(fechaDesde, fechaHasta) {
   try {
-  const hoy = new Date().toISOString().split("T")[0];
-  const response = await API.Ventas.getAll(hoy, hoy);
+  const response = await API.Ventas.getAll(fechaDesde, fechaHasta);
   const ventas = response.data || response;
-
-  this.renderizarHistorial(ventas);
-
+  this.renderizarHistorial(ventas, fechaDesde, fechaHasta);
   } catch (error) {
   console.error(" Error al cargar historial:", error);
   }
   },
 
-  renderizarHistorial(ventas) {
+  renderizarHistorial(ventas, fechaDesde, fechaHasta) {
   const tbody = document.getElementById("tablaVentasHoy");
   if (!tbody) return;
+
+  // Actualizar conteo
+  const conteo = document.getElementById("historialConteo");
+  if (conteo) {
+    const total = ventas.reduce((s, v) => s + parseFloat(v.total || 0), 0);
+    conteo.textContent = `${ventas.length} venta(s) — Total: ${this.formatCurrency(total)}`;
+  }
 
   if (ventas.length === 0) {
   tbody.innerHTML = `
   <tr>
   <td colspan="6" class="text-center" style="color: #7f8c8d;">
-  No hay ventas registradas hoy
+  No hay ventas en ese período
   </td>
   </tr>
   `;
