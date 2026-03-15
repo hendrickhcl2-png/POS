@@ -49,7 +49,7 @@ const ReportesController = {
         fechaFin = fecha_fin;
       }
 
-      // Ventas contado del periodo (excluye ventas con factura de crédito)
+      // Todas las ventas del periodo (contado y crédito)
       const ventasResult = await pool.query(
         `SELECT
           v.id,
@@ -75,7 +75,6 @@ const ReportesController = {
           GROUP BY venta_id
         ) dev ON dev.venta_id = v.id
         WHERE v.fecha >= $1 AND v.fecha <= $2
-          AND COALESCE(f.tipo_factura, 'contado') != 'credito'
           AND COALESCE(f.estado, 'pagada') != 'anulada'
         ORDER BY v.fecha DESC, v.hora DESC`,
         [fechaInicio, fechaFin],
@@ -127,11 +126,6 @@ const ReportesController = {
         }
       }
 
-      // Sumar pagos de crédito al total bruto
-      const totalPagosCredito = pagosResult.rows.reduce(
-        (sum, p) => sum + parseFloat(p.monto), 0,
-      );
-
       // Devoluciones del periodo
       const devolucionesResult = await pool.query(
         `SELECT
@@ -169,7 +163,6 @@ const ReportesController = {
       const totalDevoluciones = devolucionesResult.rows.reduce(
         (sum, d) => sum + parseFloat(d.monto_devuelto), 0,
       );
-      totalVentasBruto += totalPagosCredito;
       const totalVentasNeto = totalVentasBruto - totalDevoluciones;
 
       // Costos operativos del periodo (salidas/gastos)
@@ -183,55 +176,31 @@ const ReportesController = {
       const gananciaNeta = totalVentasNeto - totalCostos - totalSalidas;
       const margen = totalVentasNeto > 0 ? (ganancia / totalVentasNeto) * 100 : 0;
 
-      // Resumen por método de pago (contado + pagos crédito)
+      // Resumen por método de pago (todas las ventas, contado y crédito)
       const metodosPagoResult = await pool.query(
-        `SELECT metodo_pago,
-          SUM(cantidad) AS cantidad_ventas,
-          SUM(total_ventas) AS total_ventas
-        FROM (
-          SELECT v.metodo_pago, COUNT(*) AS cantidad, SUM(v.total) AS total_ventas
-          FROM ventas v
-          LEFT JOIN facturas f ON v.id = f.venta_id
-          WHERE v.fecha >= $1 AND v.fecha <= $2
-            AND COALESCE(f.tipo_factura, 'contado') != 'credito'
-            AND COALESCE(f.estado, 'pagada') != 'anulada'
-          GROUP BY metodo_pago
-          UNION ALL
-          SELECT pf.metodo_pago, COUNT(*) AS cantidad, SUM(pf.monto) AS total_ventas
-          FROM pagos_factura pf
-          JOIN facturas f ON pf.factura_id = f.id
-          WHERE pf.fecha >= $1 AND pf.fecha <= $2
-            AND f.estado != 'anulada'
-          GROUP BY pf.metodo_pago
-        ) combined
-        GROUP BY metodo_pago
+        `SELECT v.metodo_pago,
+          COUNT(*) AS cantidad_ventas,
+          SUM(v.total) AS total_ventas
+        FROM ventas v
+        LEFT JOIN facturas f ON v.id = f.venta_id
+        WHERE v.fecha >= $1 AND v.fecha <= $2
+          AND COALESCE(f.estado, 'pagada') != 'anulada'
+        GROUP BY v.metodo_pago
         ORDER BY total_ventas DESC`,
         [fechaInicio, fechaFin],
       );
 
-      // Ventas por día (contado + pagos crédito)
+      // Ventas por día (todas las ventas, contado y crédito)
       const ventasPorDiaResult = await pool.query(
-        `SELECT fecha,
-          SUM(cantidad) AS cantidad_ventas,
-          SUM(total_ventas) AS total_ventas
-        FROM (
-          SELECT v.fecha, COUNT(*) AS cantidad, SUM(v.total) AS total_ventas
-          FROM ventas v
-          LEFT JOIN facturas f ON v.id = f.venta_id
-          WHERE v.fecha >= $1 AND v.fecha <= $2
-            AND COALESCE(f.tipo_factura, 'contado') != 'credito'
-            AND COALESCE(f.estado, 'pagada') != 'anulada'
-          GROUP BY v.fecha
-          UNION ALL
-          SELECT pf.fecha, COUNT(*) AS cantidad, SUM(pf.monto) AS total_ventas
-          FROM pagos_factura pf
-          JOIN facturas f ON pf.factura_id = f.id
-          WHERE pf.fecha >= $1 AND pf.fecha <= $2
-            AND f.estado != 'anulada'
-          GROUP BY pf.fecha
-        ) combined
-        GROUP BY fecha
-        ORDER BY fecha ASC`,
+        `SELECT v.fecha,
+          COUNT(*) AS cantidad_ventas,
+          SUM(v.total) AS total_ventas
+        FROM ventas v
+        LEFT JOIN facturas f ON v.id = f.venta_id
+        WHERE v.fecha >= $1 AND v.fecha <= $2
+          AND COALESCE(f.estado, 'pagada') != 'anulada'
+        GROUP BY v.fecha
+        ORDER BY v.fecha ASC`,
         [fechaInicio, fechaFin],
       );
 
@@ -253,7 +222,7 @@ const ReportesController = {
           ganancia: parseFloat(ganancia.toFixed(2)),
           ganancia_neta: parseFloat(gananciaNeta.toFixed(2)),
           margen_porcentaje: parseFloat(margen.toFixed(2)),
-          cantidad_ventas: ventasResult.rows.length + pagosResult.rows.length,
+          cantidad_ventas: ventasResult.rows.length,
         },
         ventas: ventasResult.rows,
         pagos_credito: pagosResult.rows,
@@ -594,7 +563,23 @@ const ReportesController = {
         [fechaDia],
       );
 
-      // 6. Ventas por categoría
+      // 6. Ventas a crédito del día
+      const ventasCreditoResult = await pool.query(
+        `SELECT
+          v.id, v.numero_ticket, v.total, v.hora,
+          TRIM(CONCAT(c.nombre, ' ', COALESCE(c.apellido, ''))) AS cliente_nombre,
+          f.numero_factura, f.saldo_pendiente
+        FROM ventas v
+        LEFT JOIN clientes c ON v.cliente_id = c.id
+        JOIN facturas f ON v.id = f.venta_id
+        WHERE v.fecha = $1
+          AND f.tipo_factura = 'credito'
+          AND f.estado != 'anulada'
+        ORDER BY v.id ASC`,
+        [fechaDia],
+      );
+
+      // 7. Ventas por categoría
       const porCategoriaResult = await pool.query(
         `SELECT
           COALESCE(cat.nombre, 'Sin categoría') AS categoria,
@@ -605,7 +590,6 @@ const ReportesController = {
         LEFT JOIN categorias cat ON p.categoria_id = cat.id
         LEFT JOIN facturas f ON v.id = f.venta_id
         WHERE v.fecha = $1
-          AND COALESCE(f.tipo_factura, 'contado') != 'credito'
           AND COALESCE(f.estado, 'pagada') != 'anulada'
           AND dv.producto_id IS NOT NULL
         GROUP BY cat.nombre
@@ -613,7 +597,7 @@ const ReportesController = {
         [fechaDia],
       );
 
-      // 7. Configuración del negocio
+      // 8. Configuración del negocio
       const configResult = await pool.query(
         "SELECT nombre_negocio, direccion, telefono FROM configuracion ORDER BY id DESC LIMIT 1",
       );
@@ -624,6 +608,9 @@ const ReportesController = {
       const salidas = salidasResult.rows;
       const pagos = pagosResult.rows;
       const devoluciones = devolucionesResult.rows;
+      const ventasCredito = ventasCreditoResult.rows;
+
+      const totalVentasCreditoDia = ventasCredito.reduce((sum, v) => sum + parseFloat(v.total), 0);
 
       // Ventas por método (desglosando mixto)
       let totalEfectivo = 0, totalTarjeta = 0, totalTransferencia = 0;
@@ -701,6 +688,8 @@ const ReportesController = {
           config,
           fondo_caja: fondoCaja,
           cantidad_ventas: ventas.length,
+          cantidad_ventas_credito: ventasCredito.length,
+          total_ventas_credito: totalVentasCreditoDia,
 
           // Ventas por método
           ventas_efectivo: totalEfectivo,
@@ -732,6 +721,7 @@ const ReportesController = {
           devoluciones_efectivo: devEfectivoList,
           devoluciones_credito: devCreditoList,
           por_categoria: porCategoriaResult.rows,
+          ventas_credito_lista: ventasCredito,
         },
       });
     } catch (error) {

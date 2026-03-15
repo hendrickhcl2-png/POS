@@ -553,6 +553,16 @@ const ReportesModule = {
   document.getElementById("cEfectivoCaja").textContent = f(c.efectivo_en_caja);
   document.getElementById("cCantidadVentas").textContent = c.cantidad_ventas;
 
+  // Ventas a crédito del día
+  const cantidadCreditoEl = document.getElementById("cCantidadCredito");
+  if (cantidadCreditoEl) cantidadCreditoEl.textContent = c.cantidad_ventas_credito || 0;
+  const totalCreditoEl = document.getElementById("cTotalCreditoDia");
+  if (totalCreditoEl) {
+    totalCreditoEl.textContent = (c.cantidad_ventas_credito || 0) > 0
+      ? f(c.total_ventas_credito)
+      : "";
+  }
+
   // Dinero en caja
   document.getElementById("cFondoCaja").textContent = f(c.fondo_caja);
   document.getElementById("cVentasEfectivo").textContent = f(c.ventas_efectivo);
@@ -565,10 +575,10 @@ const ReportesModule = {
   document.getElementById("cMetEfectivo").textContent = f(c.ventas_efectivo);
   document.getElementById("cMetTarjeta").textContent = f(c.ventas_tarjeta);
   document.getElementById("cMetTransferencia").textContent = f(c.ventas_transferencia);
-  document.getElementById("cMetCredito").textContent = f(c.ventas_credito);
+  document.getElementById("cMetCredito").textContent = f(c.total_ventas_credito);
   document.getElementById("cMetCheque").textContent = f(c.ventas_cheque);
   document.getElementById("cDevoluciones").textContent = neg(c.devoluciones_total);
-  document.getElementById("cTotalVentas").textContent = f(c.ventas_neto);
+  document.getElementById("cTotalVentas").textContent = f((c.ventas_neto || 0) + (c.total_ventas_credito || 0));
 
   // Ingresos contado
   document.getElementById("cIngEfectivo").textContent = f(c.ventas_efectivo);
@@ -631,6 +641,33 @@ const ReportesModule = {
   }
 
   devDiv.innerHTML = devHtml || "<span style='color:var(--clr-muted);'>Sin devoluciones</span>";
+
+  // Ventas a crédito del día
+  const creditosCuerpo = document.getElementById("cuadreCreditosCuerpo");
+  const creditosCard = document.getElementById("cuadreCreditosCard");
+  if (creditosCuerpo) {
+    const lista = c.ventas_credito_lista || [];
+    if (lista.length === 0) {
+      creditosCuerpo.innerHTML = `<tr><td colspan="5" style="color:var(--clr-muted);padding:8px 0;">Sin ventas a crédito hoy</td></tr>`;
+    } else {
+      let totalSaldo = 0;
+      creditosCuerpo.innerHTML = lista.map(v => {
+        totalSaldo += parseFloat(v.saldo_pendiente || 0);
+        return `<tr>
+          <td style="font-weight:600;color:var(--clr-primary);">${v.numero_ticket}</td>
+          <td>${v.numero_factura || "—"}</td>
+          <td>${v.cliente_nombre || "—"}</td>
+          <td style="text-align:right;">${f(v.total)}</td>
+          <td style="text-align:right;color:var(--clr-warning);">${f(v.saldo_pendiente || 0)}</td>
+        </tr>`;
+      }).join("");
+      creditosCuerpo.innerHTML += `<tr style="font-weight:700;border-top:2px solid #ccc;">
+        <td colspan="3">Total</td>
+        <td style="text-align:right;">${f(c.total_ventas_credito)}</td>
+        <td style="text-align:right;color:var(--clr-warning);">${f(totalSaldo)}</td>
+      </tr>`;
+    }
+  }
   },
 
   async descargarCuadreExcel() {

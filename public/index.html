@@ -2817,7 +2817,7 @@
                     text-transform: uppercase;
                   "
                 >
-                  Ventas
+                  Ventas Contado
                 </div>
                 <div
                   id="cCantidadVentas"
@@ -2825,6 +2825,24 @@
                 >
                   0
                 </div>
+              </div>
+              <div class="card" style="padding: 14px; text-align: center">
+                <div
+                  style="
+                    font-size: 11px;
+                    color: var(--clr-muted);
+                    text-transform: uppercase;
+                  "
+                >
+                  Ventas Crédito
+                </div>
+                <div
+                  id="cCantidadCredito"
+                  style="font-size: 22px; font-weight: 700; color: var(--clr-warning)"
+                >
+                  0
+                </div>
+                <div id="cTotalCreditoDia" style="font-size: 12px; color: var(--clr-muted)"></div>
               </div>
             </div>
 
@@ -3048,6 +3066,35 @@
                 style="width: 100%; font-size: 13px"
                 id="cuadrePagosTabla"
               ></table>
+            </div>
+
+            <!-- Ventas a Crédito del Día -->
+            <div
+              class="card"
+              style="padding: 14px; margin-bottom: 16px"
+              id="cuadreCreditosCard"
+            >
+              <h4
+                style="
+                  margin: 0 0 10px;
+                  border-bottom: 1px solid #eee;
+                  padding-bottom: 6px;
+                "
+              >
+                Ventas a Crédito del Día
+              </h4>
+              <table style="width: 100%; font-size: 13px" id="cuadreCreditosTabla">
+                <thead>
+                  <tr style="color: var(--clr-muted); font-size: 11px;">
+                    <th style="text-align:left; padding-bottom:4px;">Ticket</th>
+                    <th style="text-align:left; padding-bottom:4px;">Factura</th>
+                    <th style="text-align:left; padding-bottom:4px;">Cliente</th>
+                    <th style="text-align:right; padding-bottom:4px;">Total</th>
+                    <th style="text-align:right; padding-bottom:4px;">Saldo Pend.</th>
+                  </tr>
+                </thead>
+                <tbody id="cuadreCreditosCuerpo"></tbody>
+              </table>
             </div>
 
             <!-- Devoluciones -->
