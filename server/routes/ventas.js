@@ -38,6 +38,12 @@ router.patch("/:id/fecha", requireAdmin, async (req, res) => {
       return res.status(404).json({ error: "Venta no encontrada o está anulada" });
     }
 
+    // Sincronizar fecha en la factura asociada
+    await pool.query(
+      `UPDATE facturas SET fecha = $1 WHERE venta_id = $2`,
+      [fecha, id]
+    );
+
     res.json({ success: true, fecha: result.rows[0].fecha });
   } catch (error) {
     console.error("❌ Error al actualizar fecha de venta:", error);
