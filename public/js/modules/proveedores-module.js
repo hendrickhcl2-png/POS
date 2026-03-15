@@ -133,6 +133,7 @@ function actualizarTablaProveedores() {
         <td>${p.telefono || "-"}</td>
         <td>${p.email || "-"}</td>
         <td>
+          <button class="btn btn-info btn-small" onclick="FacturasProveedoresModule.filtrarPorProveedor('${p.nombre.replace(/'/g, "\\'")}')">Ver Facturas</button>
           <button class="btn btn-warning btn-small" onclick="editarProveedor(${p.id})">Editar</button>
           <button class="btn btn-danger btn-small" onclick="eliminarProveedor(${p.id})">Eliminar</button>
         </td>

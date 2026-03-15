@@ -1571,10 +1571,11 @@
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
               <h3 style="margin:0">Facturas de Proveedores</h3>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <select id="facturaFiltroProveedor" style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px">
-                  <option value="">Todos los proveedores</option>
-                </select>
-                <button class="btn btn-primary btn-small" onclick="FacturasProveedoresModule.cargar()">Filtrar</button>
+                <input type="text" id="facturasBusqueda"
+                  placeholder="Buscar por proveedor o N° factura..."
+                  oninput="FacturasProveedoresModule._renderFiltrado()"
+                  style="padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:14px;min-width:260px"/>
+                <button class="btn btn-secondary btn-small" onclick="FacturasProveedoresModule.cargar()">↻ Recargar</button>
               </div>
             </div>
             <div class="tabla-scroll-horizontal">
@@ -1610,26 +1611,28 @@
 
           <div class="card">
             <h3>Lista de Proveedores</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Nombre</th>
-                  <th>Descripción</th>
-                  <th>Contacto</th>
-                  <th>Teléfono</th>
-                  <th>Email</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="tablaProveedores">
-                <tr>
-                  <td colspan="7" class="text-center tabla-vacia-mensaje">
-                    No hay proveedores registrados
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="tabla-scroll-horizontal">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Contacto</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaProveedores">
+                  <tr>
+                    <td colspan="7" class="text-center tabla-vacia-mensaje">
+                      No hay proveedores registrados
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 

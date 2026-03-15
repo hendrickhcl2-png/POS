@@ -1,44 +1,67 @@
 // ==================== MÓDULO FACTURAS DE PROVEEDORES ====================
 
 const FacturasProveedoresModule = {
+  _data: [],
+
   async cargar() {
     const tbody = document.getElementById("tablaFacturasProveedores");
     if (!tbody) return;
     tbody.innerHTML = `<tr><td colspan="7" class="text-center tabla-cargando">Cargando...</td></tr>`;
 
     try {
-      const proveedorId = document.getElementById("facturaFiltroProveedor")?.value || null;
-      const data = await window.API.Proveedores.getFacturas(proveedorId || null);
-
-      if (!data || data.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center tabla-vacia-mensaje">No hay facturas registradas</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = data.map((f) => {
-        const fecha = f.fecha ? new Date(f.fecha + "T00:00:00").toLocaleDateString("es-DO") : "—";
-        const costo = parseFloat(f.total_costo) || 0;
-        return `
-          <tr>
-            <td><strong>${f.numero}</strong></td>
-            <td>${f.proveedor_nombre || '<span style="color:var(--text-muted)">Sin proveedor</span>'}</td>
-            <td>${fecha}</td>
-            <td>${f.ncf || "—"}</td>
-            <td style="text-align:center">${f.cantidad_productos}</td>
-            <td style="font-weight:600;color:var(--clr-danger)">$${costo.toFixed(2)}</td>
-            <td>
-              <button class="btn btn-info btn-small"
-                onclick="FacturasProveedoresModule.verDetalle('${f.numero.replace(/'/g, "\\'")}', '${(f.proveedor_nombre || "").replace(/'/g, "\\'")}', '${f.fecha || ""}')">
-                Ver productos
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join("");
+      this._data = await window.API.Proveedores.getFacturas(null);
+      this._renderFiltrado();
     } catch (e) {
-      const tbody = document.getElementById("tablaFacturasProveedores");
-      if (tbody) tbody.innerHTML = `<tr><td colspan="7" class="text-center">Error al cargar facturas</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center">Error al cargar facturas</td></tr>`;
     }
+  },
+
+  _renderFiltrado() {
+    const tbody = document.getElementById("tablaFacturasProveedores");
+    if (!tbody) return;
+
+    const q = (document.getElementById("facturasBusqueda")?.value || "").toLowerCase().trim();
+    const data = q
+      ? this._data.filter((f) =>
+          (f.numero || "").toLowerCase().includes(q) ||
+          (f.proveedor_nombre || "").toLowerCase().includes(q)
+        )
+      : this._data;
+
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center tabla-vacia-mensaje">${q ? "No se encontraron facturas" : "No hay facturas registradas"}</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map((f) => {
+      const fecha = f.fecha ? new Date(f.fecha + "T00:00:00").toLocaleDateString("es-DO") : "—";
+      const costo = parseFloat(f.total_costo) || 0;
+      return `
+        <tr>
+          <td><strong>${f.numero}</strong></td>
+          <td>${f.proveedor_nombre || '<span style="color:var(--text-muted)">Sin proveedor</span>'}</td>
+          <td>${fecha}</td>
+          <td>${f.ncf || "—"}</td>
+          <td style="text-align:center">${f.cantidad_productos}</td>
+          <td style="font-weight:600;color:var(--clr-danger)">$${costo.toFixed(2)}</td>
+          <td>
+            <button class="btn btn-info btn-small"
+              onclick="FacturasProveedoresModule.verDetalle('${f.numero.replace(/'/g, "\\'")}', '${(f.proveedor_nombre || "").replace(/'/g, "\\'")}', '${f.fecha || ""}')">
+              Ver productos
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+  },
+
+  filtrarPorProveedor(nombre) {
+    const input = document.getElementById("facturasBusqueda");
+    if (input) input.value = nombre;
+    this._renderFiltrado();
+    document.getElementById("tablaFacturasProveedores")
+      ?.closest(".card")
+      ?.scrollIntoView({ behavior: "smooth" });
   },
 
   async verDetalle(numero, proveedor, fecha) {
@@ -104,13 +127,8 @@ const FacturasProveedoresModule = {
     }
   },
 
-  actualizarFiltroProveedores() {
-    const sel = document.getElementById("facturaFiltroProveedor");
-    if (!sel) return;
-    const proveedores = window._proveedores || [];
-    sel.innerHTML = `<option value="">Todos los proveedores</option>` +
-      proveedores.map((p) => `<option value="${p.id}">${p.nombre}</option>`).join("");
-  },
+  // Kept for backwards compatibility (called from index.js)
+  actualizarFiltroProveedores() {},
 };
 
 window.FacturasProveedoresModule = FacturasProveedoresModule;
