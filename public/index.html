@@ -2000,12 +2000,11 @@
             .rpt-panel.active { display:block; }
 
             /* KPI cards grid */
-            .rpt-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:16px; }
-            .rpt-kpi { border-radius:14px; padding:18px 20px; position:relative; overflow:hidden; background:var(--clr-bg); border:1px solid var(--clr-border); }
-            .rpt-kpi-accent { position:absolute; top:0; right:0; width:52px; height:100%; opacity:.08; }
-            .rpt-kpi-icon { font-size:26px; position:absolute; top:14px; right:16px; opacity:.55; }
+            .rpt-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:14px; margin-bottom:16px; }
+            .rpt-kpi { border-radius:14px; padding:16px 18px; position:relative; overflow:hidden; background:var(--clr-bg); border:1px solid var(--clr-border); }
+            .rpt-kpi-accent { position:absolute; top:0; right:0; width:44px; height:100%; opacity:.07; pointer-events:none; }
             .rpt-kpi-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--clr-muted); margin-bottom:8px; }
-            .rpt-kpi-value { font-size:24px; font-weight:800; line-height:1.1; margin-bottom:4px; }
+            .rpt-kpi-value { font-size:20px; font-weight:800; line-height:1.2; margin-bottom:4px; overflow-wrap:break-word; word-break:break-word; }
             .rpt-kpi-sub { font-size:11px; color:var(--clr-muted); line-height:1.5; }
 
             .rpt-kpi--ventas  { border-left:4px solid #3498db; } .rpt-kpi--ventas  .rpt-kpi-accent { background:#3498db; } .rpt-kpi--ventas  .rpt-kpi-value { color:#3498db; }
@@ -2024,7 +2023,7 @@
             .ci-kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-bottom:16px; }
             .ci-kpi { border-radius:10px; padding:14px 16px; border-left:3px solid; }
             .ci-kpi-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--clr-muted); margin-bottom:6px; }
-            .ci-kpi-val { font-size:20px; font-weight:800; }
+            .ci-kpi-val { font-size:18px; font-weight:800; overflow-wrap:break-word; word-break:break-word; }
             .ci-kpi--cnt    { background:color-mix(in srgb,#3498db 8%,transparent); border-color:#3498db; }
             .ci-kpi--cnt    .ci-kpi-val { color:#3498db; }
             .ci-kpi--neto   { background:color-mix(in srgb,#3498db 8%,transparent); border-color:#3498db; }
@@ -2049,7 +2048,7 @@
                 <button id="reporteMes"    class="btn btn-primary periodo-btn">Este Mes</button>
               </div>
               <div class="rpt-actions">
-                <button id="btnDescargarExcel" class="btn btn-success" onclick="ReportesModule.descargarExcel()">↓ Excel</button>
+                <button id="btnDescargarExcel" class="btn btn-success" onclick="ReportesModule.descargarExcel()">Descargar Excel</button>
                 <button class="btn btn-primary"  onclick="ReportesModule.abrirCuadre()">Cuadre (Modal)</button>
                 <button class="btn btn-danger"   onclick="ReportesModule.abrirReporteSalidas()">Reporte Salidas</button>
               </div>
@@ -2062,10 +2061,10 @@
           <!-- ── Tab navigation ── -->
           <div class="card" style="padding:5px;margin-bottom:16px;">
             <div class="rpt-tab-bar">
-              <button class="rpt-tab active" data-tab="resumen">📊 Resumen</button>
-              <button class="rpt-tab"        data-tab="ventas">🧾 Ventas</button>
-              <button class="rpt-tab"        data-tab="cuadre">💰 Cuadre del Día</button>
-              <button class="rpt-tab"        data-tab="categorias">📂 Categorías</button>
+              <button class="rpt-tab active" data-tab="resumen">Resumen</button>
+              <button class="rpt-tab"        data-tab="ventas">Ventas</button>
+              <button class="rpt-tab"        data-tab="cuadre">Cuadre del Día</button>
+              <button class="rpt-tab"        data-tab="categorias">Categorías</button>
             </div>
           </div>
 
@@ -2076,7 +2075,6 @@
             <div class="rpt-kpi-grid">
               <div class="rpt-kpi rpt-kpi--ventas">
                 <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-icon">💵</div>
                 <div class="rpt-kpi-label">Total Ventas (Neto)</div>
                 <div id="reporteTotalVentas" class="rpt-kpi-value">RD$0.00</div>
                 <div id="reporteTotalVentasNota" class="rpt-kpi-sub" style="display:none;"></div>
@@ -2084,42 +2082,36 @@
 
               <div class="rpt-kpi rpt-kpi--gan">
                 <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-icon">📈</div>
                 <div class="rpt-kpi-label">Ganancias</div>
                 <div id="reporteGanancias" class="rpt-kpi-value">RD$0.00</div>
               </div>
 
               <div class="rpt-kpi rpt-kpi--gastos">
                 <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-icon">📤</div>
                 <div class="rpt-kpi-label">Gastos Operativos</div>
                 <div id="reporteCostosOperativos" class="rpt-kpi-value">RD$0.00</div>
               </div>
 
               <div class="rpt-kpi rpt-kpi--cnt">
                 <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-icon">🧾</div>
                 <div class="rpt-kpi-label">Cantidad Ventas</div>
                 <div id="reporteCantidadVentas" class="rpt-kpi-value">0</div>
               </div>
 
               <div class="rpt-kpi rpt-kpi--margen">
                 <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-icon">%</div>
                 <div class="rpt-kpi-label">Margen</div>
                 <div id="reporteMargen" class="rpt-kpi-value" style="color:#1abc9c;">0%</div>
               </div>
 
               <div class="rpt-kpi rpt-kpi--itbis">
                 <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-icon">🏛</div>
                 <div class="rpt-kpi-label">ITBIS Recaudado</div>
                 <div id="reporteITBIS" class="rpt-kpi-value">RD$0.00</div>
               </div>
 
               <div id="cardDevolucionesResumen" class="rpt-kpi rpt-kpi--dev" style="display:none;">
                 <div class="rpt-kpi-accent"></div>
-                <div class="rpt-kpi-icon">↩</div>
                 <div class="rpt-kpi-label">Devoluciones</div>
                 <div id="reporteTotalDevoluciones" class="rpt-kpi-value">RD$0.00</div>
               </div>
@@ -2157,7 +2149,7 @@
                 <button class="btn btn-primary btn-excel-personalizado" onclick="ReportesModule.buscarRangoCompleto()">Buscar</button>
                 <button id="btnDescargarExcelPersonalizado" class="btn btn-success btn-excel-personalizado"
                   onclick="ReportesModule.descargarExcelPersonalizado(document.getElementById('excelFechaDesde').value, document.getElementById('excelFechaHasta').value)">
-                  ↓ Excel
+                  Descargar Excel
                 </button>
               </div>
               <small class="exportar-excel-hint"><strong>Excel con 2 hojas:</strong> Hoja 1 = Detalle productos · Hoja 2 = Resumen y Top 5</small>
@@ -2188,7 +2180,7 @@
 
             <!-- Devoluciones -->
             <div id="cardDevoluciones" class="card" style="display:none;border-left:4px solid var(--clr-danger);">
-              <h3 class="card-reporte-titulo" style="color:var(--clr-danger);">↩ Devoluciones del Período</h3>
+              <h3 class="card-reporte-titulo" style="color:var(--clr-danger);">Devoluciones del Período</h3>
               <div class="tabla-scroll-horizontal">
                 <table class="tabla-facturas">
                   <thead>
@@ -2354,7 +2346,7 @@
             <div class="card" id="rgVentasCatCard">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                 <h3 style="margin:0;">Ventas por Categoría</h3>
-                <button class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">↓ Excel Categorías</button>
+                <button class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">Descargar Excel</button>
               </div>
               <div id="rgVentasPorCategoria">
                 <p style="color:var(--clr-muted);text-align:center;">Usa el rango personalizado en la pestaña Ventas para cargar datos.</p>
@@ -2365,7 +2357,7 @@
             <div class="card" id="rgCard" style="display:none;">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
                 <h3 style="margin:0;">Gastos por Categoría</h3>
-                <button id="rgBtnExcel" class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">↓ Excel Gastos</button>
+                <button id="rgBtnExcel" class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">Descargar Excel</button>
               </div>
               <div id="rgContenido">
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;">
