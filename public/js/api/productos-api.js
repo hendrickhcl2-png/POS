@@ -49,6 +49,21 @@ const ProductosAPI = {
     return await APIClient.patch(`/productos/${id}/stock`, { cantidad });
   },
 
+  // Obtener productos sin precio de venta
+  async getSinPrecio() {
+    return await APIClient.get("/productos/sin-precio");
+  },
+
+  // Asignar precio de venta (activa el producto)
+  async setPrecio(id, precio_venta) {
+    return await APIClient.patch(`/productos/${id}/precio`, { precio_venta });
+  },
+
+  // Guardar lote de productos
+  async createLote(data) {
+    return await APIClient.post("/productos/lote", data);
+  },
+
   // Historial de productos vendidos
   async getVendidos(fechaInicio, fechaFin) {
     let url = "/productos/vendidos";

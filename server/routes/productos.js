@@ -60,6 +60,168 @@ router.get("/buscar", async (req, res) => {
   }
 });
 
+// ==================== PRODUCTOS SIN PRECIO DE VENTA ====================
+router.get("/sin-precio", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT p.*, c.nombre as categoria_nombre, pr.nombre as proveedor_nombre
+      FROM productos p
+      LEFT JOIN categorias c ON p.categoria_id = c.id
+      LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
+      WHERE p.activo = true AND (p.precio_venta IS NULL OR p.precio_venta = 0)
+      ORDER BY p.nombre
+    `);
+    res.json(result.rows);
+  } catch (error) {
+    console.error("❌ Error al obtener productos sin precio:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== ASIGNAR PRECIO DE VENTA ====================
+router.patch("/:id/precio", requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { precio_venta } = req.body;
+
+    if (precio_venta === undefined || isNaN(precio_venta) || parseFloat(precio_venta) <= 0) {
+      return res.status(400).json({ error: "Precio de venta inválido" });
+    }
+
+    const result = await pool.query(
+      `UPDATE productos
+       SET precio_venta = $1,
+           disponible = CASE WHEN stock_actual > 0 THEN true ELSE disponible END
+       WHERE id = $2
+       RETURNING *`,
+      [parseFloat(precio_venta), id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    res.json({ success: true, producto: result.rows[0] });
+  } catch (error) {
+    console.error("❌ Error al asignar precio:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== GUARDAR LOTE DE PRODUCTOS ====================
+router.post("/lote", requireAdmin, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const {
+      proveedor_id,
+      factura_proveedor_numero,
+      factura_proveedor_fecha,
+      ncf,
+      registrar_como_gasto,
+      productos: items,
+    } = req.body;
+
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: "Se requiere al menos un producto" });
+    }
+
+    const creadoPor = req.session?.usuario?.nombre || req.session?.usuario?.username || null;
+
+    let proveedorNombre = null;
+    if (proveedor_id) {
+      const provRes = await pool.query("SELECT nombre FROM proveedores WHERE id = $1", [proveedor_id]);
+      if (provRes.rows.length > 0) proveedorNombre = provRes.rows[0].nombre;
+    }
+
+    await client.query("BEGIN");
+
+    const creados = [];
+    const errores = [];
+
+    for (const item of items) {
+      const { codigo_barras, nombre, categoria_id, precio_costo, stock_actual } = item;
+
+      if (!nombre || nombre.trim() === "") {
+        errores.push({ item, error: "Nombre requerido" });
+        continue;
+      }
+
+      try {
+        const r = await client.query(
+          `INSERT INTO productos (
+            codigo_barras, nombre, categoria_id, proveedor_id,
+            precio_costo, precio_venta, stock_actual,
+            stock_minimo, stock_maximo, descuento_porcentaje, descuento_monto,
+            disponible, aplica_itbis, activo, creado_por,
+            factura_proveedor_numero, factura_proveedor_fecha, ncf
+          ) VALUES (
+            $1, $2, $3, $4, $5, 0, $6,
+            0, 0, 0, 0,
+            false, true, true, $7,
+            $8, $9, $10
+          ) RETURNING *`,
+          [
+            codigo_barras || null,
+            nombre.trim(),
+            categoria_id || null,
+            proveedor_id || null,
+            parseFloat(precio_costo) || 0,
+            parseInt(stock_actual) || 1,
+            creadoPor,
+            factura_proveedor_numero || null,
+            factura_proveedor_fecha || null,
+            ncf || null,
+          ],
+        );
+
+        const producto = r.rows[0];
+        creados.push(producto);
+
+        // Registrar como gasto si está marcado y hay costo
+        if (registrar_como_gasto && parseFloat(precio_costo) > 0) {
+          const numResult = await client.query(
+            `SELECT COALESCE(MAX(CAST(REGEXP_REPLACE(numero_salida, '[^0-9]', '', 'g') AS INTEGER)), 0) + 1 as siguiente FROM salidas`,
+          );
+          const numeroSalida = "SAL" + String(numResult.rows[0].siguiente).padStart(8, "0");
+
+          await client.query(
+            `INSERT INTO salidas (numero_salida, fecha, concepto, monto, categoria_gasto, beneficiario, ncf)
+             VALUES ($1, CURRENT_DATE, $2, $3, 'Compras de Inventario', $4, $5)`,
+            [
+              numeroSalida,
+              `${nombre.trim()} (${codigo_barras || "s/c"}) - Costo de compra`,
+              parseFloat(precio_costo),
+              proveedorNombre,
+              ncf || null,
+            ],
+          );
+        }
+      } catch (itemError) {
+        if (itemError.code === "23505") {
+          errores.push({ nombre, error: "Código duplicado — ya existe en el sistema" });
+        } else {
+          errores.push({ nombre, error: itemError.message });
+        }
+      }
+    }
+
+    await client.query("COMMIT");
+
+    res.status(201).json({
+      success: true,
+      creados: creados.length,
+      errores,
+      productos: creados,
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("❌ Error al guardar lote de productos:", error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 // ==================== BUSCAR INCLUYENDO SIN STOCK ====================
 router.get("/buscar-agotados", async (req, res) => {
   try {

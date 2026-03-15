@@ -846,3 +846,123 @@ window.filtrarProductos = function () {
     fila.style.display = texto.includes(busqueda) ? "" : "none";
   });
 };
+
+// ==================== TAB: GUARDAR PRODUCTO / MÚLTIPLES ====================
+window.switchProductoTab = function (tab) {
+  const panelSingle = document.getElementById("panelProductoSingle");
+  const panelMultiple = document.getElementById("panelProductoMultiple");
+  const btnSingle = document.getElementById("tabBtnSingle");
+  const btnMultiple = document.getElementById("tabBtnMultiple");
+  if (!panelSingle || !panelMultiple) return;
+
+  if (tab === "single") {
+    panelSingle.style.display = "";
+    panelMultiple.style.display = "none";
+    btnSingle.classList.add("active");
+    btnMultiple.classList.remove("active");
+  } else {
+    panelSingle.style.display = "none";
+    panelMultiple.style.display = "";
+    btnSingle.classList.remove("active");
+    btnMultiple.classList.add("active");
+    if (window.ProductosMultipleModule) ProductosMultipleModule.init();
+  }
+};
+
+// ==================== TAB: LISTA NORMAL / SIN PRECIO ====================
+window.switchListaTab = function (tab) {
+  const panelNormal = document.getElementById("panelListaNormal");
+  const panelSinPrecio = document.getElementById("panelListaSinPrecio");
+  const btnNormal = document.getElementById("listaTabNormal");
+  const btnSinPrecio = document.getElementById("listaTabSinPrecio");
+  if (!panelNormal || !panelSinPrecio) return;
+
+  if (tab === "normal") {
+    panelNormal.style.display = "";
+    panelSinPrecio.style.display = "none";
+    btnNormal.classList.add("active");
+    btnSinPrecio.classList.remove("active");
+  } else {
+    panelNormal.style.display = "none";
+    panelSinPrecio.style.display = "";
+    btnNormal.classList.remove("active");
+    btnSinPrecio.classList.add("active");
+    actualizarTablaProductosSinPrecio();
+  }
+};
+
+// ==================== TABLA PRODUCTOS SIN PRECIO ====================
+window.actualizarTablaProductosSinPrecio = async function () {
+  const tbody = document.getElementById("tablaProductosSinPrecio");
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="6" class="text-center tabla-cargando">Cargando...</td></tr>`;
+
+  try {
+    const data = await window.API.Productos.getSinPrecio();
+
+    // Actualizar badge en el tab
+    const badge = document.getElementById("badgeSinPrecio");
+    if (badge) badge.textContent = data.length > 0 ? ` (${data.length})` : "";
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center tabla-vacia-mensaje">No hay productos sin precio</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map((p) => `
+      <tr id="sin-precio-row-${p.id}">
+        <td>${p.codigo_barras || p.imei || "—"}</td>
+        <td>${p.nombre}<br><small style="color:var(--text-muted)">${p.categoria_nombre || ""}</small></td>
+        <td>${p.proveedor_nombre || "—"}</td>
+        <td>$${parseFloat(p.precio_costo || 0).toFixed(2)}</td>
+        <td>${p.stock_actual}</td>
+        <td>
+          <div style="display:flex;gap:6px;align-items:center" id="sinPrecioAcciones-${p.id}">
+            <input type="number" step="0.01" min="0.01" placeholder="Precio venta"
+              id="inputPrecio-${p.id}"
+              style="width:120px;padding:4px 8px;border:1px solid #ccc;border-radius:4px"
+            />
+            <button class="btn btn-primary btn-small"
+              onclick="asignarPrecioProducto(${p.id})">Asignar</button>
+            <button class="btn btn-warning btn-small"
+              onclick="editarProducto(${p.id})">Editar</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center">Error al cargar</td></tr>`;
+  }
+};
+
+window.asignarPrecioProducto = async function (id) {
+  const input = document.getElementById(`inputPrecio-${id}`);
+  const precio = parseFloat(input?.value);
+  if (!precio || precio <= 0) {
+    Toast.warning("Ingresa un precio válido");
+    return;
+  }
+
+  try {
+    await window.API.Productos.setPrecio(id, precio);
+    // Quitar de la lista sin-precio
+    const row = document.getElementById(`sin-precio-row-${id}`);
+    if (row) row.remove();
+    // Actualizar badge
+    const restantes = document.querySelectorAll("#tablaProductosSinPrecio tr[id^='sin-precio-row-']").length;
+    const badge = document.getElementById("badgeSinPrecio");
+    if (badge) badge.textContent = restantes > 0 ? ` (${restantes})` : "";
+    if (restantes === 0) {
+      document.getElementById("tablaProductosSinPrecio").innerHTML =
+        `<tr><td colspan="6" class="text-center tabla-vacia-mensaje">No hay productos sin precio</td></tr>`;
+    }
+    Toast.success("Precio asignado. El producto ya aparece en el listado.");
+    // Recargar tabla principal si está visible
+    const tablaProductos = window.API.Productos.getAll().then((data) => {
+      productos = data;
+      actualizarTablaProductos();
+    }).catch(() => {});
+  } catch (err) {
+    Toast.error(err?.message || "Error al asignar precio");
+  }
+};

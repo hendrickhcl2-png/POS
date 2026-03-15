@@ -839,6 +839,14 @@
             <h1>Gestión de Productos</h1>
           </div>
 
+          <!-- Tabs principales -->
+          <div class="tabs">
+            <button class="tab active" id="tabBtnSingle" onclick="switchProductoTab('single')">Guardar Producto</button>
+            <button class="tab" id="tabBtnMultiple" onclick="switchProductoTab('multiple')">Guardar Múltiples Productos</button>
+          </div>
+
+          <!-- Panel: Guardar producto único -->
+          <div id="panelProductoSingle">
           <div class="card">
             <h3>Nuevo Producto</h3>
             <form id="formProducto">
@@ -1117,9 +1125,86 @@
               </button>
             </form>
           </div>
+          </div><!-- /panelProductoSingle -->
 
+          <!-- Panel: Guardar múltiples productos -->
+          <div id="panelProductoMultiple" style="display:none">
           <div class="card">
-            <h3>Lista de Productos</h3>
+            <h3>Guardar Múltiples Productos</h3>
+            <form id="formProductoLote" onsubmit="ProductosMultipleModule.guardar(event)">
+
+              <!-- Proveedor compartido -->
+              <h4 class="seccion-titulo-simple">Proveedor</h4>
+              <div class="form-row-3">
+                <div class="form-group">
+                  <label>Proveedor:</label>
+                  <select id="loteProveedor">
+                    <option value="">Sin proveedor</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>N° Factura del Proveedor:</label>
+                  <input type="text" id="loteFacturaNumero" placeholder="Ej: FAC-0001" />
+                </div>
+                <div class="form-group">
+                  <label>Fecha Factura del Proveedor:</label>
+                  <input type="date" id="loteFacturaFecha" />
+                </div>
+              </div>
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label>NCF:</label>
+                  <input type="text" id="loteNcf" placeholder="Ej: B0100000001" maxlength="20" />
+                </div>
+              </div>
+              <div class="caja-disponibilidad" style="margin-top:10px">
+                <label class="disponibilidad-label">
+                  <input type="checkbox" id="loteRegistrarGasto" class="disponibilidad-checkbox" checked />
+                  <div>
+                    <strong class="disponibilidad-titulo">Registrar como gasto</strong>
+                    <p class="disponibilidad-descripcion">Los costos se registrarán automáticamente como salidas en el módulo de gastos</p>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Tabla de productos -->
+              <h4 class="seccion-titulo-simple" style="margin-top:1.5rem">Productos a registrar</h4>
+              <div class="tabla-scroll-horizontal">
+                <table id="tablaLoteProductos">
+                  <thead>
+                    <tr>
+                      <th>Código de Barras</th>
+                      <th>Nombre <span class="campo-requerido">*</span></th>
+                      <th>Categoría</th>
+                      <th>Costo Total</th>
+                      <th>Cantidad</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyLoteProductos"></tbody>
+                </table>
+              </div>
+              <button type="button" class="btn btn-success" style="margin-top:10px"
+                onclick="ProductosMultipleModule.agregarFila()">+ Agregar fila</button>
+
+              <div style="margin-top:1.5rem;display:flex;gap:10px">
+                <button type="submit" class="btn btn-primary">Guardar Todos los Productos</button>
+                <button type="button" class="btn btn-secondary"
+                  onclick="ProductosMultipleModule.limpiar()">Limpiar</button>
+              </div>
+            </form>
+          </div>
+          </div><!-- /panelProductoMultiple -->
+
+          <!-- Lista con sub-tabs -->
+          <div class="card">
+            <div class="tabs" style="margin-bottom:15px">
+              <button class="tab active" id="listaTabNormal" onclick="switchListaTab('normal')">Lista de Productos</button>
+              <button class="tab" id="listaTabSinPrecio" onclick="switchListaTab('sinPrecio')">Productos no registrados<span id="badgeSinPrecio"></span></button>
+            </div>
+
+            <!-- Lista normal -->
+            <div id="panelListaNormal">
             <div class="search-bar">
               <input
                 type="text"
@@ -1148,7 +1233,32 @@
                 </tr>
               </tbody>
             </table>
-          </div>
+            </div><!-- /panelListaNormal -->
+
+            <!-- Lista sin precio -->
+            <div id="panelListaSinPrecio" style="display:none">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Producto / Categoría</th>
+                    <th>Proveedor</th>
+                    <th>Costo</th>
+                    <th>Stock</th>
+                    <th>Asignar Precio de Venta</th>
+                  </tr>
+                </thead>
+                <tbody id="tablaProductosSinPrecio">
+                  <tr>
+                    <td colspan="6" class="text-center tabla-vacia-mensaje">
+                      No hay productos sin precio
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div><!-- /panelListaSinPrecio -->
+
+          </div><!-- /card lista -->
         </section>
 
         <!-- INVENTARIO VENDIDO SECTION -->
@@ -3096,6 +3206,7 @@
     <script src="js/api/api-global.js"></script>
     <script src="js/utils/barcode-scanner.js"></script>
     <script src="js/modules/productos-module.js"></script>
+    <script src="js/modules/productos-multiple-module.js"></script>
     <script src="js/modules/proveedores-module.js"></script>
     <script src="js/modules/verificador-module.js"></script>
     <script src="js/modules/salidas-module.js"></script>

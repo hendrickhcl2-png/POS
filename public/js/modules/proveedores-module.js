@@ -143,12 +143,12 @@ function actualizarTablaProveedores() {
 }
 
 function actualizarSelectProveedores() {
-  const select = document.getElementById("productoProveedor");
-  if (!select) return;
+  const opciones = '<option value="">Sin proveedor</option>' +
+    proveedores.map((p) => `<option value="${p.id}">${p.nombre}</option>`).join("");
 
-  select.innerHTML =
-    '<option value="">Sin proveedor</option>' +
-    proveedores
-      .map((p) => `<option value="${p.id}">${p.nombre}</option>`)
-      .join("");
+  const selSingle = document.getElementById("productoProveedor");
+  if (selSingle) selSingle.innerHTML = opciones;
+
+  const selLote = document.getElementById("loteProveedor");
+  if (selLote) selLote.innerHTML = opciones;
 }

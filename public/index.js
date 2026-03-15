@@ -62,6 +62,8 @@ async function cargarDatosIniciales() {
         window.API.Configuracion.get().catch(() => []),
       ]);
     window.configuracion = configuracion;
+    window._categorias = categorias;
+    window._proveedores = proveedores;
 
     actualizarSelectClientes();
     actualizarSelectCategorias();
