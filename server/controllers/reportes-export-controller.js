@@ -309,6 +309,101 @@ const ReportesExportController = {
       granTotalRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF27AE60" } };
       granTotalRow.height = 22;
 
+      // ==================== HOJA 3: GANANCIAS POR PRODUCTO + FECHA ====================
+      const ganResult = await pool.query(
+        `SELECT
+          v.fecha,
+          p.nombre,
+          COALESCE(c.nombre, 'Sin categoría') AS categoria_nombre,
+          SUM(dv.cantidad)::int AS cantidad_vendida,
+          SUM(dv.subtotal) AS total_ventas,
+          SUM(dv.cantidad * p.precio_costo) AS total_costo,
+          SUM(dv.subtotal - (dv.cantidad * p.precio_costo)) AS ganancia
+        FROM detalle_venta dv
+        JOIN productos p ON dv.producto_id = p.id
+        JOIN ventas v ON dv.venta_id = v.id
+        LEFT JOIN facturas f ON v.id = f.venta_id
+        LEFT JOIN categorias c ON p.categoria_id = c.id
+        WHERE v.fecha >= $1 AND v.fecha <= $2
+          AND COALESCE(f.estado, 'pagada') != 'anulada'
+        GROUP BY v.fecha, p.id, p.nombre, p.precio_costo, c.nombre
+        ORDER BY v.fecha DESC, ganancia DESC`,
+        [fechaInicio, fechaFin],
+      );
+
+      const sheet3 = workbook.addWorksheet("Ganancias por Producto");
+      sheet3.mergeCells("A1:H1");
+      const t3 = sheet3.getCell("A1");
+      t3.value = `Ganancias por Producto — ${fechaInicio} al ${fechaFin}`;
+      t3.font = { bold: true, size: 13, color: { argb: "FFFFFFFF" } };
+      t3.alignment = { horizontal: "center", vertical: "middle" };
+      t3.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF27AE60" } };
+      sheet3.getRow(1).height = 26;
+      sheet3.addRow([]);
+
+      sheet3.columns = [
+        { key: "fecha",           width: 13 },
+        { key: "nombre",          width: 35 },
+        { key: "categoria",       width: 22 },
+        { key: "cantidad",        width: 10 },
+        { key: "total_ventas",    width: 18 },
+        { key: "total_costo",     width: 18 },
+        { key: "ganancia",        width: 18 },
+        { key: "margen",          width: 10 },
+      ];
+
+      const hGan = sheet3.addRow(["Fecha", "Producto", "Categoría", "Cant.", "Venta Total (RD$)", "Costo Total (RD$)", "Ganancia (RD$)", "Margen %"]);
+      hGan.eachCell(cell => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF27AE60" } };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+      });
+      hGan.height = 18;
+
+      let totVta = 0, totCst = 0, totGan = 0;
+      ganResult.rows.forEach((r, i) => {
+        const venta   = parseFloat(r.total_ventas || 0);
+        const costo   = parseFloat(r.total_costo  || 0);
+        const gan     = parseFloat(r.ganancia      || 0);
+        const margen  = venta > 0 ? parseFloat(((gan / venta) * 100).toFixed(1)) : 0;
+        const dt = new Date(r.fecha);
+        const [y, m, d] = [dt.getUTCFullYear(), String(dt.getUTCMonth()+1).padStart(2,"0"), String(dt.getUTCDate()).padStart(2,"0")];
+        const row = sheet3.addRow({
+          fecha:        `${m}/${d}/${y}`,
+          nombre:       r.nombre,
+          categoria:    r.categoria_nombre,
+          cantidad:     r.cantidad_vendida,
+          total_ventas: venta,
+          total_costo:  costo,
+          ganancia:     gan,
+          margen:       margen,
+        });
+        row.getCell("total_ventas").numFmt = "#,##0.00";
+        row.getCell("total_costo").numFmt  = "#,##0.00";
+        row.getCell("ganancia").numFmt     = "#,##0.00";
+        row.getCell("margen").numFmt       = '0.0"%"';
+        if (gan < 0) row.getCell("ganancia").font = { color: { argb: "FFE74C3C" } };
+        if (i % 2 === 0) row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0F9F4" } };
+        totVta += venta; totCst += costo; totGan += gan;
+      });
+
+      const totRow3 = sheet3.addRow({
+        nombre:       "TOTAL",
+        total_ventas: totVta,
+        total_costo:  totCst,
+        ganancia:     totGan,
+        margen:       totVta > 0 ? parseFloat(((totGan / totVta) * 100).toFixed(1)) : 0,
+      });
+      ["nombre","total_ventas","total_costo","ganancia","margen"].forEach(k => {
+        totRow3.getCell(k).font = { bold: true, color: { argb: "FFFFFFFF" } };
+        totRow3.getCell(k).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF27AE60" } };
+      });
+      totRow3.getCell("total_ventas").numFmt = "#,##0.00";
+      totRow3.getCell("total_costo").numFmt  = "#,##0.00";
+      totRow3.getCell("ganancia").numFmt     = "#,##0.00";
+      totRow3.getCell("margen").numFmt       = '0.0"%"';
+      totRow3.height = 20;
+
       const nombreArchivo = `reporte_${fechaInicio}_${fechaFin}.xlsx`;
 
       res.setHeader(

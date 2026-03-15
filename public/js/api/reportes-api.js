@@ -22,6 +22,7 @@ const ReportesAPI = {
     return await APIClient.get(`/reportes/${endpoint}?fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`);
   },
 
+
   async getReporteInventario() {
     return await APIClient.get("/reportes/inventario");
   },

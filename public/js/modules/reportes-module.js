@@ -62,7 +62,7 @@ const ReportesModule = {
   try {
   this.mostrarCargando(true);
 
-  // Cargar ambos reportes en paralelo
+  // Cargar reportes en paralelo
   const [reporteVentas, reporteProductos] = await Promise.all([
   ReportesAPI.getReporteVentas(periodo),
   ReportesAPI.getReporteProductos(periodo),
@@ -191,12 +191,29 @@ const ReportesModule = {
         color: r.ganancia_neta >= 0 ? "#27ae60" : "var(--clr-danger)" })}
     `;
 
-    // ── Detalle por producto ────────────────────────────────────
+    // ── Detalle por producto + fecha ────────────────────────────
     const thStyle = "padding:8px 10px;text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--clr-muted);white-space:nowrap;";
     const thL     = thStyle.replace("text-align:right;", "text-align:left;");
+    const fmtFecha = (s) => {
+      if (!s) return "—";
+      const str = String(s).split("T")[0].split(" ")[0];
+      const parts = str.split("-");
+      if (parts.length === 3 && parts[0].length === 4) {
+        const [y, m, d] = parts;
+        return `${m}/${d}/${y}`;
+      }
+      const dt = new Date(s);
+      if (isNaN(dt)) return String(s);
+      const m = String(dt.getUTCMonth() + 1).padStart(2, "0");
+      const d = String(dt.getUTCDate()).padStart(2, "0");
+      const y = dt.getUTCFullYear();
+      return `${m}/${d}/${y}`;
+    };
+
+    const mostrarFecha = productos.some(p => p.fecha);
 
     const filasProd = productos.length === 0
-      ? `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--clr-muted);">Sin productos en este periodo</td></tr>`
+      ? `<tr><td colspan="${mostrarFecha ? 8 : 7}" style="padding:20px;text-align:center;color:var(--clr-muted);">Sin productos en este periodo</td></tr>`
       : productos.map((p, i) => {
           const ganancia   = parseFloat(p.ganancia || 0);
           const totalVenta = parseFloat(p.total_ventas || 0);
@@ -206,6 +223,7 @@ const ReportesModule = {
           const bg         = i % 2 === 0 ? "var(--clr-bg-surface)" : "transparent";
           return `
             <tr style="background:${bg};">
+              ${mostrarFecha ? `<td style="padding:8px 10px;font-size:12px;white-space:nowrap;">${fmtFecha(p.fecha)}</td>` : ""}
               <td style="padding:8px 10px;font-size:13px;font-weight:600;">${p.nombre}</td>
               <td style="padding:8px 10px;font-size:12px;color:var(--clr-muted);">${p.categoria_nombre || "—"}</td>
               <td style="padding:8px 10px;text-align:right;font-size:13px;">${p.cantidad_vendida}</td>
@@ -220,12 +238,14 @@ const ReportesModule = {
     const totalVtaProd = productos.reduce((s, p) => s + parseFloat(p.total_ventas || 0), 0);
     const totalCstProd = productos.reduce((s, p) => s + parseFloat(p.total_costo || 0), 0);
     const margenProd   = totalVtaProd > 0 ? ((totalGanProd / totalVtaProd) * 100).toFixed(1) : "0.0";
+    const colSpanTot   = mostrarFecha ? 4 : 3;
 
     const tablaHtml = `
       <div style="overflow-x:auto;margin-top:4px;">
         <table style="width:100%;border-collapse:collapse;">
           <thead>
             <tr style="border-bottom:2px solid var(--clr-border);">
+              ${mostrarFecha ? `<th style="${thL}">Fecha</th>` : ""}
               <th style="${thL}">Producto</th>
               <th style="${thL}">Categoría</th>
               <th style="${thStyle}">Cant.</th>
@@ -238,7 +258,7 @@ const ReportesModule = {
           <tbody>${filasProd}</tbody>
           <tfoot>
             <tr style="border-top:2px solid var(--clr-border);background:color-mix(in srgb,#27ae60 8%,transparent);">
-              <td colspan="3" style="padding:9px 10px;font-weight:700;font-size:13px;">TOTAL PRODUCTOS</td>
+              <td colspan="${colSpanTot}" style="padding:9px 10px;font-weight:700;font-size:13px;">TOTAL PRODUCTOS</td>
               <td style="padding:9px 10px;text-align:right;font-weight:700;font-size:13px;">${f(totalVtaProd)}</td>
               <td style="padding:9px 10px;text-align:right;font-weight:700;font-size:13px;color:var(--clr-danger);">${f(totalCstProd)}</td>
               <td style="padding:9px 10px;text-align:right;font-weight:700;font-size:13px;color:#27ae60;">${f(totalGanProd)}</td>
@@ -248,7 +268,7 @@ const ReportesModule = {
         </table>
       </div>`;
 
-    el.innerHTML = `
+  el.innerHTML = `
       <div style="margin-bottom:20px;">${resumenHtml}</div>
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--clr-muted);margin-bottom:8px;padding-top:4px;border-top:1px solid var(--clr-border);">
         Detalle por Producto

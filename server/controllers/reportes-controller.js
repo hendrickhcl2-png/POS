@@ -277,9 +277,10 @@ const ReportesController = {
         fechaFin = fecha_fin;
       }
 
-      // Productos vendidos con detalles
+      // Productos vendidos con detalles (por fecha)
       const productosResult = await pool.query(
-        `SELECT 
+        `SELECT
+          v.fecha,
           p.id,
           p.codigo_barras,
           p.imei,
@@ -299,8 +300,8 @@ const ReportesController = {
         LEFT JOIN categorias c ON p.categoria_id = c.id
         WHERE v.fecha >= $1 AND v.fecha <= $2
           AND COALESCE(f.estado, 'pagada') != 'anulada'
-        GROUP BY p.id, p.codigo_barras, p.imei, p.nombre, p.precio_costo, p.precio_venta, c.nombre
-        ORDER BY cantidad_vendida DESC`,
+        GROUP BY v.fecha, p.id, p.codigo_barras, p.imei, p.nombre, p.precio_costo, p.precio_venta, c.nombre
+        ORDER BY v.fecha DESC, cantidad_vendida DESC`,
         [fechaInicio, fechaFin],
       );
 
