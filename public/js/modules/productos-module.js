@@ -447,6 +447,8 @@ async function guardarProducto(e) {
 
       mostrarAlerta(`"${nombre}" actualizado exitosamente`, "success");
       cancelarEdicion();
+      // Refrescar lista sin-precio por si se le asignó precio
+      if (window.actualizarTablaProductosSinPrecio) actualizarTablaProductosSinPrecio();
     } else {
       producto = await window.API.Productos.create(productoData);
 
@@ -917,16 +919,8 @@ window.actualizarTablaProductosSinPrecio = async function () {
         <td>$${parseFloat(p.precio_costo || 0).toFixed(2)}</td>
         <td>${p.stock_actual}</td>
         <td>
-          <div style="display:flex;gap:6px;align-items:center" id="sinPrecioAcciones-${p.id}">
-            <input type="number" step="0.01" min="0.01" placeholder="Precio venta"
-              id="inputPrecio-${p.id}"
-              style="width:120px;padding:4px 8px;border:1px solid #ccc;border-radius:4px"
-            />
-            <button class="btn btn-primary btn-small"
-              onclick="asignarPrecioProducto(${p.id})">Asignar</button>
-            <button class="btn btn-warning btn-small"
-              onclick="editarProducto(${p.id})">Editar</button>
-          </div>
+          <button class="btn btn-warning btn-small"
+            onclick="editarProducto(${p.id})">Editar</button>
         </td>
       </tr>
     `).join("");
@@ -935,34 +929,3 @@ window.actualizarTablaProductosSinPrecio = async function () {
   }
 };
 
-window.asignarPrecioProducto = async function (id) {
-  const input = document.getElementById(`inputPrecio-${id}`);
-  const precio = parseFloat(input?.value);
-  if (!precio || precio <= 0) {
-    Toast.warning("Ingresa un precio válido");
-    return;
-  }
-
-  try {
-    await window.API.Productos.setPrecio(id, precio);
-    // Quitar de la lista sin-precio
-    const row = document.getElementById(`sin-precio-row-${id}`);
-    if (row) row.remove();
-    // Actualizar badge
-    const restantes = document.querySelectorAll("#tablaProductosSinPrecio tr[id^='sin-precio-row-']").length;
-    const badge = document.getElementById("badgeSinPrecio");
-    if (badge) badge.textContent = restantes > 0 ? ` (${restantes})` : "";
-    if (restantes === 0) {
-      document.getElementById("tablaProductosSinPrecio").innerHTML =
-        `<tr><td colspan="6" class="text-center tabla-vacia-mensaje">No hay productos sin precio</td></tr>`;
-    }
-    Toast.success("Precio asignado. El producto ya aparece en el listado.");
-    // Recargar tabla principal si está visible
-    const tablaProductos = window.API.Productos.getAll().then((data) => {
-      productos = data;
-      actualizarTablaProductos();
-    }).catch(() => {});
-  } catch (err) {
-    Toast.error(err?.message || "Error al asignar precio");
-  }
-};

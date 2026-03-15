@@ -47,12 +47,30 @@ const ProductosMultipleModule = {
           ${this._opcionesCategorias()}
         </select>
       </td>
-      <td><input type="number" class="lote-cantidad" value="1" min="1" style="width:70px"/></td>
+      <td><input type="number" class="lote-costo" step="0.01" min="0" placeholder="0.00" style="width:100px"
+            oninput="ProductosMultipleModule.recalcularTotal()"/></td>
+      <td><input type="number" class="lote-cantidad" value="1" min="1" style="width:70px"
+            oninput="ProductosMultipleModule.recalcularTotal()"/></td>
+      <td class="lote-subtotal" style="text-align:right;font-weight:600">$0.00</td>
       <td>
         <button type="button" class="btn btn-danger btn-small" onclick="ProductosMultipleModule.quitarFila(${id})">✕</button>
       </td>
     `;
     document.getElementById("tbodyLoteProductos").appendChild(tr);
+  },
+
+  recalcularTotal() {
+    let total = 0;
+    document.querySelectorAll("#tbodyLoteProductos tr").forEach((tr) => {
+      const costo = parseFloat(tr.querySelector(".lote-costo")?.value) || 0;
+      const cantidad = parseInt(tr.querySelector(".lote-cantidad")?.value) || 0;
+      const subtotal = costo * cantidad;
+      const subtotalEl = tr.querySelector(".lote-subtotal");
+      if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+      total += subtotal;
+    });
+    const inputTotal = document.getElementById("loteCostoTotal");
+    if (inputTotal) inputTotal.value = total.toFixed(2);
   },
 
   quitarFila(id) {
@@ -61,6 +79,7 @@ const ProductosMultipleModule = {
     if (document.getElementById("tbodyLoteProductos").children.length === 0) {
       this.agregarFila();
     }
+    this.recalcularTotal();
   },
 
   limpiar() {
@@ -83,6 +102,7 @@ const ProductosMultipleModule = {
         codigo_barras: fila.querySelector(".lote-codigo").value.trim() || null,
         nombre,
         categoria_id: parseInt(fila.querySelector(".lote-categoria").value) || null,
+        precio_costo: parseFloat(fila.querySelector(".lote-costo").value) || 0,
         stock_actual: parseInt(fila.querySelector(".lote-cantidad").value) || 1,
       });
     }
@@ -92,12 +112,14 @@ const ProductosMultipleModule = {
       return;
     }
 
+    const costoTotalCalculado = parseFloat(document.getElementById("loteCostoTotal").value) || 0;
+
     const payload = {
       proveedor_id: parseInt(document.getElementById("loteProveedor").value) || null,
       factura_proveedor_numero: document.getElementById("loteFacturaNumero").value.trim() || null,
       factura_proveedor_fecha: document.getElementById("loteFacturaFecha").value || null,
       ncf: document.getElementById("loteNcf").value.trim() || null,
-      costo_total_factura: parseFloat(document.getElementById("loteCostoTotal").value) || 0,
+      costo_total_factura: costoTotalCalculado,
       registrar_como_gasto: document.getElementById("loteRegistrarGasto").checked,
       productos,
     };

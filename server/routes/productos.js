@@ -16,6 +16,7 @@ router.get("/", async (req, res) => {
       LEFT JOIN categorias c ON p.categoria_id = c.id
       LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
       WHERE p.activo = true AND p.stock_actual > 0
+        AND (p.precio_venta IS NOT NULL AND p.precio_venta > 0)
       ORDER BY p.nombre
     `);
     res.json(result.rows);
@@ -43,6 +44,7 @@ router.get("/buscar", async (req, res) => {
        LEFT JOIN categorias c ON p.categoria_id = c.id
        LEFT JOIN proveedores pr ON p.proveedor_id = pr.id
        WHERE p.activo = true AND p.stock_actual > 0
+         AND (p.precio_venta IS NOT NULL AND p.precio_venta > 0)
        AND (
          LOWER(p.nombre) LIKE LOWER($1) OR
          LOWER(p.codigo_barras) LIKE LOWER($1) OR
@@ -140,7 +142,7 @@ router.post("/lote", requireAdmin, async (req, res) => {
     const errores = [];
 
     for (const item of items) {
-      const { codigo_barras, nombre, categoria_id, stock_actual } = item;
+      const { codigo_barras, nombre, categoria_id, precio_costo, stock_actual } = item;
 
       if (!nombre || nombre.trim() === "") {
         errores.push({ item, error: "Nombre requerido" });
@@ -156,16 +158,17 @@ router.post("/lote", requireAdmin, async (req, res) => {
             disponible, aplica_itbis, activo, creado_por,
             factura_proveedor_numero, factura_proveedor_fecha, ncf
           ) VALUES (
-            $1, $2, $3, $4, 0, 0, $5,
+            $1, $2, $3, $4, $5, 0, $6,
             0, 0, 0, 0,
-            false, true, true, $6,
-            $7, $8, $9
+            false, true, true, $7,
+            $8, $9, $10
           ) RETURNING *`,
           [
             codigo_barras || null,
             nombre.trim(),
             categoria_id || null,
             proveedor_id || null,
+            parseFloat(precio_costo) || 0,
             parseInt(stock_actual) || 1,
             creadoPor,
             factura_proveedor_numero || null,
