@@ -194,6 +194,19 @@ async function initAuth() {
       `);
     }
 
+    // Corrección: sincronizar facturas.fecha con ventas.fecha donde difieran
+    const syncFechas = await pool.query(`
+      UPDATE facturas f
+      SET fecha = v.fecha
+      FROM ventas v
+      WHERE f.venta_id = v.id
+        AND v.fecha::date != f.fecha::date
+        AND v.estado != 'anulada'
+    `);
+    if (syncFechas.rowCount > 0) {
+      console.log(`✅ Corrección: ${syncFechas.rowCount} factura(s) con fecha sincronizada`);
+    }
+
     console.log("✅ Auth inicializado");
   } catch (error) {
     console.error("❌ Error en initAuth:", error);
