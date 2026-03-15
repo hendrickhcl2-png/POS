@@ -23,6 +23,10 @@ const VentasAPI = {
     return await APIClient.post(`/ventas/${id}/anular`, { motivo });
   },
 
+  async updateFecha(id, fecha) {
+    return await APIClient.patch(`/ventas/${id}/fecha`, { fecha });
+  },
+
   async getEstadisticas(fechaDesde = null, fechaHasta = null) {
     const params = new URLSearchParams();
     if (fechaDesde) params.append("fecha_desde", fechaDesde);

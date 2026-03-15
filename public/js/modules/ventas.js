@@ -1255,7 +1255,7 @@ const VentasModule = {
   if (ventas.length === 0) {
   tbody.innerHTML = `
   <tr>
-  <td colspan="6" class="text-center" style="color: #7f8c8d;">
+  <td colspan="7" class="text-center" style="color: #7f8c8d;">
   No hay ventas en ese período
   </td>
   </tr>
@@ -1263,27 +1263,37 @@ const VentasModule = {
   return;
   }
 
+  const isAdmin = window.Auth?.isAdmin();
   tbody.innerHTML = ventas
 .map(
-  (venta) => `
-  <tr>
+  (venta) => {
+    const fechaISO = venta.fecha ? venta.fecha.split("T")[0] : "";
+    const fechaDisplay = fechaISO
+      ? new Date(fechaISO + "T00:00:00").toLocaleDateString("es-DO")
+      : "—";
+    return `
+  <tr id="historial-fila-${venta.id}">
   <td>#${venta.numero_ticket}</td>
+  <td>
+    <span id="historial-fecha-text-${venta.id}">${fechaDisplay}</span>
+    <span id="historial-fecha-edit-${venta.id}" style="display:none">
+      <input type="date" value="${fechaISO}" style="padding:2px 6px;font-size:13px;border:1px solid #ccc;border-radius:4px"
+        id="historial-fecha-input-${venta.id}"/>
+      <button class="btn btn-primary btn-small" onclick="VentasModule.guardarFechaVenta(${venta.id})">✓</button>
+      <button class="btn btn-secondary btn-small" onclick="VentasModule.cancelarEditarFecha(${venta.id})">✕</button>
+    </span>
+  </td>
   <td>${venta.hora ? String(venta.hora).substring(0, 8) : new Date(venta.fecha).toLocaleTimeString("es-DO")}</td>
   <td>${venta.cliente_nombre?.trim() ? venta.cliente_nombre.trim() : '<span style="background:#ecf0f1;color:#7f8c8d;padding:2px 8px;border-radius:10px;font-size:12px;">Cliente General</span>'}</td>
   <td style="font-weight: bold; color: #27ae60;">${this.formatCurrency(venta.total)}</td>
   <td>${this.formatMetodoPago(venta.metodo_pago)}</td>
   <td>
-  <button
-  class="btn btn-info btn-small"
-  onclick="VentasModule.verDetalleVenta(${venta.id})"
-  title="Ver factura"
-  >
-   Ver factura
-  </button>
+  <button class="btn btn-info btn-small" onclick="VentasModule.verDetalleVenta(${venta.id})" title="Ver factura">Ver factura</button>
+  ${isAdmin ? `<button class="btn btn-warning btn-small" onclick="VentasModule.editarFechaVenta(${venta.id})" id="historial-btn-editar-${venta.id}">Editar fecha</button>` : ""}
   </td>
   </tr>
-  `,
-  )
+  `;
+  })
 .join("");
   },
 
@@ -1295,6 +1305,34 @@ const VentasModule = {
   console.error("Error al cargar detalle:", error);
   Toast.show("Error al cargar detalle de venta", "error");
   }
+  },
+
+  editarFechaVenta(ventaId) {
+    document.getElementById(`historial-fecha-text-${ventaId}`).style.display = "none";
+    document.getElementById(`historial-fecha-edit-${ventaId}`).style.display = "inline";
+    document.getElementById(`historial-btn-editar-${ventaId}`).style.display = "none";
+  },
+
+  cancelarEditarFecha(ventaId) {
+    document.getElementById(`historial-fecha-text-${ventaId}`).style.display = "";
+    document.getElementById(`historial-fecha-edit-${ventaId}`).style.display = "none";
+    document.getElementById(`historial-btn-editar-${ventaId}`).style.display = "";
+  },
+
+  async guardarFechaVenta(ventaId) {
+    const input = document.getElementById(`historial-fecha-input-${ventaId}`);
+    const fecha = input?.value;
+    if (!fecha) { Toast.warning("Selecciona una fecha"); return; }
+    try {
+      await API.Ventas.updateFecha(ventaId, fecha);
+      Toast.success("Fecha actualizada");
+      // Actualizar display sin recargar toda la tabla
+      const fechaDisplay = new Date(fecha + "T00:00:00").toLocaleDateString("es-DO");
+      document.getElementById(`historial-fecha-text-${ventaId}`).textContent = fechaDisplay;
+      this.cancelarEditarFecha(ventaId);
+    } catch (err) {
+      Toast.error(err?.message || "Error al actualizar la fecha");
+    }
   },
 
   // ==================== UTILIDADES ====================
