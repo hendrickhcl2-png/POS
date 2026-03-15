@@ -126,8 +126,7 @@ router.get("/facturas/:numero/productos", async (req, res) => {
 // Crear proveedor
 router.post("/", requireAdmin, async (req, res) => {
   try {
-    const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion } =
-      req.body;
+    const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas } = req.body;
 
     if (!nombre || nombre.trim() === "") {
       return res.status(400).json({ error: "El nombre es obligatorio" });
@@ -144,10 +143,10 @@ router.post("/", requireAdmin, async (req, res) => {
 
     const result = await pool.query(
       `INSERT INTO proveedores
-       (codigo, nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       (codigo, nombre, contacto_nombre, telefono, email, direccion, rnc, notas)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [codigo, nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion || null],
+      [codigo, nombre, contacto_nombre, telefono, email, direccion, rnc, notas],
     );
 
     res.status(201).json(result.rows[0]);
@@ -161,8 +160,7 @@ router.post("/", requireAdmin, async (req, res) => {
 router.put("/:id", requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion } =
-      req.body;
+    const { nombre, contacto_nombre, telefono, email, direccion, rnc, notas } = req.body;
 
     if (!nombre || nombre.trim() === "") {
       return res.status(400).json({ error: "El nombre es obligatorio" });
@@ -171,11 +169,10 @@ router.put("/:id", requireAdmin, async (req, res) => {
     const result = await pool.query(
       `UPDATE proveedores
        SET nombre = $1, contacto_nombre = $2, telefono = $3,
-           email = $4, direccion = $5, rnc = $6, notas = $7,
-           descripcion = $8
-       WHERE id = $9
+           email = $4, direccion = $5, rnc = $6, notas = $7
+       WHERE id = $8
        RETURNING *`,
-      [nombre, contacto_nombre, telefono, email, direccion, rnc, notas, descripcion || null, id],
+      [nombre, contacto_nombre, telefono, email, direccion, rnc, notas, id],
     );
 
     if (result.rows.length === 0) {

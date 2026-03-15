@@ -18,7 +18,6 @@ async function guardarProveedor(e) {
     email: getValue("proveedorEmail") || null,
     direccion: getValue("proveedorDireccion") || null,
     rnc: getValue("proveedorRNC") || null,
-    descripcion: getValue("proveedorDescripcion") || null,
   };
 
   try {
@@ -54,7 +53,6 @@ window.editarProveedor = async function (id) {
   setValueIfExists("proveedorEmail", p.email || "");
   setValueIfExists("proveedorDireccion", p.direccion || "");
   setValueIfExists("proveedorRNC", p.rnc || "");
-  setValueIfExists("proveedorDescripcion", p.descripcion || "");
 
   // Cambiar botón submit
   const btnSubmit = document.querySelector('#formProveedor button[type="submit"]');
@@ -118,7 +116,7 @@ function actualizarTablaProveedores() {
 
   if (proveedores.length === 0) {
     tbody.innerHTML =
-      '<tr><td colspan="7" class="text-center">No hay proveedores registrados</td></tr>';
+      '<tr><td colspan="6" class="text-center">No hay proveedores registrados</td></tr>';
     return;
   }
 
@@ -128,7 +126,6 @@ function actualizarTablaProveedores() {
       <tr>
         <td>${p.codigo || p.id}</td>
         <td><strong>${p.nombre}</strong></td>
-        <td>${p.descripcion || "-"}</td>
         <td>${p.contacto_nombre || "-"}</td>
         <td>${p.telefono || "-"}</td>
         <td>${p.email || "-"}</td>
