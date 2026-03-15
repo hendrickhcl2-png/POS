@@ -343,6 +343,19 @@ const ReportesController = {
         [fechaInicio, fechaFin],
       );
 
+      // Total de servicios del periodo (costo = 0, todo es ganancia)
+      const serviciosTotalesResult = await pool.query(
+        `SELECT COALESCE(SUM(sv.subtotal), 0) AS total_servicios
+         FROM servicios_venta sv
+         JOIN ventas v ON sv.venta_id = v.id
+         LEFT JOIN facturas f ON v.id = f.venta_id
+         WHERE v.fecha >= $1 AND v.fecha <= $2
+           AND sv.es_gratuito = false
+           AND COALESCE(f.estado, 'pagada') != 'anulada'`,
+        [fechaInicio, fechaFin],
+      );
+      const totalServicios = parseFloat(serviciosTotalesResult.rows[0].total_servicios || 0);
+
       // Calcular totales
       let totalUnidadesVendidas = 0;
       let totalIngresos = 0;
@@ -355,6 +368,10 @@ const ReportesController = {
         totalCostos += parseFloat(producto.total_costo || 0);
         totalGanancias += parseFloat(producto.ganancia || 0);
       }
+
+      // Los servicios tienen costo 0, son ganancia pura
+      totalIngresos += totalServicios;
+      totalGanancias += totalServicios;
 
       res.json({
         success: true,
@@ -460,17 +477,22 @@ const ReportesController = {
         fechaFin = fecha_fin;
       }
 
-      // Ganancias por día
+      // Ganancias por día (ventas + servicios - costo productos)
       const gananciasPorDiaResult = await pool.query(
-        `SELECT 
+        `SELECT
           v.fecha,
-          SUM(v.total) as ingresos,
-          SUM(dv.cantidad * p.costo) as costos,
-          SUM(v.total) - SUM(dv.cantidad * p.costo) as ganancia_neta,
-          COUNT(DISTINCT v.id) as num_ventas
+          SUM(v.total)                                  AS ingresos,
+          COALESCE(SUM(costos.total_costo), 0)          AS costos,
+          SUM(v.total) - COALESCE(SUM(costos.total_costo), 0) AS ganancia_neta,
+          COUNT(DISTINCT v.id)                          AS num_ventas
         FROM ventas v
-        JOIN detalle_venta dv ON v.id = dv.venta_id
-        JOIN productos p ON dv.producto_id = p.id
+        LEFT JOIN (
+          SELECT dv.venta_id,
+                 SUM(dv.cantidad * COALESCE(p.precio_costo, 0)) AS total_costo
+          FROM detalle_venta dv
+          JOIN productos p ON dv.producto_id = p.id
+          GROUP BY dv.venta_id
+        ) costos ON v.id = costos.venta_id
         LEFT JOIN facturas f ON v.id = f.venta_id
         WHERE v.fecha >= $1 AND v.fecha <= $2
           AND COALESCE(f.estado, 'pagada') != 'anulada'
