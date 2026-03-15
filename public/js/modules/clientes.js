@@ -102,10 +102,10 @@ const ClientesModule = {
       return `
         <tr>
           <td>
-            <div style="display:flex;align-items:center;gap:12px;">
+            <div class="client-cell">
               <div class="avatar-circle" style="font-size:14px;">${iniciales}</div>
               <div>
-                <strong style="font-size:14px;color:var(--clr-dark);">${nombreCompleto}</strong>
+                <strong class="client-cell__name">${nombreCompleto}</strong>
                 ${c.cedula ? `<br><small style="color:var(--clr-muted);">${c.cedula}</small>` : ""}
                 ${c.rnc ? `<br><small style="color:var(--clr-muted);">RNC: ${c.rnc}</small>` : ""}
               </div>
@@ -266,18 +266,7 @@ const ClientesModule = {
   let content = `
   <div class="card-hero" style="padding:40px;margin:-25px -25px 30px -25px;">
   <div style="display: flex; align-items: center; gap: 20px;">
-  <div class="avatar" style="
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 32px;
-  ">
+  <div class="hero-avatar">
   ${iniciales}
   </div>
   <div>

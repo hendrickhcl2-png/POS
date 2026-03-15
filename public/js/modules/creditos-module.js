@@ -209,7 +209,7 @@ const CreditosModule = {
           ${this._fmt(c.saldo_pendiente)}
         </td>
         <td style="text-align:center;">
-          <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
+          <div class="flex-row flex-row--gap-6 flex-row--jcenter">
             <button
               class="btn btn-primary btn-small"
               onclick="CreditosModule.abrirModalPago(${c.cliente_id})"
@@ -268,30 +268,30 @@ const CreditosModule = {
       `
       <form id="formCreditoPago" onsubmit="event.preventDefault(); CreditosModule._submitPago();">
         <div class="form-group" style="margin-bottom:16px;">
-          <label style="font-weight:600;display:block;margin-bottom:6px;">Fecha del pago:</label>
+          <label class="cp-label">Fecha del pago:</label>
           <input type="date" id="cpFecha"
             value="${new Date().toISOString().split("T")[0]}"
-            style="width:100%;padding:10px;border:1px solid var(--clr-border);border-radius:8px;font-size:14px;" required />
+            class="cp-input" required />
         </div>
 
         <div class="form-group" style="margin-bottom:16px;">
-          <label style="font-weight:600;display:block;margin-bottom:6px;">Factura:</label>
-          <select id="cpFacturaId" class="form-control" style="width:100%;padding:10px;border:1px solid var(--clr-border);border-radius:8px;font-size:14px;"
+          <label class="cp-label">Factura:</label>
+          <select id="cpFacturaId" class="cp-input"
             onchange="CreditosModule._onFacturaCambio(this)">
             ${opcionesFacturas}
           </select>
         </div>
 
         <div class="form-group" style="margin-bottom:16px;">
-          <label style="font-weight:600;display:block;margin-bottom:6px;">Monto a pagar:</label>
+          <label class="cp-label">Monto a pagar:</label>
           <input type="number" id="cpMonto" step="0.01" min="0.01"
             value="${primerSaldo}"
-            style="width:100%;padding:10px;border:1px solid var(--clr-border);border-radius:8px;font-size:16px;font-weight:700;" required />
+            class="cp-input cp-input--lg" required />
         </div>
 
         <div class="form-group" style="margin-bottom:16px;">
-          <label style="font-weight:600;display:block;margin-bottom:6px;">Método de pago:</label>
-          <select id="cpMetodo" style="width:100%;padding:10px;border:1px solid var(--clr-border);border-radius:8px;font-size:14px;">
+          <label class="cp-label">Método de pago:</label>
+          <select id="cpMetodo" class="cp-input">
             <option value="efectivo">Efectivo</option>
             <option value="tarjeta">Tarjeta</option>
             <option value="transferencia">Transferencia</option>
@@ -301,10 +301,10 @@ const CreditosModule = {
         </div>
 
         <div class="form-group" style="margin-bottom:16px;">
-          <label style="font-weight:600;display:block;margin-bottom:6px;">Referencia / Banco (opcional):</label>
+          <label class="cp-label">Referencia / Banco (opcional):</label>
           <input type="text" id="cpReferencia"
             placeholder="Número de referencia, banco..."
-            style="width:100%;padding:10px;border:1px solid var(--clr-border);border-radius:8px;font-size:14px;" />
+            class="cp-input" />
         </div>
 
         <div class="js-modal__actions">
@@ -401,12 +401,12 @@ const CreditosModule = {
           <table style="width:100%;border-collapse:collapse;">
             <thead>
               <tr style="background:var(--clr-bg-surface);">
-                <th style="padding:10px 12px;text-align:left;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Fecha</th>
-                <th style="padding:10px 12px;text-align:left;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);"># Pago</th>
-                <th style="padding:10px 12px;text-align:left;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Factura</th>
-                <th style="padding:10px 12px;text-align:right;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Monto</th>
-                <th style="padding:10px 12px;text-align:center;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Método</th>
-                <th style="padding:10px 12px;text-align:left;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Referencia</th>
+                <th class="th-muted text-left">Fecha</th>
+                <th class="th-muted text-left"># Pago</th>
+                <th class="th-muted text-left">Factura</th>
+                <th class="th-muted text-right">Monto</th>
+                <th class="th-muted text-center">Método</th>
+                <th class="th-muted text-left">Referencia</th>
               </tr>
             </thead>
             <tbody>
@@ -504,18 +504,18 @@ const CreditosModule = {
         }).join('');
 
     const resumen = `
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
-        <div style="flex:1;min-width:130px;background:var(--clr-bg-surface);border-radius:8px;padding:14px;text-align:center;border:1px solid var(--clr-border);">
-          <div style="font-size:12px;color:var(--clr-muted);">Monto original</div>
-          <div style="font-size:18px;font-weight:700;">${this._fmt(totalOriginal)}</div>
+      <div class="cr-stat-row">
+        <div class="cr-stat-card">
+          <div class="cr-stat-card__label">Monto original</div>
+          <div class="cr-stat-card__value">${this._fmt(totalOriginal)}</div>
         </div>
-        <div style="flex:1;min-width:130px;background:#f0faf5;border-radius:8px;padding:14px;text-align:center;border:1px solid var(--clr-border);">
-          <div style="font-size:12px;color:var(--clr-muted);">Total abonado</div>
-          <div style="font-size:18px;font-weight:700;color:var(--clr-success);">${this._fmt(totalPagado)}</div>
+        <div class="cr-stat-card cr-stat-card--success">
+          <div class="cr-stat-card__label">Total abonado</div>
+          <div class="cr-stat-card__value">${this._fmt(totalPagado)}</div>
         </div>
-        <div style="flex:1;min-width:130px;background:#fff5f5;border-radius:8px;padding:14px;text-align:center;border:1px solid var(--clr-border);">
-          <div style="font-size:12px;color:var(--clr-muted);">Saldo pendiente</div>
-          <div style="font-size:18px;font-weight:700;color:var(--clr-danger);">${this._fmt(totalPendiente)}</div>
+        <div class="cr-stat-card cr-stat-card--danger">
+          <div class="cr-stat-card__label">Saldo pendiente</div>
+          <div class="cr-stat-card__value">${this._fmt(totalPendiente)}</div>
         </div>
       </div>
       ${cliente.cedula || cliente.telefono ? `<p style="font-size:13px;color:var(--clr-muted);margin:0 0 16px;">${cliente.cedula ? 'Cédula: ' + cliente.cedula : ''} ${cliente.telefono ? '&nbsp;|&nbsp; Tel: ' + cliente.telefono : ''}</p>` : ''}
@@ -526,12 +526,12 @@ const CreditosModule = {
         <table style="width:100%;border-collapse:collapse;">
           <thead>
             <tr style="background:var(--clr-bg-surface);">
-              <th style="padding:10px 12px;text-align:left;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Factura</th>
-              <th style="padding:10px 12px;text-align:left;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Fecha</th>
-              <th style="padding:10px 12px;text-align:right;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Original</th>
-              <th style="padding:10px 12px;text-align:right;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Abonado</th>
-              <th style="padding:10px 12px;text-align:right;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Pendiente</th>
-              <th style="padding:10px 12px;text-align:center;font-size:12px;color:var(--clr-muted);border-bottom:1px solid var(--clr-border);">Estado</th>
+              <th class="th-muted text-left">Factura</th>
+              <th class="th-muted text-left">Fecha</th>
+              <th class="th-muted text-right">Original</th>
+              <th class="th-muted text-right">Abonado</th>
+              <th class="th-muted text-right">Pendiente</th>
+              <th class="th-muted text-center">Estado</th>
             </tr>
           </thead>
           <tbody>${filasFacturas}</tbody>
@@ -558,17 +558,17 @@ const CreditosModule = {
 
     const overlay = document.createElement("div");
     overlay.id = id;
-    overlay.className = "js-overlay";
+    overlay.className = "cp-overlay js-overlay";
     overlay.style.cssText = "display:none;padding:20px;";
 
     overlay.innerHTML = `
-      <div style="background:var(--clr-bg-white);border-radius:12px;width:100%;max-width:${maxWidth};max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--clr-border);">
-          <h3 style="margin:0;font-size:16px;color:var(--clr-dark);">${titulo}</h3>
+      <div class="cp-modal" style="max-width:${maxWidth}">
+        <div class="cp-modal__header">
+          <h3 class="cp-modal__title">${titulo}</h3>
           <button onclick="CreditosModule._cerrarModal('${id}')"
-            style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--clr-muted);line-height:1;">&times;</button>
+            class="cp-modal__close">&times;</button>
         </div>
-        <div style="padding:24px;">
+        <div class="cp-modal__body">
           ${contenidoHtml}
         </div>
       </div>`;

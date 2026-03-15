@@ -252,8 +252,8 @@ const InventarioModule = {
   // Mostrar información del producto
   document.getElementById("movimientoProductoInfo").innerHTML = `
   <div class="info-panel">
-  <strong style="font-size: 16px;">${producto.nombre}</strong><br>
-  <small style="color: #7f8c8d;">Stock actual: <strong style="font-size: 18px; color: #2c3e50;">${producto.stock}</strong></small>
+  <strong class="prod-info__name">${producto.nombre}</strong><br>
+  <small class="prod-info__meta">Stock actual: <strong class="prod-info__stock">${producto.stock}</strong></small>
   </div>
   `;
 
@@ -334,8 +334,8 @@ const InventarioModule = {
   // Mostrar información del producto
   document.getElementById("ajusteProductoInfo").innerHTML = `
   <div class="info-panel">
-  <strong style="font-size: 16px;">${producto.nombre}</strong><br>
-  <small style="color: #7f8c8d;">Stock actual: <strong style="font-size: 18px; color: #2c3e50;">${producto.stock}</strong></small>
+  <strong class="prod-info__name">${producto.nombre}</strong><br>
+  <small class="prod-info__meta">Stock actual: <strong class="prod-info__stock">${producto.stock}</strong></small>
   </div>
   `;
 
@@ -426,21 +426,21 @@ const InventarioModule = {
   `;
   } else {
   content += `
-  <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+  <table class="hist-table">
   <thead>
-  <tr style="background: #f8f9fa;">
-  <th style="padding: 12px; text-align: left;">Fecha</th>
-  <th style="padding: 12px; text-align: center;">Tipo</th>
-  <th style="padding: 12px; text-align: right;">Cantidad</th>
-  <th style="padding: 12px; text-align: left;">Motivo</th>
+  <tr>
+  <th class="fct-th">Fecha</th>
+  <th class="fct-th">Tipo</th>
+  <th class="fct-th">Cantidad</th>
+  <th class="fct-th">Motivo</th>
   </tr>
   </thead>
   <tbody>
   ${movimientos
 .map(
   (mov) => `
-  <tr style="border-bottom: 1px solid #dee2e6;">
-  <td style="padding: 12px;">
+  <tr>
+  <td>
   ${Formatters.formatFecha(mov.fecha)}<br>
   <small style="color: #7f8c8d;">${Formatters.formatHora(mov.fecha)}</small>
   </td>
@@ -453,7 +453,7 @@ const InventarioModule = {
   <td style="padding: 12px; text-align: right; font-weight: bold; font-size: 16px; color: ${mov.tipo === "entrada" ? "#27ae60": "#e74c3c"};">
   ${mov.tipo === "entrada" ? "+": "-"}${mov.cantidad}
   </td>
-  <td style="padding: 12px;">${mov.motivo || "-"}</td>
+  <td>${mov.motivo || "-"}</td>
   </tr>
   `,
   )

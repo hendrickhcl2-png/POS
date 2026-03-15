@@ -173,10 +173,9 @@
                 Buscar
               </button>
               <button
-                class="btn btn-warning"
+                class="btn btn-warning btn--icon"
                 onclick="escanearProductoVenta()"
                 title="Escanear código de barras y agregar al carrito"
-                style="display: flex; align-items: center; gap: 6px"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -207,16 +206,7 @@
               </div>
 
               <div id="fechaRetroactivaContainer" style="margin-bottom: 10px">
-                <label
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    cursor: pointer;
-                    font-size: 0.9em;
-                    color: #856404;
-                  "
-                >
+                <label class="panel-fecha-retro__label">
                   <input
                     type="checkbox"
                     id="activarFechaRetroactiva"
@@ -227,35 +217,13 @@
                 </label>
                 <div
                   id="fechaRetroactivaPanel"
-                  style="
-                    display: none;
-                    margin-top: 8px;
-                    padding: 10px;
-                    background: #fff3cd;
-                    border: 1px solid #ffc107;
-                    border-radius: 6px;
-                  "
+                  class="panel-fecha-retro"
                 >
-                  <label
-                    style="
-                      font-size: 0.85em;
-                      font-weight: 600;
-                      color: #856404;
-                      display: block;
-                      margin-bottom: 4px;
-                    "
-                    >Fecha de la venta:</label
-                  >
+                  <label class="panel-fecha-retro__label--block">Fecha de la venta:</label>
                   <input
                     type="date"
                     id="fechaVentaRetroactiva"
-                    style="
-                      width: 100%;
-                      padding: 6px;
-                      border: 1px solid #ffc107;
-                      border-radius: 4px;
-                      font-size: 0.9em;
-                    "
+                    class="panel-fecha-retro__input"
                   />
                   <small style="color: #856404; display: block; margin-top: 4px"
                     >Esta venta no aparecerá en el cuadre de turno de
@@ -609,7 +577,7 @@
           </div>
 
           <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+            <div class="flex-row flex-row--between flex-row--center flex-row--gap-10 mb-14">
               <h3 style="margin:0">Historial de Ventas</h3>
               <span id="historialConteo" style="color:var(--text-muted);font-size:0.9rem"></span>
             </div>
@@ -675,10 +643,9 @@
                 Buscar
               </button>
               <button
-                class="btn btn-warning"
+                class="btn btn-warning btn--icon"
                 onclick="VerificadorModule.escanear()"
                 title="Escanear con lector de código de barras"
-                style="display: flex; align-items: center; gap: 6px"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -753,7 +720,7 @@
               class="kpi-grid"
             ></div>
 
-            <div class="card" style="padding: 0; overflow: hidden">
+            <div class="card card--flush">
               <table>
                 <thead>
                   <tr>
@@ -779,7 +746,7 @@
           <div class="tab-content" id="tabContentPagados">
             <div id="creditosPagadosStats" class="kpi-grid"></div>
 
-            <div class="card" style="padding: 0; overflow: hidden">
+            <div class="card card--flush">
               <table>
                 <thead>
                   <tr>
@@ -824,7 +791,7 @@
           <!-- Stats bar -->
           <div id="clientesStats" class="kpi-grid"></div>
 
-          <div class="card" style="padding: 0; overflow: hidden">
+          <div class="card card--flush">
             <table>
               <thead>
                 <tr>
@@ -1310,84 +1277,35 @@
               "
             >
               <div>
-                <label
-                  style="
-                    display: block;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #7f8c8d;
-                    margin-bottom: 4px;
-                  "
-                  >Desde</label
-                >
+                <label class="filter-label">Desde</label>
                 <input
                   type="date"
                   id="ivFechaDesde"
-                  style="
-                    padding: 8px 12px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                  "
+                  class="filter-input"
                 />
               </div>
               <div>
-                <label
-                  style="
-                    display: block;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #7f8c8d;
-                    margin-bottom: 4px;
-                  "
-                  >Hasta</label
-                >
+                <label class="filter-label">Hasta</label>
                 <input
                   type="date"
                   id="ivFechaHasta"
-                  style="
-                    padding: 8px 12px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                  "
+                  class="filter-input"
                 />
               </div>
               <button
+                class="btn btn-primary"
                 onclick="InventarioVendidoModule.cargar()"
-                style="
-                  background: #3498db;
-                  color: white;
-                  border: none;
-                  padding: 9px 20px;
-                  border-radius: 5px;
-                  cursor: pointer;
-                  font-weight: 600;
-                "
               >
                 Buscar
               </button>
               <div style="flex: 1; min-width: 200px">
-                <label
-                  style="
-                    display: block;
-                    font-size: 13px;
-                    font-weight: 600;
-                    color: #7f8c8d;
-                    margin-bottom: 4px;
-                  "
-                  >Buscar</label
-                >
+                <label class="filter-label">Buscar</label>
                 <input
                   type="text"
                   id="ivBuscador"
                   placeholder="Producto, ticket, cliente, IMEI..."
                   oninput="InventarioVendidoModule.filtrar()"
-                  style="
-                    width: 100%;
-                    padding: 8px 12px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                    box-sizing: border-box;
-                  "
+                  class="filter-input filter-input--full"
                 />
               </div>
             </div>
@@ -1415,7 +1333,7 @@
             <div class="tbl-scroll">
               <table style="width: 100%; border-collapse: collapse">
                 <thead>
-                  <tr style="background: #2c3e50; color: white">
+                  <tr class="thead-dark">
                     <th style="padding: 11px 12px; text-align: left">
                       N° Ticket
                     </th>
@@ -1508,7 +1426,7 @@
           </div>
 
           <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+            <div class="flex-row flex-row--between flex-row--center flex-row--gap-10 mb-14">
               <h3 style="margin:0">Facturas de Proveedores</h3>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <input type="text" id="facturasBusqueda"
@@ -1666,7 +1584,7 @@
               </div>
             </div>
             <div id="sgContenido" style="display:none;">
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+              <div class="auto-grid--160">
                 <div style="background:var(--clr-bg-surface);padding:14px;border-radius:10px;text-align:center;">
                   <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Total Gastos</div>
                   <div id="sgTotal" style="font-size:22px;font-weight:700;color:var(--clr-danger);">RD$0</div>
@@ -2110,29 +2028,29 @@
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px;">
                   <div class="rpt-sub-card">
                     <div class="rpt-sub-title">Métodos de Pago</div>
-                    <table style="width:100%;font-size:13px;">
+                    <table class="ci-table">
                       <tbody>
-                        <tr><td style="padding:4px 0;">Efectivo</td><td id="ciMetEfectivo" style="text-align:right;font-weight:600;">RD$0</td></tr>
-                        <tr><td style="padding:4px 0;">Tarjeta</td><td id="ciMetTarjeta" style="text-align:right;font-weight:600;">RD$0</td></tr>
-                        <tr><td style="padding:4px 0;">Transferencia</td><td id="ciMetTransferencia" style="text-align:right;font-weight:600;">RD$0</td></tr>
-                        <tr><td style="padding:4px 0;">Cheque</td><td id="ciMetCheque" style="text-align:right;font-weight:600;">RD$0</td></tr>
-                        <tr><td style="padding:4px 0;color:var(--clr-warning);">Crédito</td><td id="ciMetCredito" style="text-align:right;font-weight:600;color:var(--clr-warning);">RD$0</td></tr>
-                        <tr><td style="padding:4px 0;color:var(--clr-danger);">Devoluciones</td><td id="ciMetDev" style="text-align:right;font-weight:600;color:var(--clr-danger);">RD$0</td></tr>
-                        <tr style="border-top:2px solid var(--clr-border);font-weight:700;"><td style="padding:6px 0;">Total</td><td id="ciMetTotal" style="text-align:right;color:var(--clr-primary);">RD$0</td></tr>
+                        <tr><td>Efectivo</td><td id="ciMetEfectivo">RD$0</td></tr>
+                        <tr><td>Tarjeta</td><td id="ciMetTarjeta">RD$0</td></tr>
+                        <tr><td>Transferencia</td><td id="ciMetTransferencia">RD$0</td></tr>
+                        <tr><td>Cheque</td><td id="ciMetCheque">RD$0</td></tr>
+                        <tr><td style="color:var(--clr-warning);">Crédito</td><td id="ciMetCredito" style="color:var(--clr-warning);">RD$0</td></tr>
+                        <tr><td style="color:var(--clr-danger);">Devoluciones</td><td id="ciMetDev" style="color:var(--clr-danger);">RD$0</td></tr>
+                        <tr class="ci-total"><td>Total</td><td id="ciMetTotal" style="color:var(--clr-primary);">RD$0</td></tr>
                       </tbody>
                     </table>
                   </div>
 
                   <div class="rpt-sub-card">
                     <div class="rpt-sub-title">Efectivo en Caja</div>
-                    <table style="width:100%;font-size:13px;">
+                    <table class="ci-table">
                       <tbody>
-                        <tr><td style="padding:4px 0;">Fondo inicial</td><td id="ciFondoCaja" style="text-align:right;">RD$0</td></tr>
-                        <tr><td style="padding:4px 0;">+ Ventas efectivo</td><td id="ciIngEfectivo" style="text-align:right;">RD$0</td></tr>
-                        <tr><td style="padding:4px 0;">+ Abonos efectivo</td><td id="ciAbonos" style="text-align:right;">RD$0</td></tr>
-                        <tr><td style="padding:4px 0;color:var(--clr-danger);">− Salidas efectivo</td><td id="ciSalidasEf" style="text-align:right;color:var(--clr-danger);">RD$0</td></tr>
-                        <tr><td style="padding:4px 0;color:var(--clr-danger);">− Dev. efectivo</td><td id="ciDevEf" style="text-align:right;color:var(--clr-danger);">RD$0</td></tr>
-                        <tr style="border-top:2px solid var(--clr-border);font-weight:700;"><td style="padding:6px 0;">= Efectivo en caja</td><td id="ciEfectivoCaja2" style="text-align:right;color:var(--clr-success);font-size:15px;">RD$0</td></tr>
+                        <tr><td>Fondo inicial</td><td id="ciFondoCaja">RD$0</td></tr>
+                        <tr><td>+ Ventas efectivo</td><td id="ciIngEfectivo">RD$0</td></tr>
+                        <tr><td>+ Abonos efectivo</td><td id="ciAbonos">RD$0</td></tr>
+                        <tr><td style="color:var(--clr-danger);">− Salidas efectivo</td><td id="ciSalidasEf" style="color:var(--clr-danger);">RD$0</td></tr>
+                        <tr><td style="color:var(--clr-danger);">− Dev. efectivo</td><td id="ciDevEf" style="color:var(--clr-danger);">RD$0</td></tr>
+                        <tr class="ci-total"><td>= Efectivo en caja</td><td id="ciEfectivoCaja2" style="color:var(--clr-success);font-size:15px;">RD$0</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -2149,7 +2067,7 @@
                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:12px;">
                   <div class="rpt-sub-card">
                     <div class="rpt-sub-title">Ventas por Categoría</div>
-                    <table style="width:100%;font-size:13px;">
+                    <table class="ci-table">
                       <tbody id="ciCategorias">
                         <tr><td colspan="2" style="color:var(--clr-muted);">Sin datos</td></tr>
                       </tbody>
@@ -2217,7 +2135,7 @@
                 <button id="rgBtnExcel" class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">Descargar Excel</button>
               </div>
               <div id="rgContenido">
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px;">
+                <div class="auto-grid--160" style="margin-bottom:18px;">
                   <div class="rpt-kpi rpt-kpi--dev" style="padding:14px 16px;">
                     <div class="rpt-kpi-accent"></div>
                     <div class="rpt-kpi-label">Total Gastos</div>
@@ -2334,8 +2252,7 @@
           <!-- Tabla -->
           <div
             id="invReporteTablaWrap"
-            class="card"
-            style="padding: 0; overflow: hidden"
+            class="card card--flush"
           >
             <div
               style="
@@ -2894,44 +2811,44 @@
                 >
                   Dinero en Caja
                 </h4>
-                <table style="width: 100%; font-size: 13px">
+                <table class="ci-table">
                   <tr>
                     <td>Fondo de Caja</td>
-                    <td id="cFondoCaja" style="text-align: right"></td>
+                    <td id="cFondoCaja"></td>
                   </tr>
                   <tr>
                     <td>+ Ventas Efectivo</td>
                     <td
                       id="cVentasEfectivo"
-                      style="text-align: right; color: var(--clr-success)"
+                      style="color: var(--clr-success)"
                     ></td>
                   </tr>
                   <tr>
                     <td>+ Abonos Efectivo</td>
                     <td
                       id="cAbonos"
-                      style="text-align: right; color: var(--clr-success)"
+                      style="color: var(--clr-success)"
                     ></td>
                   </tr>
                   <tr>
                     <td>- Salidas</td>
                     <td
                       id="cSalidas"
-                      style="text-align: right; color: var(--clr-danger)"
+                      style="color: var(--clr-danger)"
                     ></td>
                   </tr>
                   <tr>
                     <td>- Dev. Efectivo</td>
                     <td
                       id="cDevEfectivo"
-                      style="text-align: right; color: var(--clr-danger)"
+                      style="color: var(--clr-danger)"
                     ></td>
                   </tr>
-                  <tr style="font-weight: 700; border-top: 2px solid #ccc">
+                  <tr class="ci-total">
                     <td>= Efectivo en Caja</td>
                     <td
                       id="cEfectivoCaja2"
-                      style="text-align: right; color: var(--clr-warning)"
+                      style="color: var(--clr-warning)"
                     ></td>
                   </tr>
                 </table>
@@ -2948,37 +2865,37 @@
                 >
                   Ventas por Método
                 </h4>
-                <table style="width: 100%; font-size: 13px">
+                <table class="ci-table">
                   <tr>
                     <td>Efectivo</td>
-                    <td id="cMetEfectivo" style="text-align: right"></td>
+                    <td id="cMetEfectivo"></td>
                   </tr>
                   <tr>
                     <td>Tarjeta</td>
-                    <td id="cMetTarjeta" style="text-align: right"></td>
+                    <td id="cMetTarjeta"></td>
                   </tr>
                   <tr>
                     <td>Transferencia</td>
-                    <td id="cMetTransferencia" style="text-align: right"></td>
+                    <td id="cMetTransferencia"></td>
                   </tr>
                   <tr>
                     <td>Crédito</td>
-                    <td id="cMetCredito" style="text-align: right"></td>
+                    <td id="cMetCredito"></td>
                   </tr>
                   <tr>
                     <td>Cheque</td>
-                    <td id="cMetCheque" style="text-align: right"></td>
+                    <td id="cMetCheque"></td>
                   </tr>
                   <tr>
                     <td style="color: var(--clr-danger)">Dev. de Ventas</td>
                     <td
                       id="cDevoluciones"
-                      style="text-align: right; color: var(--clr-danger)"
+                      style="color: var(--clr-danger)"
                     ></td>
                   </tr>
-                  <tr style="font-weight: 700; border-top: 2px solid #ccc">
+                  <tr class="ci-total">
                     <td>Total Ventas</td>
-                    <td id="cTotalVentas" style="text-align: right"></td>
+                    <td id="cTotalVentas"></td>
                   </tr>
                 </table>
               </div>
@@ -3004,7 +2921,7 @@
                   Ventas por Depto
                 </h4>
                 <table
-                  style="width: 100%; font-size: 13px"
+                  class="ci-table"
                   id="cuadreCategorias"
                 ></table>
               </div>
@@ -3020,36 +2937,36 @@
                 >
                   Ingresos Contado
                 </h4>
-                <table style="width: 100%; font-size: 13px">
+                <table class="ci-table">
                   <tr>
                     <td>Ventas Efectivo</td>
-                    <td id="cIngEfectivo" style="text-align: right"></td>
+                    <td id="cIngEfectivo"></td>
                   </tr>
                   <tr>
                     <td>Pagos Clientes</td>
-                    <td id="cIngPagos" style="text-align: right"></td>
+                    <td id="cIngPagos"></td>
                   </tr>
                   <tr>
                     <td>Ventas Transferencia</td>
-                    <td id="cIngTransferencia" style="text-align: right"></td>
+                    <td id="cIngTransferencia"></td>
                   </tr>
                   <tr>
                     <td style="color: var(--clr-danger)">Abonos (Dev. ef.)</td>
                     <td
                       id="cIngDevEf"
-                      style="text-align: right; color: var(--clr-danger)"
+                      style="color: var(--clr-danger)"
                     ></td>
                   </tr>
                   <tr>
                     <td style="color: var(--clr-danger)">Dev. Transferencia</td>
                     <td
                       id="cIngDevTra"
-                      style="text-align: right; color: var(--clr-danger)"
+                      style="color: var(--clr-danger)"
                     ></td>
                   </tr>
-                  <tr style="font-weight: 700; border-top: 2px solid #ccc">
+                  <tr class="ci-total">
                     <td>Total Ingresos</td>
-                    <td id="cTotalIngresos" style="text-align: right"></td>
+                    <td id="cTotalIngresos"></td>
                   </tr>
                 </table>
               </div>
@@ -3071,7 +2988,7 @@
                 Salidas
               </h4>
               <table
-                style="width: 100%; font-size: 13px"
+                class="ci-table"
                 id="cuadreSalidasTabla"
               ></table>
             </div>
@@ -3092,7 +3009,7 @@
                 Pagos de Créditos
               </h4>
               <table
-                style="width: 100%; font-size: 13px"
+                class="ci-table"
                 id="cuadrePagosTabla"
               ></table>
             </div>
@@ -3112,7 +3029,7 @@
               >
                 Ventas a Crédito del Día
               </h4>
-              <table style="width: 100%; font-size: 13px" id="cuadreCreditosTabla">
+              <table class="ci-table" id="cuadreCreditosTabla">
                 <thead>
                   <tr style="color: var(--clr-muted); font-size: 11px;">
                     <th style="text-align:left; padding-bottom:4px;">Ticket</th>

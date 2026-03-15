@@ -2565,3 +2565,212 @@ tbody tr:hover {
 
 .rpt-sub-card  { background:var(--clr-bg-surface); border-radius:12px; padding:16px; }
 .rpt-sub-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:var(--clr-muted); margin-bottom:12px; }
+
+/* ==================== EXTRACTED INLINE STYLES ==================== */
+
+/* --- Flex utilities --- */
+.flex-row          { display:flex; flex-wrap:wrap; }
+.flex-row--gap-6   { gap:6px; }
+.flex-row--gap-8   { gap:8px; }
+.flex-row--gap-10  { gap:10px; }
+.flex-row--gap-12  { gap:12px; }
+.flex-row--gap-30  { gap:30px; }
+.flex-row--between { justify-content:space-between; }
+.flex-row--center  { align-items:center; }
+.flex-row--end     { align-items:flex-end; }
+.flex-row--jcenter { justify-content:center; }
+.mb-14 { margin-bottom:14px; }
+.mb-20 { margin-bottom:20px; }
+
+/* --- Icon button --- */
+.btn--icon { display:flex; align-items:center; gap:6px; }
+
+/* --- Card flush (no padding) --- */
+.card--flush { padding:0; overflow:hidden; }
+
+/* --- Filter inputs & labels --- */
+.filter-label {
+  display:block;
+  font-size:13px;
+  font-weight:600;
+  color:var(--clr-muted);
+  margin-bottom:4px;
+}
+.filter-input {
+  padding:8px 12px;
+  border:1px solid var(--clr-border);
+  border-radius:5px;
+  font-size:14px;
+}
+.filter-input--full { width:100%; }
+
+/* --- thead dark --- */
+.thead-dark { background:#2c3e50; color:white; }
+
+/* --- Inline stat mini (gastos) --- */
+.auto-grid--160 {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(160px,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.auto-grid--240 {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(240px,1fr));
+  gap:12px;
+  margin-bottom:12px;
+}
+
+/* --- Retroactive date panel --- */
+.panel-fecha-retro {
+  display:none;
+  margin-top:8px;
+  padding:10px;
+  background:#fff3cd;
+  border:1px solid #ffc107;
+  border-radius:6px;
+}
+.panel-fecha-retro__label {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  font-size:0.9em;
+  color:#856404;
+}
+.panel-fecha-retro__label--block {
+  font-size:0.85em;
+  font-weight:600;
+  color:#856404;
+  display:block;
+  margin-bottom:4px;
+}
+.panel-fecha-retro__input {
+  width:100%;
+  padding:6px;
+  border:1px solid #ffc107;
+  border-radius:4px;
+  font-size:0.9em;
+}
+
+/* --- Cuadre del Día inline table --- */
+.ci-table        { width:100%; font-size:13px; }
+.ci-table td:first-child { padding:4px 0; }
+.ci-table td:last-child  { text-align:right; font-weight:600; }
+.ci-table .ci-total { border-top:2px solid var(--clr-border); font-weight:700; }
+.ci-table .ci-total td:first-child { padding:6px 0; }
+
+/* --- Factura print: action buttons --- */
+.factura-btn {
+  color:white;
+  border:none;
+  padding:8px 18px;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:bold;
+}
+.factura-btn--purple { background:#8e44ad; }
+.factura-btn--green  { background:#27ae60; }
+.factura-btn--blue   { background:#3498db; }
+.factura-btn--red    { background:#e74c3c; }
+.factura-action-bar__title { color:white; font-size:16px; font-weight:bold; }
+.factura-print-body { padding:30px; }
+
+/* --- Factura table cells --- */
+.fct-th, .fct-td     { padding:10px; font-size:13px; }
+.fct-th--sm, .fct-td--sm { padding:8px; font-size:12px; }
+.text-right { text-align:right; }
+.text-left  { text-align:left; }
+
+/* --- Créditos payment modal shell --- */
+.cp-overlay    { display:none; padding:20px; }
+.cp-modal {
+  background:var(--clr-bg-white);
+  border-radius:12px;
+  width:100%;
+  max-height:90vh;
+  overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+.cp-modal__header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:20px 24px;
+  border-bottom:1px solid var(--clr-border);
+}
+.cp-modal__title { margin:0; font-size:16px; color:var(--clr-dark); }
+.cp-modal__close {
+  background:none;
+  border:none;
+  cursor:pointer;
+  font-size:22px;
+  color:var(--clr-muted);
+  line-height:1;
+}
+.cp-modal__body { padding:24px; }
+
+/* --- Créditos form fields --- */
+.cp-label { font-weight:600; display:block; margin-bottom:6px; }
+.cp-input {
+  width:100%;
+  padding:10px;
+  border:1px solid var(--clr-border);
+  border-radius:8px;
+  font-size:14px;
+}
+.cp-input--lg { font-size:16px; font-weight:700; }
+
+/* --- Créditos reporte stat cards --- */
+.cr-stat-row  { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+.cr-stat-card {
+  flex:1;
+  min-width:130px;
+  background:var(--clr-bg-surface);
+  border-radius:8px;
+  padding:14px;
+  text-align:center;
+  border:1px solid var(--clr-border);
+}
+.cr-stat-card--success { background:#f0faf5; }
+.cr-stat-card--danger  { background:#fff5f5; }
+.cr-stat-card__label   { font-size:12px; color:var(--clr-muted); }
+.cr-stat-card__value   { font-size:18px; font-weight:700; }
+
+/* --- Créditos/general table header cell --- */
+.th-muted {
+  padding:10px 12px;
+  font-size:12px;
+  color:var(--clr-muted);
+  border-bottom:1px solid var(--clr-border);
+}
+
+/* --- Inventario: product info modal text --- */
+.prod-info__name  { font-size:16px; }
+.prod-info__meta  { color:var(--clr-muted); }
+.prod-info__stock { font-size:18px; color:var(--clr-dark); }
+
+/* --- Inventario: movement history table --- */
+.hist-table                    { width:100%; border-collapse:collapse; margin:20px 0; }
+.hist-table thead tr           { background:#f8f9fa; }
+.hist-table tbody tr           { border-bottom:1px solid #dee2e6; }
+.hist-table td, .hist-table th { padding:12px; }
+
+/* --- Clientes: table cell with avatar --- */
+.client-cell       { display:flex; align-items:center; gap:12px; }
+.client-cell__name { font-size:14px; color:var(--clr-dark); }
+
+/* --- Clientes: hero avatar circle --- */
+.hero-avatar {
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-weight:bold;
+  font-size:32px;
+}

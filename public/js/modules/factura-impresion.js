@@ -36,17 +36,17 @@ const FacturaImpresion = {
 
   <!-- BOTONES DE ACCIÓN (fuera de print) -->
   <div class="no-print factura-action-bar">
-  <span style="color:white;font-size:16px;font-weight:bold;"> Factura / Recibo</span>
-  <div style="display:flex;gap:10px;">
-  <button type="button" onclick="FacturaImpresion.imprimirTermica()" style="background:#8e44ad;color:white;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;">🖨️ Térmica</button>
-  <button type="button" onclick="FacturaImpresion.imprimir()" style="background:#27ae60;color:white;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;"> Imprimir</button>
-  <button type="button" onclick="FacturaImpresion.descargarPDF()" style="background:#3498db;color:white;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;"> PDF</button>
-  <button type="button" onclick="FacturaImpresion.cerrar()" style="background:#e74c3c;color:white;border:none;padding:8px 18px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;"> Cerrar</button>
+  <span class="factura-action-bar__title"> Factura / Recibo</span>
+  <div class="flex-row flex-row--gap-10">
+  <button type="button" onclick="FacturaImpresion.imprimirTermica()" class="factura-btn factura-btn--purple">🖨️ Térmica</button>
+  <button type="button" onclick="FacturaImpresion.imprimir()" class="factura-btn factura-btn--green"> Imprimir</button>
+  <button type="button" onclick="FacturaImpresion.descargarPDF()" class="factura-btn factura-btn--blue"> PDF</button>
+  <button type="button" onclick="FacturaImpresion.cerrar()" class="factura-btn factura-btn--red"> Cerrar</button>
   </div>
   </div>
 
   <!-- FACTURA IMPRIMIBLE -->
-  <div id="contenidoFactura" style="padding:30px;">
+  <div id="contenidoFactura" class="factura-print-body">
 
   <!-- HEADER -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:15px;border-bottom:3px solid #2c3e50;">
@@ -82,13 +82,13 @@ const FacturaImpresion = {
   <!-- TABLA DE PRODUCTOS -->
   <table style="width:100%;border-collapse:collapse;margin-bottom:10px;">
   <thead>
-  <tr style="background:#2c3e50;color:white;">
-  <th style="padding:10px;text-align:left;font-size:13px;">#</th>
-  <th style="padding:10px;text-align:left;font-size:13px;">Producto</th>
-  <th style="padding:10px;text-align:left;font-size:13px;">Código</th>
-  <th style="padding:10px;text-align:center;font-size:13px;">Cantidad</th>
-  <th style="padding:10px;text-align:right;font-size:13px;">Precio Unit.</th>
-  <th style="padding:10px;text-align:right;font-size:13px;">Subtotal</th>
+  <tr class="thead-dark">
+  <th class="fct-th text-left">#</th>
+  <th class="fct-th text-left">Producto</th>
+  <th class="fct-th text-left">Código</th>
+  <th class="fct-th text-center">Cantidad</th>
+  <th class="fct-th text-right">Precio Unit.</th>
+  <th class="fct-th text-right">Subtotal</th>
   </tr>
   </thead>
   <tbody>
@@ -96,20 +96,20 @@ const FacturaImpresion = {
         .map(
           (item, i) => `
   <tr style="border-bottom:1px solid #ecf0f1;background:${i % 2 === 0 ? "white" : "#f8f9fa"};">
-  <td style="padding:10px;font-size:13px;color:#7f8c8d;">${i + 1}</td>
-  <td style="padding:10px;font-size:13px;font-weight:500;">
+  <td class="fct-td" style="color:#7f8c8d;">${i + 1}</td>
+  <td class="fct-td" style="font-weight:500;">
     ${item.nombre_producto}
     ${item.imei ? `<br><span style="font-size:11px;color:#7f8c8d;">IMEI: ${item.imei}</span>` : ""}
   </td>
-  <td style="padding:10px;font-size:12px;color:#7f8c8d;">${item.codigo_producto || ""}</td>
-  <td style="padding:10px;text-align:center;font-size:13px;">${item.cantidad}</td>
-  <td style="padding:10px;text-align:right;font-size:13px;">
+  <td class="fct-td" style="font-size:12px;color:#7f8c8d;">${item.codigo_producto || ""}</td>
+  <td class="fct-td text-center">${item.cantidad}</td>
+  <td class="fct-td text-right">
     ${item.precio_original && parseFloat(item.precio_original) > parseFloat(item.precio_unitario)
       ? `<span style="text-decoration:line-through;color:#bdc3c7;font-size:11px;display:block;">${this.formatCurrency(item.precio_original)}</span>`
       : ""}
     ${this.formatCurrency(item.precio_unitario)}
   </td>
-  <td style="padding:10px;text-align:right;font-size:13px;font-weight:600;color:#27ae60;">${this.formatCurrency(item.subtotal)}</td>
+  <td class="fct-td text-right" style="font-weight:600;color:#27ae60;">${this.formatCurrency(item.subtotal)}</td>
   </tr>
   `,
         )
@@ -123,13 +123,13 @@ const FacturaImpresion = {
   <table style="width:100%;border-collapse:collapse;margin-bottom:10px;margin-top:15px;">
   <thead>
   <tr style="background:#8e44ad;color:white;">
-  <th style="padding:8px;text-align:left;font-size:12px;" colspan="4"> SERVICIOS ADICIONALES</th>
+  <th class="fct-th--sm text-left" colspan="4"> SERVICIOS ADICIONALES</th>
   </tr>
   <tr style="background:#9b59b6;color:white;">
-  <th style="padding:8px;text-align:left;font-size:12px;">#</th>
-  <th style="padding:8px;text-align:left;font-size:12px;">Servicio</th>
-  <th style="padding:8px;text-align:center;font-size:12px;">Estado</th>
-  <th style="padding:8px;text-align:right;font-size:12px;">Precio</th>
+  <th class="fct-th--sm text-left">#</th>
+  <th class="fct-th--sm text-left">Servicio</th>
+  <th class="fct-th--sm text-center">Estado</th>
+  <th class="fct-th--sm text-right">Precio</th>
   </tr>
   </thead>
   <tbody>
@@ -137,14 +137,14 @@ const FacturaImpresion = {
           .map(
             (s, i) => `
   <tr style="border-bottom:1px solid #ecf0f1;">
-  <td style="padding:8px;font-size:12px;color:#7f8c8d;">${i + 1}</td>
-  <td style="padding:8px;font-size:12px;">${s.nombre_servicio}</td>
-  <td style="padding:8px;text-align:center;font-size:12px;">
+  <td class="fct-td--sm" style="color:#7f8c8d;">${i + 1}</td>
+  <td class="fct-td--sm">${s.nombre_servicio}</td>
+  <td class="fct-td--sm text-center">
   <span style="background:${s.es_gratuito ? "#27ae60" : "#f39c12"};color:white;padding:2px 10px;border-radius:12px;font-size:11px;">
   ${s.es_gratuito ? " GRATIS" : " Pagado"}
   </span>
   </td>
-  <td style="padding:8px;text-align:right;font-size:12px;font-weight:600;color:${s.es_gratuito ? "#27ae60" : "#2c3e50"};">
+  <td class="fct-td--sm text-right" style="font-weight:600;color:${s.es_gratuito ? "#27ae60" : "#2c3e50"};">
   ${s.es_gratuito ? "RD$0.00" : this.formatCurrency(s.precio)}
   </td>
   </tr>
@@ -162,33 +162,33 @@ const FacturaImpresion = {
   <div style="display:flex;justify-content:flex-end;">
   <table style="width:320px;border-collapse:collapse;">
   <tr style="border-bottom:1px solid #ecf0f1;">
-  <td style="padding:8px 10px;color:#7f8c8d;font-size:14px;">Subtotal:</td>
-  <td style="padding:8px 10px;text-align:right;font-size:14px;">${this.formatCurrency(factura.subtotal)}</td>
+  <td class="fct-td--sm" style="color:#7f8c8d;font-size:14px;">Subtotal:</td>
+  <td class="fct-td--sm text-right" style="font-size:14px;">${this.formatCurrency(factura.subtotal)}</td>
   </tr>
   ${factura.descuento && parseFloat(factura.descuento) > 0
         ? `
   <tr style="border-bottom:1px solid #ecf0f1;">
-  <td style="padding:8px 10px;color:#27ae60;font-size:14px;font-weight:600;">Descuento aplicado:</td>
-  <td style="padding:8px 10px;text-align:right;font-size:14px;color:#27ae60;font-weight:600;">${this.formatCurrency(factura.descuento)}</td>
+  <td class="fct-td--sm" style="color:#27ae60;font-size:14px;font-weight:600;">Descuento aplicado:</td>
+  <td class="fct-td--sm text-right" style="font-size:14px;color:#27ae60;font-weight:600;">${this.formatCurrency(factura.descuento)}</td>
   </tr>`
         : ""
       }
   <tr style="border-bottom:1px solid #ecf0f1;">
-  <td style="padding:8px 10px;color:#7f8c8d;font-size:14px;">ITBIS (18%):</td>
-  <td style="padding:8px 10px;text-align:right;font-size:14px;">${this.formatCurrency(factura.itbis)}</td>
+  <td class="fct-td--sm" style="color:#7f8c8d;font-size:14px;">ITBIS (18%):</td>
+  <td class="fct-td--sm text-right" style="font-size:14px;">${this.formatCurrency(factura.itbis)}</td>
   </tr>
   <tr style="background:#2c3e50;">
-  <td style="padding:12px 10px;color:white;font-size:18px;font-weight:bold;">${factura.total_devuelto > 0 ? "TOTAL BRUTO:" : "TOTAL:"}</td>
-  <td style="padding:12px 10px;text-align:right;color:#27ae60;font-size:20px;font-weight:bold;">${this.formatCurrency(factura.total)}</td>
+  <td class="fct-td--sm" style="color:white;font-size:18px;font-weight:bold;">${factura.total_devuelto > 0 ? "TOTAL BRUTO:" : "TOTAL:"}</td>
+  <td class="fct-td--sm text-right" style="color:#27ae60;font-size:20px;font-weight:bold;">${this.formatCurrency(factura.total)}</td>
   </tr>
   ${factura.total_devuelto > 0 ? `
   <tr style="background:#c0392b;">
-  <td style="padding:10px 10px;color:white;font-size:14px;font-weight:bold;">Monto Devuelto:</td>
-  <td style="padding:10px 10px;text-align:right;color:#fff;font-size:16px;font-weight:bold;">-${this.formatCurrency(factura.total_devuelto)}</td>
+  <td class="fct-td--sm" style="color:white;font-size:14px;font-weight:bold;">Monto Devuelto:</td>
+  <td class="fct-td--sm text-right" style="color:#fff;font-size:16px;font-weight:bold;">-${this.formatCurrency(factura.total_devuelto)}</td>
   </tr>
   <tr style="background:#27ae60;">
-  <td style="padding:12px 10px;color:white;font-size:18px;font-weight:bold;">TOTAL NETO:</td>
-  <td style="padding:12px 10px;text-align:right;color:white;font-size:20px;font-weight:bold;">${this.formatCurrency(factura.total_neto)}</td>
+  <td class="fct-td--sm" style="color:white;font-size:18px;font-weight:bold;">TOTAL NETO:</td>
+  <td class="fct-td--sm text-right" style="color:white;font-size:20px;font-weight:bold;">${this.formatCurrency(factura.total_neto)}</td>
   </tr>
   ` : ""}
   </table>
@@ -215,19 +215,19 @@ const FacturaImpresion = {
   <table style="width:100%;border-collapse:collapse;font-size:12px;">
   <thead>
   <tr style="background:#f8d7da;">
-  <th style="padding:6px 8px;text-align:left;color:#721c24;">Producto</th>
-  <th style="padding:6px 8px;text-align:center;color:#721c24;">Cant. Devuelta</th>
-  <th style="padding:6px 8px;text-align:right;color:#721c24;">Precio Unit.</th>
-  <th style="padding:6px 8px;text-align:right;color:#721c24;">Total</th>
+  <th class="fct-th--sm text-left" style="color:#721c24;">Producto</th>
+  <th class="fct-th--sm text-center" style="color:#721c24;">Cant. Devuelta</th>
+  <th class="fct-th--sm text-right" style="color:#721c24;">Precio Unit.</th>
+  <th class="fct-th--sm text-right" style="color:#721c24;">Total</th>
   </tr>
   </thead>
   <tbody>
   ${(dev.items || []).map(item => `
   <tr style="border-bottom:1px solid #f5c6cb;">
-  <td style="padding:6px 8px;color:#2c3e50;">${item.nombre_producto}</td>
-  <td style="padding:6px 8px;text-align:center;color:#2c3e50;">${item.cantidad_devuelta}</td>
-  <td style="padding:6px 8px;text-align:right;color:#2c3e50;">${this.formatCurrency(item.precio_unitario)}</td>
-  <td style="padding:6px 8px;text-align:right;font-weight:600;color:#c0392b;">${this.formatCurrency(item.total)}</td>
+  <td class="fct-td--sm" style="color:#2c3e50;">${item.nombre_producto}</td>
+  <td class="fct-td--sm text-center" style="color:#2c3e50;">${item.cantidad_devuelta}</td>
+  <td class="fct-td--sm text-right" style="color:#2c3e50;">${this.formatCurrency(item.precio_unitario)}</td>
+  <td class="fct-td--sm text-right" style="font-weight:600;color:#c0392b;">${this.formatCurrency(item.total)}</td>
   </tr>
   `).join("")}
   </tbody>
