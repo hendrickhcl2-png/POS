@@ -305,9 +305,9 @@ const VentasController = {
           estado,
           tipo_factura,
           venta_id
-        ) VALUES ($1, $2, 'B02', $3, $4, $5, $6, $7,
-            CASE WHEN $9 = 'pendiente' THEN 0 ELSE $7 END,
-            CASE WHEN $9 = 'pendiente' THEN $7 ELSE 0 END,
+        ) VALUES ($1, $2, 'B02', $3, $4, $5, $6, $7::numeric,
+            CASE WHEN $9 = 'pendiente' THEN 0::numeric ELSE $7::numeric END,
+            CASE WHEN $9 = 'pendiente' THEN $7::numeric ELSE 0::numeric END,
             COALESCE($12::date, CURRENT_DATE), $8, $9, $10, $11)
         RETURNING *`,
         [
