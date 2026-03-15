@@ -30,6 +30,9 @@ router.get("/cuadre/excel", ReportesExportController.exportarCuadreExcel.bind(Re
 router.get("/salidas", ReportesController.getReporteSalidas.bind(ReportesController));
 router.get("/salidas/excel", ReportesExportController.exportarSalidasExcel.bind(ReportesExportController));
 
+// Reporte combinado por categorías (ventas + gastos)
+router.get("/categorias/excel", ReportesExportController.exportarCategoriasExcel.bind(ReportesExportController));
+
 // Reporte de inventario
 router.get("/inventario", requireAdmin, ReportesController.getReporteInventario);
 

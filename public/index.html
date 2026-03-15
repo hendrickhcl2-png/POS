@@ -1723,6 +1723,36 @@
             </form>
           </div>
 
+          <!-- Reporte de Gastos por Categoría (Inline) -->
+          <div class="card" id="sgCard">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+              <h3 style="margin:0;">Reporte de Gastos por Categoría</h3>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <input type="date" id="sgDesde" style="width:140px"/>
+                <span style="color:var(--clr-muted);">a</span>
+                <input type="date" id="sgHasta" style="width:140px"/>
+                <button class="btn btn-primary btn-small" onclick="cargarReporteGastosSalidas()">Consultar</button>
+                <button id="sgBtnExcel" class="btn btn-success btn-small" style="display:none;" onclick="descargarExcelCategoriasSalidas()">Descargar Excel</button>
+              </div>
+            </div>
+            <div id="sgContenido" style="display:none;">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+                <div style="background:var(--clr-bg-surface);padding:14px;border-radius:10px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Total Gastos</div>
+                  <div id="sgTotal" style="font-size:22px;font-weight:700;color:var(--clr-danger);">RD$0</div>
+                </div>
+                <div style="background:var(--clr-bg-surface);padding:14px;border-radius:10px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Cantidad</div>
+                  <div id="sgCantidad" style="font-size:22px;font-weight:700;">0</div>
+                </div>
+              </div>
+              <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Por Categoría</div>
+              <div id="sgPorCategoria"></div>
+              <div style="font-weight:700;margin:14px 0 10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Por Método de Pago</div>
+              <div id="sgPorMetodo"></div>
+            </div>
+          </div>
+
           <div class="card">
             <h3>Historial de Salidas y Gastos</h3>
             <table>
@@ -2025,12 +2055,7 @@
               </div>
               <button
                 class="btn btn-primary btn-excel-personalizado"
-                onclick="
-                  ReportesModule.buscarPorRango(
-                    document.getElementById('excelFechaDesde').value,
-                    document.getElementById('excelFechaHasta').value,
-                  )
-                "
+                onclick="ReportesModule.buscarRangoCompleto()"
               >
                 Buscar
               </button>
@@ -2371,6 +2396,40 @@
 
             </div>
           </div>
+
+          <!-- Ventas por Categoría -->
+          <div class="card" id="rgVentasCatCard" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <h3 style="margin:0;">Ventas por Categoría</h3>
+              <button class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">Descargar Excel</button>
+            </div>
+            <div id="rgVentasPorCategoria"></div>
+          </div>
+
+          <!-- Reporte de Gastos por Categoría (Inline Reportes) -->
+          <div class="card" id="rgCard" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <h3 style="margin:0;">Reporte de Gastos por Categoría</h3>
+              <button id="rgBtnExcel" class="btn btn-success btn-small" onclick="ReportesModule.descargarExcelCategorias()">Descargar Excel</button>
+            </div>
+            <div id="rgContenido">
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+                <div style="background:var(--clr-bg-surface);padding:14px;border-radius:10px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Total Gastos</div>
+                  <div id="rgTotal" style="font-size:22px;font-weight:700;color:var(--clr-danger);">RD$0</div>
+                </div>
+                <div style="background:var(--clr-bg-surface);padding:14px;border-radius:10px;text-align:center;">
+                  <div style="font-size:11px;color:var(--clr-muted);text-transform:uppercase;margin-bottom:4px;">Cantidad</div>
+                  <div id="rgCantidad" style="font-size:22px;font-weight:700;">0</div>
+                </div>
+              </div>
+              <div style="font-weight:700;margin-bottom:10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Por Categoría</div>
+              <div id="rgPorCategoria"></div>
+              <div style="font-weight:700;margin:14px 0 10px;font-size:13px;text-transform:uppercase;color:var(--clr-muted);">Por Método de Pago</div>
+              <div id="rgPorMetodo"></div>
+            </div>
+          </div>
+
         </section>
 
         <!-- REPORTE INVENTARIO SECTION -->

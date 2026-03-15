@@ -105,6 +105,91 @@ async function eliminarSalida(id, concepto) {
   }
 }
 
+// ==================== REPORTE GASTOS INLINE (SALIDAS) ====================
+
+function _renderGastoBars(containerId, items, total, colorGrad) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const f = (n) => Formatters.formatCurrency(parseFloat(n) || 0);
+  el.innerHTML = (items || []).map(item => {
+    const label = item.categoria || item.metodo_pago || "—";
+    const pct = total > 0 ? ((parseFloat(item.total) / total) * 100).toFixed(1) : 0;
+    return `
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span style="font-weight:600;">${label}</span>
+          <span>${f(item.total)} (${pct}%)</span>
+        </div>
+        <div style="background:#ecf0f1;height:24px;border-radius:12px;overflow:hidden;">
+          <div style="background:${colorGrad};height:100%;width:${pct}%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold;min-width:${pct > 0 ? '32px' : '0'};">
+            ${item.cantidad}
+          </div>
+        </div>
+      </div>`;
+  }).join("") || `<p style="color:var(--clr-muted);text-align:center;">Sin datos</p>`;
+}
+
+async function descargarExcelCategoriasSalidas() {
+  const desde = document.getElementById("sgDesde")?.value;
+  const hasta = document.getElementById("sgHasta")?.value;
+  if (!desde || !hasta) { mostrarAlerta("Selecciona ambas fechas", "warning"); return; }
+  const btn = document.getElementById("sgBtnExcel");
+  if (btn) { btn.disabled = true; btn.textContent = "Generando..."; }
+  try {
+    const baseURL = window.API_URL || "http://localhost:3000/api";
+    const response = await fetch(`${baseURL}/reportes/categorias/excel?fecha_inicio=${desde}&fecha_fin=${hasta}`);
+    if (!response.ok) throw new Error("Error al generar Excel");
+    const blob = await response.blob();
+    const a = document.createElement("a");
+    a.href = window.URL.createObjectURL(blob);
+    a.download = `categorias_${desde}_${hasta}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (e) {
+    mostrarAlerta("Error al descargar: " + e.message, "danger");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "Descargar Excel"; }
+  }
+}
+window.descargarExcelCategoriasSalidas = descargarExcelCategoriasSalidas;
+
+async function cargarReporteGastosSalidas() {
+  const desde = document.getElementById("sgDesde")?.value;
+  const hasta = document.getElementById("sgHasta")?.value;
+  if (!desde || !hasta) { mostrarAlerta("Selecciona ambas fechas", "warning"); return; }
+  try {
+    const data = await ReportesAPI.getReporteSalidas(desde, hasta);
+    const resumen = data.resumen;
+    const total = parseFloat(resumen.total_salidas) || 0;
+
+    document.getElementById("sgTotal").textContent = Formatters.formatCurrency(total);
+    document.getElementById("sgCantidad").textContent = resumen.cantidad_salidas;
+
+    _renderGastoBars("sgPorCategoria", data.por_categoria, total, "linear-gradient(90deg,#e74c3c,#c0392b)");
+    _renderGastoBars("sgPorMetodo", data.por_metodo, total, "linear-gradient(90deg,#3498db,#2980b9)");
+
+    document.getElementById("sgContenido").style.display = "block";
+    const btn = document.getElementById("sgBtnExcel");
+    if (btn) btn.style.display = "inline-block";
+  } catch (e) {
+    mostrarAlerta("Error al cargar reporte de gastos: " + e.message, "danger");
+  }
+}
+
+function initReporteGastosSalidas() {
+  const hoy = new Date().toISOString().split("T")[0];
+  const primero = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
+  const sgDesde = document.getElementById("sgDesde");
+  const sgHasta = document.getElementById("sgHasta");
+  if (sgDesde && !sgDesde.value) sgDesde.value = primero;
+  if (sgHasta && !sgHasta.value) sgHasta.value = hoy;
+  cargarReporteGastosSalidas();
+}
+
+window.cargarReporteGastosSalidas = cargarReporteGastosSalidas;
+window.initReporteGastosSalidas = initReporteGastosSalidas;
+
 async function guardarSalida(e) {
   e.preventDefault();
 

@@ -239,6 +239,7 @@ case "proveedores":
     case "salidas":
       cargarSalidas();
       actualizarSelectCategoriasGasto();
+      if (window.initReporteGastosSalidas) initReporteGastosSalidas();
       break;
     case "configuracion":
       cargarConfiguracion();

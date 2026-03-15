@@ -504,6 +504,188 @@ const ReportesExportController = {
     }
   },
 
+  // ==================== EXCEL RESUMEN POR CATEGORÍAS ====================
+
+  async exportarCategoriasExcel(req, res, next) {
+    try {
+      const { fecha_inicio, fecha_fin } = req.query;
+      if (!fecha_inicio || !fecha_fin) {
+        return res.status(400).json({ success: false, message: "Debe especificar fecha_inicio y fecha_fin" });
+      }
+
+      const [ventasCatRes, gastosCatRes, gastosDetRes] = await Promise.all([
+        pool.query(
+          `SELECT COALESCE(c.nombre, 'Sin categoría') AS categoria,
+                  COUNT(DISTINCT p.id)::int AS productos_distintos,
+                  SUM(dv.cantidad)::int AS cantidad_vendida,
+                  SUM(dv.subtotal) AS total_ventas
+           FROM detalle_venta dv
+           JOIN productos p ON dv.producto_id = p.id
+           JOIN ventas v ON dv.venta_id = v.id
+           LEFT JOIN facturas f ON v.id = f.venta_id
+           LEFT JOIN categorias c ON p.categoria_id = c.id
+           WHERE v.fecha >= $1 AND v.fecha <= $2
+             AND COALESCE(f.estado, 'pagada') != 'anulada'
+           GROUP BY c.nombre ORDER BY total_ventas DESC`,
+          [fecha_inicio, fecha_fin]
+        ),
+        pool.query(
+          `SELECT COALESCE(categoria_gasto, 'Sin categoría') AS categoria,
+                  COUNT(*)::int AS cantidad,
+                  SUM(monto) AS total
+           FROM salidas
+           WHERE fecha >= $1 AND fecha <= $2
+           GROUP BY categoria_gasto ORDER BY total DESC`,
+          [fecha_inicio, fecha_fin]
+        ),
+        pool.query(
+          `SELECT numero_salida, fecha, concepto, descripcion, monto,
+                  COALESCE(categoria_gasto, 'Sin categoría') AS categoria_gasto,
+                  COALESCE(metodo_pago, 'No especificado') AS metodo_pago,
+                  COALESCE(beneficiario, '') AS beneficiario
+           FROM salidas
+           WHERE fecha >= $1 AND fecha <= $2
+           ORDER BY fecha DESC, id DESC`,
+          [fecha_inicio, fecha_fin]
+        ),
+      ]);
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Fifty Tech POS";
+      workbook.created = new Date();
+
+      const CLR_HEADER  = "FF2C3E50";
+      const CLR_WHITE   = "FFFFFFFF";
+      const CLR_GREEN   = "FF27AE60";
+      const CLR_RED     = "FFE74C3C";
+      const CLR_BLUE    = "FF3498DB";
+
+      const styleHeader = (row, color) => {
+        row.eachCell(cell => {
+          cell.font = { bold: true, color: { argb: CLR_WHITE } };
+          cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
+          cell.alignment = { horizontal: "center", vertical: "middle" };
+        });
+        row.height = 20;
+      };
+
+      const addTitle = (sheet, text, color, cols) => {
+        sheet.mergeCells(`A1:${String.fromCharCode(64 + cols)}1`);
+        const cell = sheet.getCell("A1");
+        cell.value = text;
+        cell.font = { bold: true, size: 13, color: { argb: CLR_WHITE } };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: color } };
+        sheet.getRow(1).height = 26;
+      };
+
+      // ── HOJA 1: Ventas por Categoría ──────────────────────────────
+      const sh1 = workbook.addWorksheet("Ventas por Categoría");
+      addTitle(sh1, `Ventas por Categoría — ${fecha_inicio} al ${fecha_fin}`, CLR_GREEN, 4);
+      sh1.addRow([]);
+      sh1.columns = [
+        { key: "categoria",          width: 28 },
+        { key: "total_ventas",       width: 20 },
+        { key: "cantidad_vendida",   width: 18 },
+        { key: "productos_distintos",width: 20 },
+      ];
+      const hRow1 = sh1.addRow(["Categoría", "Total Ventas (RD$)", "Unidades Vendidas", "Productos Distintos"]);
+      styleHeader(hRow1, CLR_GREEN);
+
+      const totalVentas = ventasCatRes.rows.reduce((s, r) => s + parseFloat(r.total_ventas || 0), 0);
+      ventasCatRes.rows.forEach((r, i) => {
+        const row = sh1.addRow({
+          categoria:          r.categoria,
+          total_ventas:       parseFloat(r.total_ventas || 0),
+          cantidad_vendida:   r.cantidad_vendida,
+          productos_distintos:r.productos_distintos,
+        });
+        row.getCell("total_ventas").numFmt = "#,##0.00";
+        if (i % 2 === 0) row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0F9F4" } };
+      });
+      const totV = sh1.addRow({ categoria: "TOTAL", total_ventas: totalVentas });
+      totV.getCell("categoria").font = { bold: true, color: { argb: CLR_WHITE } };
+      totV.getCell("total_ventas").numFmt = "#,##0.00";
+      totV.getCell("total_ventas").font = { bold: true, color: { argb: CLR_WHITE } };
+      totV.fill = { type: "pattern", pattern: "solid", fgColor: { argb: CLR_GREEN } };
+
+      // ── HOJA 2: Gastos por Categoría ──────────────────────────────
+      const sh2 = workbook.addWorksheet("Gastos por Categoría");
+      addTitle(sh2, `Gastos por Categoría — ${fecha_inicio} al ${fecha_fin}`, CLR_RED, 3);
+      sh2.addRow([]);
+      sh2.columns = [
+        { key: "categoria", width: 28 },
+        { key: "total",     width: 20 },
+        { key: "cantidad",  width: 18 },
+      ];
+      const hRow2 = sh2.addRow(["Categoría", "Total (RD$)", "Cantidad Gastos"]);
+      styleHeader(hRow2, CLR_RED);
+
+      const totalGastos = gastosCatRes.rows.reduce((s, r) => s + parseFloat(r.total || 0), 0);
+      gastosCatRes.rows.forEach((r, i) => {
+        const row = sh2.addRow({
+          categoria: r.categoria,
+          total:     parseFloat(r.total || 0),
+          cantidad:  r.cantidad,
+        });
+        row.getCell("total").numFmt = "#,##0.00";
+        if (i % 2 === 0) row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF5F5" } };
+      });
+      const totG = sh2.addRow({ categoria: "TOTAL", total: totalGastos });
+      totG.getCell("categoria").font = { bold: true, color: { argb: CLR_WHITE } };
+      totG.getCell("total").numFmt = "#,##0.00";
+      totG.getCell("total").font = { bold: true, color: { argb: CLR_WHITE } };
+      totG.fill = { type: "pattern", pattern: "solid", fgColor: { argb: CLR_RED } };
+
+      // ── HOJA 3: Detalle Gastos ────────────────────────────────────
+      const sh3 = workbook.addWorksheet("Detalle Gastos");
+      addTitle(sh3, `Detalle de Gastos — ${fecha_inicio} al ${fecha_fin}`, CLR_BLUE, 8);
+      sh3.addRow([]);
+      sh3.columns = [
+        { key: "numero_salida",   width: 14 },
+        { key: "fecha",           width: 13 },
+        { key: "categoria_gasto", width: 22 },
+        { key: "concepto",        width: 30 },
+        { key: "descripcion",     width: 28 },
+        { key: "monto",           width: 15 },
+        { key: "metodo_pago",     width: 16 },
+        { key: "beneficiario",    width: 22 },
+      ];
+      const hRow3 = sh3.addRow(["N° Salida","Fecha","Categoría","Concepto","Descripción","Monto (RD$)","Método Pago","Beneficiario"]);
+      styleHeader(hRow3, CLR_BLUE);
+
+      let totalDet = 0;
+      gastosDetRes.rows.forEach((s, i) => {
+        const row = sh3.addRow({
+          numero_salida:   s.numero_salida,
+          fecha:           s.fecha,
+          categoria_gasto: s.categoria_gasto,
+          concepto:        s.concepto,
+          descripcion:     s.descripcion || "",
+          monto:           parseFloat(s.monto),
+          metodo_pago:     s.metodo_pago,
+          beneficiario:    s.beneficiario,
+        });
+        row.getCell("monto").numFmt = "#,##0.00";
+        if (i % 2 === 0) row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF5F8FF" } };
+        totalDet += parseFloat(s.monto);
+      });
+      const totD = sh3.addRow({ concepto: "TOTAL", monto: totalDet });
+      totD.getCell("concepto").font = { bold: true, color: { argb: CLR_WHITE } };
+      totD.getCell("monto").numFmt = "#,##0.00";
+      totD.getCell("monto").font = { bold: true, color: { argb: CLR_WHITE } };
+      totD.fill = { type: "pattern", pattern: "solid", fgColor: { argb: CLR_BLUE } };
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="reporte_categorias_${fecha_inicio}_${fecha_fin}.xlsx"`);
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error) {
+      console.error("❌ Error al exportar categorías Excel:", error);
+      next(error);
+    }
+  },
+
   // ==================== EXPORTAR SALIDAS EXCEL ====================
 
   async exportarSalidasExcel(req, res, next) {
