@@ -8,6 +8,7 @@ const FacturacionModule = {
   cliente_id: null,
   estado: null,
   codigo_producto: null,
+  numero_factura: "",
   },
 
   // ==================== INICIALIZACIÓN ====================
@@ -49,6 +50,15 @@ const FacturacionModule = {
   const btnLimpiar = document.getElementById("limpiarFiltros");
   if (btnLimpiar) {
   btnLimpiar.addEventListener("click", () => this.limpiarFiltros());
+  }
+
+  // Búsqueda por número de factura (client-side, instantánea)
+  const inputNumero = document.getElementById("buscarNumeroFactura");
+  if (inputNumero) {
+  inputNumero.addEventListener("input", () => {
+    this.filtros.numero_factura = inputNumero.value.trim().toLowerCase();
+    this.renderizarFacturas();
+  });
   }
 
   },
@@ -111,7 +121,12 @@ const FacturacionModule = {
   const tbody = document.getElementById("tablaFacturas");
   if (!tbody) return;
 
-  if (this.facturas.length === 0) {
+  const q = this.filtros.numero_factura || "";
+  const facturas = q
+    ? this.facturas.filter((f) => (f.numero_factura || "").toLowerCase().includes(q))
+    : this.facturas;
+
+  if (facturas.length === 0) {
   tbody.innerHTML = `
   <tr>
   <td colspan="8" style="text-align: center; padding: 40px; color: #7f8c8d;">
@@ -124,7 +139,7 @@ const FacturacionModule = {
   return;
   }
 
-  tbody.innerHTML = this.facturas
+  tbody.innerHTML = facturas
 .map(
   (factura) => `
   <tr style="cursor: pointer;" onclick="FacturacionModule.verDetalleFactura(${factura.id})">
