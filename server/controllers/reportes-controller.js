@@ -307,22 +307,39 @@ const ReportesController = {
       // Top 10 productos más vendidos
       const topProductos = productosResult.rows.slice(0, 10);
 
-      // Resumen por categoría
+      // Resumen por categoría (productos + servicios)
       const categoriasResult = await pool.query(
-        `SELECT 
-          COALESCE(c.nombre, 'Sin categoría') as categoria,
-          COUNT(DISTINCT p.id) as productos_distintos,
-          SUM(dv.cantidad) as cantidad_vendida,
-          SUM(dv.subtotal) as total_ventas
-        FROM detalle_venta dv
-        JOIN productos p ON dv.producto_id = p.id
-        JOIN ventas v ON dv.venta_id = v.id
-        LEFT JOIN facturas f ON v.id = f.venta_id
-        LEFT JOIN categorias c ON p.categoria_id = c.id
-        WHERE v.fecha >= $1 AND v.fecha <= $2
-          AND COALESCE(f.estado, 'pagada') != 'anulada'
-        GROUP BY c.nombre
-        ORDER BY total_ventas DESC`,
+        `SELECT categoria, productos_distintos, cantidad_vendida, total_ventas, tipo
+         FROM (
+           SELECT
+             COALESCE(c.nombre, 'Sin categoría') AS categoria,
+             COUNT(DISTINCT p.id)::int AS productos_distintos,
+             SUM(dv.cantidad)::int AS cantidad_vendida,
+             SUM(dv.subtotal) AS total_ventas,
+             'producto' AS tipo
+           FROM detalle_venta dv
+           JOIN productos p ON dv.producto_id = p.id
+           JOIN ventas v ON dv.venta_id = v.id
+           LEFT JOIN facturas f ON v.id = f.venta_id
+           LEFT JOIN categorias c ON p.categoria_id = c.id
+           WHERE v.fecha >= $1 AND v.fecha <= $2
+             AND COALESCE(f.estado, 'pagada') != 'anulada'
+           GROUP BY c.nombre
+           UNION ALL
+           SELECT
+             'Servicios' AS categoria,
+             1 AS productos_distintos,
+             COUNT(sv.id)::int AS cantidad_vendida,
+             SUM(sv.subtotal) AS total_ventas,
+             'servicio' AS tipo
+           FROM servicios_venta sv
+           JOIN ventas v ON sv.venta_id = v.id
+           LEFT JOIN facturas f ON v.id = f.venta_id
+           WHERE v.fecha >= $1 AND v.fecha <= $2
+             AND sv.es_gratuito = false
+             AND COALESCE(f.estado, 'pagada') != 'anulada'
+         ) t
+         ORDER BY total_ventas DESC`,
         [fechaInicio, fechaFin],
       );
 
@@ -579,21 +596,33 @@ const ReportesController = {
         [fechaDia],
       );
 
-      // 7. Ventas por categoría
+      // 7. Ventas por categoría (productos + servicios)
       const porCategoriaResult = await pool.query(
-        `SELECT
-          COALESCE(cat.nombre, 'Sin categoría') AS categoria,
-          COALESCE(SUM(dv.subtotal), 0) AS total
-        FROM detalle_venta dv
-        JOIN ventas v ON dv.venta_id = v.id
-        LEFT JOIN productos p ON dv.producto_id = p.id
-        LEFT JOIN categorias cat ON p.categoria_id = cat.id
-        LEFT JOIN facturas f ON v.id = f.venta_id
-        WHERE v.fecha = $1
-          AND COALESCE(f.estado, 'pagada') != 'anulada'
-          AND dv.producto_id IS NOT NULL
-        GROUP BY cat.nombre
-        ORDER BY total DESC`,
+        `SELECT categoria, total FROM (
+           SELECT
+             COALESCE(cat.nombre, 'Sin categoría') AS categoria,
+             COALESCE(SUM(dv.subtotal), 0) AS total
+           FROM detalle_venta dv
+           JOIN ventas v ON dv.venta_id = v.id
+           LEFT JOIN productos p ON dv.producto_id = p.id
+           LEFT JOIN categorias cat ON p.categoria_id = cat.id
+           LEFT JOIN facturas f ON v.id = f.venta_id
+           WHERE v.fecha = $1
+             AND COALESCE(f.estado, 'pagada') != 'anulada'
+             AND dv.producto_id IS NOT NULL
+           GROUP BY cat.nombre
+           UNION ALL
+           SELECT
+             'Servicios' AS categoria,
+             COALESCE(SUM(sv.subtotal), 0) AS total
+           FROM servicios_venta sv
+           JOIN ventas v ON sv.venta_id = v.id
+           LEFT JOIN facturas f ON v.id = f.venta_id
+           WHERE v.fecha = $1
+             AND sv.es_gratuito = false
+             AND COALESCE(f.estado, 'pagada') != 'anulada'
+         ) t
+         ORDER BY total DESC`,
         [fechaDia],
       );
 

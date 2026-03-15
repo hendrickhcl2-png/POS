@@ -515,18 +515,35 @@ const ReportesExportController = {
 
       const [ventasCatRes, gastosCatRes, gastosDetRes] = await Promise.all([
         pool.query(
-          `SELECT COALESCE(c.nombre, 'Sin categoría') AS categoria,
-                  COUNT(DISTINCT p.id)::int AS productos_distintos,
-                  SUM(dv.cantidad)::int AS cantidad_vendida,
-                  SUM(dv.subtotal) AS total_ventas
-           FROM detalle_venta dv
-           JOIN productos p ON dv.producto_id = p.id
-           JOIN ventas v ON dv.venta_id = v.id
-           LEFT JOIN facturas f ON v.id = f.venta_id
-           LEFT JOIN categorias c ON p.categoria_id = c.id
-           WHERE v.fecha >= $1 AND v.fecha <= $2
-             AND COALESCE(f.estado, 'pagada') != 'anulada'
-           GROUP BY c.nombre ORDER BY total_ventas DESC`,
+          `SELECT categoria, productos_distintos, cantidad_vendida, total_ventas, tipo
+           FROM (
+             SELECT COALESCE(c.nombre, 'Sin categoría') AS categoria,
+                    COUNT(DISTINCT p.id)::int AS productos_distintos,
+                    SUM(dv.cantidad)::int AS cantidad_vendida,
+                    SUM(dv.subtotal) AS total_ventas,
+                    'producto' AS tipo
+             FROM detalle_venta dv
+             JOIN productos p ON dv.producto_id = p.id
+             JOIN ventas v ON dv.venta_id = v.id
+             LEFT JOIN facturas f ON v.id = f.venta_id
+             LEFT JOIN categorias c ON p.categoria_id = c.id
+             WHERE v.fecha >= $1 AND v.fecha <= $2
+               AND COALESCE(f.estado, 'pagada') != 'anulada'
+             GROUP BY c.nombre
+             UNION ALL
+             SELECT 'Servicios' AS categoria,
+                    1 AS productos_distintos,
+                    COUNT(sv.id)::int AS cantidad_vendida,
+                    SUM(sv.subtotal) AS total_ventas,
+                    'servicio' AS tipo
+             FROM servicios_venta sv
+             JOIN ventas v ON sv.venta_id = v.id
+             LEFT JOIN facturas f ON v.id = f.venta_id
+             WHERE v.fecha >= $1 AND v.fecha <= $2
+               AND sv.es_gratuito = false
+               AND COALESCE(f.estado, 'pagada') != 'anulada'
+           ) t
+           ORDER BY total_ventas DESC`,
           [fecha_inicio, fecha_fin]
         ),
         pool.query(
@@ -581,24 +598,26 @@ const ReportesExportController = {
 
       // ── HOJA 1: Ventas por Categoría ──────────────────────────────
       const sh1 = workbook.addWorksheet("Ventas por Categoría");
-      addTitle(sh1, `Ventas por Categoría — ${fecha_inicio} al ${fecha_fin}`, CLR_GREEN, 4);
+      addTitle(sh1, `Ventas por Categoría — ${fecha_inicio} al ${fecha_fin}`, CLR_GREEN, 5);
       sh1.addRow([]);
       sh1.columns = [
+        { key: "tipo",               width: 12 },
         { key: "categoria",          width: 28 },
         { key: "total_ventas",       width: 20 },
         { key: "cantidad_vendida",   width: 18 },
         { key: "productos_distintos",width: 20 },
       ];
-      const hRow1 = sh1.addRow(["Categoría", "Total Ventas (RD$)", "Unidades Vendidas", "Productos Distintos"]);
+      const hRow1 = sh1.addRow(["Tipo", "Categoría / Servicio", "Total Ventas (RD$)", "Cantidad Vendida", "Productos/Servicios"]);
       styleHeader(hRow1, CLR_GREEN);
 
       const totalVentas = ventasCatRes.rows.reduce((s, r) => s + parseFloat(r.total_ventas || 0), 0);
       ventasCatRes.rows.forEach((r, i) => {
         const row = sh1.addRow({
+          tipo:               r.tipo === 'servicio' ? 'Servicio' : 'Producto',
           categoria:          r.categoria,
           total_ventas:       parseFloat(r.total_ventas || 0),
           cantidad_vendida:   r.cantidad_vendida,
-          productos_distintos:r.productos_distintos,
+          productos_distintos:r.tipo === 'servicio' ? r.cantidad_vendida : r.productos_distintos,
         });
         row.getCell("total_ventas").numFmt = "#,##0.00";
         if (i % 2 === 0) row.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF0F9F4" } };

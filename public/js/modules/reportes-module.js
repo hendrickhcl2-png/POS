@@ -1051,15 +1051,25 @@ const ReportesModule = {
     const total = cats.reduce((sum, c) => sum + parseFloat(c.total_ventas || 0), 0);
     el.innerHTML = cats.map(c => {
       const pct = total > 0 ? ((parseFloat(c.total_ventas) / total) * 100).toFixed(1) : 0;
+      const esServicio = c.tipo === 'servicio';
+      const barColor = esServicio
+        ? 'linear-gradient(90deg,#8e44ad,#9b59b6)'
+        : 'linear-gradient(90deg,#27ae60,#2ecc71)';
+      const badge = esServicio
+        ? `<span style="font-size:10px;background:#8e44ad;color:#fff;border-radius:4px;padding:1px 5px;margin-left:6px;">SERV</span>`
+        : '';
+      const detalle = esServicio
+        ? `${c.cantidad_vendida}x`
+        : `${c.productos_distintos} prod.`;
       return `
         <div style="margin-bottom:12px;">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-            <span style="font-weight:600;">${c.categoria}</span>
+            <span style="font-weight:600;">${c.categoria}${badge}</span>
             <span>${this.formatCurrency(c.total_ventas)} · ${c.cantidad_vendida} uds (${pct}%)</span>
           </div>
           <div style="background:#ecf0f1;height:24px;border-radius:12px;overflow:hidden;">
-            <div style="background:linear-gradient(90deg,#27ae60,#2ecc71);height:100%;width:${pct}%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold;min-width:${pct > 0 ? '32px' : '0'};">
-              ${c.productos_distintos} prod.
+            <div style="background:${barColor};height:100%;width:${pct}%;display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:bold;min-width:${pct > 0 ? '32px' : '0'};">
+              ${detalle}
             </div>
           </div>
         </div>`;
