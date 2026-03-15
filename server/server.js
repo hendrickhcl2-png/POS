@@ -152,11 +152,6 @@ async function initAuth() {
     await pool.query(`
       ALTER TABLE detalle_venta ADD COLUMN IF NOT EXISTS imei VARCHAR(50)
     `);
-    // Migración: columna descripcion en proveedores
-    await pool.query(`
-      ALTER TABLE proveedores ADD COLUMN IF NOT EXISTS descripcion TEXT
-    `);
-
     console.log("✅ Auth inicializado");
   } catch (error) {
     console.error("❌ Error en initAuth:", error);
