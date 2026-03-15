@@ -130,19 +130,24 @@ router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Verificar si tiene productos asociados
-    const productos = await pool.query(
+    // Bloquear si hay productos activos en esta categoría
+    const activos = await pool.query(
       "SELECT COUNT(*) as count FROM productos WHERE categoria_id = $1 AND activo = true",
       [id],
     );
 
-    if (parseInt(productos.rows[0].count) > 0) {
+    if (parseInt(activos.rows[0].count) > 0) {
       return res.status(400).json({
-        error:
-          "No se puede eliminar la categoría porque tiene productos asociados",
-        total_productos: parseInt(productos.rows[0].count),
+        error: "No se puede eliminar la categoría porque tiene productos activos asociados",
+        total_productos: parseInt(activos.rows[0].count),
       });
     }
+
+    // Desvincular productos inactivos para no violar la FK
+    await pool.query(
+      "UPDATE productos SET categoria_id = NULL WHERE categoria_id = $1 AND activo = false",
+      [id],
+    );
 
     const result = await pool.query(
       "DELETE FROM categorias WHERE id = $1 RETURNING *",
