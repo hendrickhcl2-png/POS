@@ -474,6 +474,7 @@ async function guardarProducto(e) {
       mostrarAlerta(`"${nombre}" guardado exitosamente`, "success");
     }
 
+    try { productos = await window.API.Productos.getAll(); } catch (_) {}
     actualizarTablaProductos();
     actualizarSelectProductos();
     actualizarInventario();
@@ -494,6 +495,7 @@ async function guardarProducto(e) {
           limpiarCaracteristicas();
           agregarLineaCosto();
           agregarCaracteristica();
+          try { productos = await window.API.Productos.getAll(); } catch (_) {}
           actualizarTablaProductos();
           actualizarSelectProductos();
           actualizarInventario();
@@ -510,10 +512,11 @@ async function guardarProducto(e) {
 let _pgProductos = null;
 let _pgSinPrecio = null;
 
-function actualizarTablaProductos() {
+function actualizarTablaProductos(lista) {
+  const data = lista !== undefined ? lista : productos;
   if (!_pgProductos) _pgProductos = new Paginator('tablaProductos', 20);
   _pgProductos.render(
-    productos.map((p) => {
+    data.map((p) => {
       const codigoPrincipal = p.codigo_barras || p.imei || `ID-${p.id}`;
       const disponible = p.disponible !== false;
       const tieneDescuento = p.descuento_porcentaje > 0 || p.descuento_monto > 0;
@@ -812,6 +815,18 @@ function actualizarSelectCategorias() {
   });
 
   toggleStockPorCategoria();
+
+  // Poblar dropdown de filtro por categoría en la lista de productos
+  const filtroSelect = document.getElementById("filtrarCategoriaProducto");
+  if (filtroSelect) {
+    filtroSelect.innerHTML = '<option value="">Todas las categorías</option>';
+    categorias.forEach((cat) => {
+      const option = document.createElement("option");
+      option.value = cat.id;
+      option.textContent = cat.nombre;
+      filtroSelect.appendChild(option);
+    });
+  }
 }
 
 // ==================== TOGGLE STOCK POR CATEGORÍA ====================
@@ -855,15 +870,26 @@ window.eliminarProducto = async function (id) {
 };
 
 window.filtrarProductos = function () {
-  const busqueda = getValue("buscarProducto").toLowerCase();
-  const tbody = document.getElementById("tablaProductos");
-  if (!tbody) return;
+  const busqueda = getValue("buscarProducto").toLowerCase().trim();
+  const categoriaId = getValue("filtrarCategoriaProducto");
 
-  const filas = tbody.getElementsByTagName("tr");
-  Array.from(filas).forEach((fila) => {
-    const texto = fila.textContent.toLowerCase();
-    fila.style.display = texto.includes(busqueda) ? "" : "none";
-  });
+  let resultado = productos;
+
+  if (categoriaId) {
+    resultado = resultado.filter((p) => String(p.categoria_id) === String(categoriaId));
+  }
+
+  if (busqueda) {
+    resultado = resultado.filter((p) => {
+      const texto = [p.codigo_barras, p.imei, p.sku, p.nombre, p.categoria_nombre]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return texto.includes(busqueda);
+    });
+  }
+
+  actualizarTablaProductos(resultado);
 };
 
 // ==================== TAB: GUARDAR PRODUCTO / MÚLTIPLES ====================
