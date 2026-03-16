@@ -113,10 +113,12 @@ router.get("/:id", async (req, res) => {
         v.cambio,
         v.banco,
         v.referencia,
-        v.hora
+        v.hora,
+        COALESCE(v.usuario_nombre, u.nombre) as vendedor_nombre
       FROM facturas f
       LEFT JOIN clientes c ON f.cliente_id = c.id
       LEFT JOIN ventas v ON f.venta_id = v.id
+      LEFT JOIN usuarios u ON v.usuario_id = u.id
       WHERE f.id = $1`,
       [id],
     );

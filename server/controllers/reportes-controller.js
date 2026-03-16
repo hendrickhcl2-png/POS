@@ -64,10 +64,12 @@ const ReportesController = {
           f.numero_factura,
           f.tipo_factura,
           f.estado AS factura_estado,
-          COALESCE(dev.monto_devuelto, 0) AS monto_devuelto
+          COALESCE(dev.monto_devuelto, 0) AS monto_devuelto,
+          COALESCE(v.usuario_nombre, u.nombre) AS cajero_nombre
         FROM ventas v
         LEFT JOIN clientes c ON v.cliente_id = c.id
         LEFT JOIN facturas f ON v.id = f.venta_id
+        LEFT JOIN usuarios u ON v.usuario_id = u.id
         LEFT JOIN (
           SELECT venta_id, SUM(total) AS monto_devuelto
           FROM devoluciones

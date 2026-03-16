@@ -309,6 +309,7 @@ const ReportesModule = {
         <td>${this.formatFecha(row.fecha)}</td>
         <td>${row.hora || "N/A"}</td>
         <td>${row.cliente_nombre || "—"}</td>
+        <td>—</td>
         <td style="text-align:right;">—</td>
         <td style="text-align:right;font-weight:600;color:var(--clr-success);">
           ${this.formatCurrency(row.monto)}
@@ -325,6 +326,7 @@ const ReportesModule = {
     <td>${this.formatFecha(row.fecha)}</td>
     <td>${row.hora || "N/A"}</td>
     <td>${row.cliente_nombre || "Cliente General"}</td>
+    <td>${row.cajero_nombre || "—"}</td>
     <td style="text-align:right;">${this.formatCurrency(row.subtotal)}</td>
     <td style="text-align:right;font-weight:600;color:${tieneDevolucion ? "var(--clr-danger)" : "var(--clr-success)"};">
     ${this.formatCurrency(neto)}
@@ -335,7 +337,7 @@ const ReportesModule = {
     <td>${this.formatMetodoPago(row.metodo_pago)}</td>
     </tr>`;
     }),
-    `<tr><td colspan="7" style="text-align: center; padding: 40px; color: #7f8c8d;"><p>No hay ventas en este periodo</p></td></tr>`
+    `<tr><td colspan="8" style="text-align: center; padding: 40px; color: #7f8c8d;"><p>No hay ventas en este periodo</p></td></tr>`
   );
   },
 

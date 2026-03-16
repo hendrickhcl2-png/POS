@@ -64,13 +64,15 @@ const ReportesExportController = {
           END                                                     AS nombre_cliente,
           c.telefono                                              AS telefono_cliente,
           CASE WHEN dr.producto_id IS NOT NULL THEN 'Sí' ELSE 'No' END AS fue_devuelto,
-          'Producto' AS tipo_item
+          'Producto' AS tipo_item,
+          COALESCE(v.usuario_nombre, u.nombre)                   AS cajero_nombre
 
         FROM detalle_venta dtv
         JOIN productos   p  ON dtv.producto_id = p.id
         JOIN ventas      v  ON dtv.venta_id    = v.id
         LEFT JOIN facturas f ON v.id = f.venta_id
         LEFT JOIN clientes c ON v.cliente_id = c.id
+        LEFT JOIN usuarios u ON v.usuario_id = u.id
         LEFT JOIN (
           SELECT dd.producto_id, dev.venta_id, SUM(dd.total) AS monto_devuelto
           FROM detalle_devolucion dd
@@ -104,12 +106,14 @@ const ReportesExportController = {
           END AS nombre_cliente,
           c.telefono AS telefono_cliente,
           'No' AS fue_devuelto,
-          'Servicio' AS tipo_item
+          'Servicio' AS tipo_item,
+          COALESCE(v.usuario_nombre, u.nombre) AS cajero_nombre
 
         FROM servicios_venta sv
         JOIN ventas v ON sv.venta_id = v.id
         LEFT JOIN facturas f ON v.id = f.venta_id
         LEFT JOIN clientes c ON v.cliente_id = c.id
+        LEFT JOIN usuarios u ON v.usuario_id = u.id
 
         WHERE v.fecha >= $1 AND v.fecha <= $2
           AND sv.es_gratis = false
@@ -156,6 +160,7 @@ const ReportesExportController = {
         { header: "Tipo Factura", key: "tipoFactura", width: 10 },
         { header: "Cliente", key: "cliente", width: 25 },
         { header: "Teléfono", key: "telefono", width: 15 },
+        { header: "Cajero", key: "cajero", width: 20 },
         { header: "Devuelto", key: "devuelto", width: 10 },
       ];
 
@@ -189,6 +194,7 @@ const ReportesExportController = {
           tipoFactura: f.tipo_factura || "",
           cliente: f.nombre_cliente,
           telefono: f.telefono_cliente || "",
+          cajero: f.cajero_nombre || "",
           devuelto: f.fue_devuelto,
         });
       });

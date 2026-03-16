@@ -45,13 +45,6 @@
   /* Sidebar */
   --clr-sidebar-bg:   #1a2332;
 
-  /* Stat card semantic gradients */
-  --stat-count-a:     #2980b9;  --stat-count-b:    #1a5276;
-  --stat-revenue-a:   #1565c0;  --stat-revenue-b:  #0d3b7a;
-  --stat-positive-a:  #27ae60;  --stat-positive-b: #1e8449;
-  --stat-pending-a:   #f39c12;  --stat-pending-b:  #d35400;
-  --stat-cost-a:      #c0392b;  --stat-cost-b:     #922b21;
-  --stat-itbis-a:     #5c6bc0;  --stat-itbis-b:    #3949ab;
 }
 
 * {
@@ -983,87 +976,6 @@ tbody tr:hover {
   color: var(--clr-danger);
 }
 
-/* ==================== FACTURACIÓN - STATS CARDS ==================== */
-
-/* Grid de tarjetas de estadísticas de facturación */
-.facturacion-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  margin-bottom: 25px;
-}
-
-/* Stat cards — shared base */
-.stat-card-total-facturas,
-.stat-card-monto-total,
-.stat-card-pendientes,
-.stat-card-pagadas,
-.stat-card-ventas,
-.stat-card-ganancias,
-.stat-card-costos-mercancia,
-.stat-card-costos-operativos,
-.stat-card-cantidad-ventas,
-.stat-card-margen,
-.stat-card-itbis {
-  color: white;
-  border: none;
-}
-
-/* count — azul (Total Facturas, Total Ventas, Cantidad Ventas) */
-.stat-card-total-facturas,
-.stat-card-ventas,
-.stat-card-cantidad-ventas {
-  background: linear-gradient(135deg, var(--stat-count-a) 0%, var(--stat-count-b) 100%);
-}
-
-/* revenue — azul marino (Monto Total) */
-.stat-card-monto-total {
-  background: linear-gradient(135deg, var(--stat-revenue-a) 0%, var(--stat-revenue-b) 100%);
-}
-
-/* pending — ámbar (Pendientes) */
-.stat-card-pendientes {
-  background: linear-gradient(135deg, var(--stat-pending-a) 0%, var(--stat-pending-b) 100%);
-}
-
-/* positive — verde (Pagadas, Ganancias, Margen) */
-.stat-card-pagadas,
-.stat-card-ganancias,
-.stat-card-margen {
-  background: linear-gradient(135deg, var(--stat-positive-a) 0%, var(--stat-positive-b) 100%);
-}
-
-/* Fila interior de cada stat card (ícono + texto) */
-.stat-card-fila {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Párrafo de etiqueta dentro de stat card */
-.stat-card-etiqueta {
-  margin: 0;
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-/* Valores numéricos de stat cards — margen compartido */
-.stat-card-valor-grande,
-.stat-card-valor-mediano,
-.stat-card-valor-reportes,
-.stat-card-valor-itbis {
-  margin: 10px 0 0 0;
-}
-
-.stat-card-valor-grande   { font-size: 36px; }
-.stat-card-valor-mediano  { font-size: 32px; }
-
-/* Ícono decorativo de stat card (grande, semitransparente) */
-.stat-card-icono {
-  font-size: 48px;
-  opacity: 0.5;
-}
-
 /* ==================== FACTURACIÓN - FILTROS ==================== */
 
 /* Encabezado del bloque de búsqueda de facturas */
@@ -1225,30 +1137,6 @@ tbody tr:hover {
   display: block;
   margin-top: 10px;
 }
-
-/* ==================== REPORTES - STAT CARDS ==================== */
-
-/* Grid de tarjetas de resumen de reportes */
-.reportes-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 25px;
-}
-
-/* cost — rojo (Costos Mercancía, Costos Operativos) */
-.stat-card-costos-mercancia,
-.stat-card-costos-operativos {
-  background: linear-gradient(135deg, var(--stat-cost-a) 0%, var(--stat-cost-b) 100%);
-}
-
-/* indigo (ITBIS Recaudado) */
-.stat-card-itbis {
-  background: linear-gradient(135deg, var(--stat-itbis-a) 0%, var(--stat-itbis-b) 100%);
-}
-
-.stat-card-valor-reportes { font-size: 26px; }
-.stat-card-valor-itbis    { font-size: 22px; }
 
 /* ==================== REPORTES - GRÁFICOS Y TABLA ==================== */
 
@@ -1917,36 +1805,6 @@ tbody tr:hover {
   border-bottom: none;
 }
 
-/* Stats Cards (inside modals) */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
-  margin: 20px 0;
-}
-
-.stat-card {
-  background: linear-gradient(135deg, var(--stat-count-a) 0%, var(--stat-count-b) 100%);
-  padding: 20px;
-  border-radius: 10px;
-  color: white;
-  text-align: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-}
-
-.stat-card h4 {
-  margin: 0 0 10px 0;
-  font-size: 13px;
-  opacity: 0.85;
-  font-weight: 500;
-}
-
-.stat-card .value {
-  font-size: 32px;
-  font-weight: bold;
-  margin: 0;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .modal-content {
@@ -1960,10 +1818,6 @@ tbody tr:hover {
 
   .modal-body {
     padding: 18px;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -2172,37 +2026,22 @@ tbody tr:hover {
   overflow-wrap: anywhere;
 }
 
-.kpi--blue   { border-left-color: #3498db; background: color-mix(in srgb, #3498db 6%, var(--clr-bg)); }
-.kpi--blue   .kpi-card-accent { background: #3498db; }
-.kpi--blue   .kpi-card-value  { color: #3498db; }
+/* KPI color modifiers — set --kpi-color and the card styles follow */
+[class*="kpi--"] {
+  border-left-color: var(--kpi-color);
+  background: color-mix(in srgb, var(--kpi-color) 6%, var(--clr-bg));
+}
+[class*="kpi--"] .kpi-card-accent { background: var(--kpi-color); }
+[class*="kpi--"] .kpi-card-value  { color: var(--kpi-color); }
 
-.kpi--green  { border-left-color: #27ae60; background: color-mix(in srgb, #27ae60 6%, var(--clr-bg)); }
-.kpi--green  .kpi-card-accent { background: #27ae60; }
-.kpi--green  .kpi-card-value  { color: #27ae60; }
-
-.kpi--orange { border-left-color: #e67e22; background: color-mix(in srgb, #e67e22 6%, var(--clr-bg)); }
-.kpi--orange .kpi-card-accent { background: #e67e22; }
-.kpi--orange .kpi-card-value  { color: #e67e22; }
-
-.kpi--purple { border-left-color: #9b59b6; background: color-mix(in srgb, #9b59b6 6%, var(--clr-bg)); }
-.kpi--purple .kpi-card-accent { background: #9b59b6; }
-.kpi--purple .kpi-card-value  { color: #9b59b6; }
-
-.kpi--teal   { border-left-color: #1abc9c; background: color-mix(in srgb, #1abc9c 6%, var(--clr-bg)); }
-.kpi--teal   .kpi-card-accent { background: #1abc9c; }
-.kpi--teal   .kpi-card-value  { color: #1abc9c; }
-
-.kpi--dark   { border-left-color: #2c3e50; background: color-mix(in srgb, #2c3e50 6%, var(--clr-bg)); }
-.kpi--dark   .kpi-card-accent { background: #2c3e50; }
-.kpi--dark   .kpi-card-value  { color: #2c3e50; }
-
-.kpi--red    { border-left-color: #e74c3c; background: color-mix(in srgb, #e74c3c 6%, var(--clr-bg)); }
-.kpi--red    .kpi-card-accent { background: #e74c3c; }
-.kpi--red    .kpi-card-value  { color: #e74c3c; }
-
-.kpi--amber  { border-left-color: #f39c12; background: color-mix(in srgb, #f39c12 6%, var(--clr-bg)); }
-.kpi--amber  .kpi-card-accent { background: #f39c12; }
-.kpi--amber  .kpi-card-value  { color: #f39c12; }
+.kpi--blue   { --kpi-color: #3498db; }
+.kpi--green  { --kpi-color: #27ae60; }
+.kpi--orange { --kpi-color: #e67e22; }
+.kpi--purple { --kpi-color: #9b59b6; }
+.kpi--teal   { --kpi-color: #1abc9c; }
+.kpi--dark   { --kpi-color: #2c3e50; }
+.kpi--red    { --kpi-color: #e74c3c; }
+.kpi--amber  { --kpi-color: #f39c12; }
 
 /* ==================== JS MODAL OVERLAY/BOX ==================== */
 .js-overlay {
@@ -2324,25 +2163,6 @@ tbody tr:hover {
 .flex-gap-sm  { display: flex; gap: 5px; flex-wrap: wrap; }
 .flex-gap     { display: flex; gap: 10px; flex-wrap: wrap; }
 .flex-gap-lg  { display: flex; gap: 20px; flex-wrap: wrap; }
-
-/* ==================== PRODUCTOS - FILAS DINÁMICAS ==================== */
-.costo-item-dinamico {
-  display: grid;
-  grid-template-columns: 2fr 1fr auto;
-  gap: 10px;
-  margin-bottom: 10px;
-  padding: 10px;
-  background: #f8f9fa;
-  border-radius: 5px;
-  border-left: 3px solid #3498db;
-}
-.costo-item-dinamico input {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
-}
-.costo-item-dinamico .costo-monto { text-align: right; }
 
 .caracteristica-item {
   display: grid;
@@ -2580,7 +2400,6 @@ tbody tr:hover {
 .flex-row--end     { align-items:flex-end; }
 .flex-row--jcenter { justify-content:center; }
 .mb-14 { margin-bottom:14px; }
-.mb-20 { margin-bottom:20px; }
 
 /* --- Icon button --- */
 .btn--icon { display:flex; align-items:center; gap:6px; }
