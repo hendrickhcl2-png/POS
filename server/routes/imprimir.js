@@ -284,9 +284,9 @@ function generarTextoCuadre(c) {
   lines.push(linea("-"));
   lines.push(columnas("REALIZADO:", fmtFecha(c.fecha)));
   lines.push(columnas("CAJERO:", (c.cajero || "").toUpperCase()));
-  lines.push(columnas("VENTAS TOTALES:", fmt(c.ventas_neto)));
+  lines.push(columnas("VENTAS TOTALES:", fmt((c.ventas_neto || 0) + (c.total_ventas_credito || 0))));
   lines.push(columnas("GANANCIA:", fmt(c.ganancia)));
-  lines.push(columnas(c.cantidad_ventas + " VENTAS EN EL TURNO.", ""));
+  lines.push(columnas((c.cantidad_ventas + (c.cantidad_ventas_credito || 0)) + " VENTAS EN EL TURNO.", ""));
   lines.push(linea("-"));
 
   // Dinero en caja
@@ -315,12 +315,12 @@ function generarTextoCuadre(c) {
   lines.push(centrar("== VENTAS =="));
   lines.push(columnas("EN EFECTIVO:", fmt(c.ventas_efectivo)));
   lines.push(columnas("CON TARJETA:", fmt(c.ventas_tarjeta)));
-  lines.push(columnas("A CREDITO:", fmt(c.ventas_credito)));
+  lines.push(columnas("A CREDITO:", fmt(c.total_ventas_credito)));
   lines.push(columnas("TRANSFERENCIA:", fmt(c.ventas_transferencia)));
   lines.push(columnas("CHEQUE:", fmt(c.ventas_cheque)));
   lines.push(columnas("DEV. DE VENTAS:", "- " + fmt(c.devoluciones_total)));
   lines.push(linea("-"));
-  lines.push(columnas("TOTAL VENTAS", "= " + fmt(c.ventas_neto)));
+  lines.push(columnas("TOTAL VENTAS", "= " + fmt((c.ventas_neto || 0) + (c.total_ventas_credito || 0))));
   lines.push(linea("-"));
 
   // Ventas por depto
@@ -340,7 +340,7 @@ function generarTextoCuadre(c) {
   lines.push(columnas("VENTAS EFECTIVO:", fmt(c.ventas_efectivo)));
   lines.push(columnas("PAGOS CLIENTES:", fmt(c.pagos_clientes)));
   lines.push(columnas("VENTAS TRANSFERENCIA:", fmt(c.ventas_transferencia)));
-  lines.push(columnas("ABONOS:", "- " + fmt(c.dev_efectivo)));
+  lines.push(columnas("DEV. EFECTIVO:", "- " + fmt(c.dev_efectivo)));
   lines.push(columnas("DEV. TRANSFERENCIA:", "- " + fmt(c.dev_transferencia)));
   lines.push(linea("-"));
   lines.push(columnas("TOTAL INGRESOS", "= " + fmt(c.total_ingresos)));
