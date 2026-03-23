@@ -144,7 +144,7 @@ const VentasController = {
       // Insertar items de la venta
       for (const item of items) {
         const productoResult = await client.query(
-          "SELECT * FROM productos WHERE id = $1",
+          "SELECT * FROM productos WHERE id = $1 FOR UPDATE",
           [item.producto_id],
         );
 
@@ -163,6 +163,8 @@ const VentasController = {
         const itbis_item = incluir_itbis !== false ? item.subtotal * 0.18 : 0;
         const total_item = item.subtotal + itbis_item;
 
+        // El INSERT en detalle_venta dispara el trigger 'actualizar_stock_venta'
+        // que ya descuenta stock_actual automáticamente
         await client.query(
           `INSERT INTO detalle_venta (
             venta_id,
@@ -194,12 +196,12 @@ const VentasController = {
           ],
         );
 
+        // Actualizar disponible después del trigger
         await client.query(
-          `UPDATE productos 
-           SET stock_actual = stock_actual - $1,
-               disponible = CASE WHEN stock_actual - $1 <= 0 THEN false ELSE disponible END
-           WHERE id = $2`,
-          [item.cantidad, item.producto_id],
+          `UPDATE productos
+           SET disponible = CASE WHEN stock_actual <= 0 THEN false ELSE disponible END
+           WHERE id = $1`,
+          [item.producto_id],
         );
 
         await client.query(

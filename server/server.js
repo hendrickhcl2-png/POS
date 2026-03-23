@@ -151,6 +151,13 @@ async function initAuth() {
     await pool.query(`
       ALTER TABLE ventas ADD COLUMN IF NOT EXISTS usuario_nombre VARCHAR(100)
     `);
+    // Migración: columnas de anulación en ventas
+    await pool.query(`
+      ALTER TABLE ventas ADD COLUMN IF NOT EXISTS motivo_anulacion TEXT
+    `);
+    await pool.query(`
+      ALTER TABLE ventas ADD COLUMN IF NOT EXISTS fecha_anulacion TIMESTAMP
+    `);
     // Migración: columna imei en detalle_venta
     await pool.query(`
       ALTER TABLE detalle_venta ADD COLUMN IF NOT EXISTS imei VARCHAR(50)

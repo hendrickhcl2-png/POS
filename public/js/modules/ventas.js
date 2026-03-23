@@ -950,6 +950,8 @@ const VentasModule = {
   // ==================== PROCESAR VENTA ====================
 
   async procesarVenta() {
+  if (this._procesandoVenta) return;
+
   if (this.carritoItems.length === 0 && this.serviciosEnVenta.length === 0) {
   this.mostrarAlerta("El carrito está vacío", "warning");
   return;
@@ -961,6 +963,7 @@ const VentasModule = {
   return;
   }
 
+  this._procesandoVenta = true;
   const ventaData = this.prepararDatosVenta(totales);
 
   try {
@@ -991,6 +994,8 @@ const VentasModule = {
   } catch (error) {
   console.error(" Error al procesar venta:", error);
   this.mostrarAlerta("Error al procesar venta: " + error.message, "danger");
+  } finally {
+  this._procesandoVenta = false;
   }
   },
 
