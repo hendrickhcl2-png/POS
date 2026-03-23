@@ -340,26 +340,89 @@ router.post("/desde-venta", async (req, res) => {
 
 // ==================== ANULAR FACTURA ====================
 router.post("/:id/anular", async (req, res) => {
+  const client = await pool.connect();
+
   try {
+    await client.query("BEGIN");
+
     const { id } = req.params;
     const { motivo_anulacion } = req.body;
 
     if (!motivo_anulacion || motivo_anulacion.trim() === "") {
+      await client.query("ROLLBACK");
       return res.status(400).json({ success: false, message: "El motivo de anulación es obligatorio" });
     }
 
     // Verificar que la factura existe y no está ya anulada
-    const facturaActual = await pool.query(
-      "SELECT estado FROM facturas WHERE id = $1", [id]
+    const facturaActual = await client.query(
+      "SELECT id, estado, venta_id FROM facturas WHERE id = $1", [id]
     );
     if (facturaActual.rows.length === 0) {
+      await client.query("ROLLBACK");
       return res.status(404).json({ success: false, message: "Factura no encontrada" });
     }
     if (facturaActual.rows[0].estado === "anulada") {
+      await client.query("ROLLBACK");
       return res.status(400).json({ success: false, message: "Esta factura ya está anulada" });
     }
 
-    const result = await pool.query(
+    const factura = facturaActual.rows[0];
+
+    // Devolver productos al inventario
+    if (factura.venta_id) {
+      const itemsResult = await client.query(
+        "SELECT * FROM detalle_venta WHERE venta_id = $1",
+        [factura.venta_id]
+      );
+
+      for (const item of itemsResult.rows) {
+        const stockActual = await client.query(
+          "SELECT stock_actual FROM productos WHERE id = $1",
+          [item.producto_id]
+        );
+        const stockAnterior = stockActual.rows.length > 0 ? stockActual.rows[0].stock_actual : 0;
+
+        await client.query(
+          `UPDATE productos
+           SET stock_actual = stock_actual + $1,
+               disponible = true
+           WHERE id = $2`,
+          [item.cantidad, item.producto_id]
+        );
+
+        await client.query(
+          `INSERT INTO movimientos_inventario (
+            producto_id,
+            tipo,
+            cantidad,
+            motivo,
+            usuario,
+            fecha,
+            stock_anterior,
+            stock_nuevo
+          ) VALUES ($1, 'entrada', $2, $3, 'Sistema', CURRENT_TIMESTAMP, $4, $5)`,
+          [
+            item.producto_id,
+            item.cantidad,
+            "Anulación de factura #" + id + ": " + motivo_anulacion.trim(),
+            stockAnterior,
+            stockAnterior + item.cantidad,
+          ]
+        );
+      }
+
+      // Marcar la venta asociada como anulada también
+      await client.query(
+        `UPDATE ventas
+         SET estado = 'anulada',
+             motivo_anulacion = $1,
+             fecha_anulacion = CURRENT_TIMESTAMP
+         WHERE id = $2`,
+        [motivo_anulacion.trim(), factura.venta_id]
+      );
+    }
+
+    const result = await client.query(
       `UPDATE facturas
        SET estado = 'anulada',
            updated_at = CURRENT_TIMESTAMP
@@ -368,17 +431,22 @@ router.post("/:id/anular", async (req, res) => {
       [id],
     );
 
+    await client.query("COMMIT");
+
     res.json({
       success: true,
       message: "Factura anulada exitosamente",
       data: result.rows[0],
     });
   } catch (error) {
+    await client.query("ROLLBACK");
     console.error("❌ Error al anular factura:", error);
     res.status(500).json({
       success: false,
       message: error.message,
     });
+  } finally {
+    client.release();
   }
 });
 
