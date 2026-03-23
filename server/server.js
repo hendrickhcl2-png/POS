@@ -2,6 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -239,8 +240,78 @@ async function initAuth() {
   }
 }
 
+// ==================== FIX ONE-TIME: Devolver inventario de facturas anuladas hoy ====================
+// [AUTO-FIX] INICIO
+async function fixInventarioFacturasAnuladas() {
+  try {
+    const result = await pool.query(`
+      SELECT f.id, f.venta_id, f.updated_at
+      FROM facturas f
+      WHERE f.estado = 'anulada'
+        AND f.venta_id IS NOT NULL
+        AND f.updated_at::date = '2026-03-23'
+    `);
+
+    if (result.rows.length === 0) {
+      console.log("ℹ️  Fix inventario: No hay facturas anuladas el 2026-03-23 para corregir.");
+    } else {
+      for (const factura of result.rows) {
+        const items = await pool.query(
+          "SELECT * FROM detalle_venta WHERE venta_id = $1",
+          [factura.venta_id]
+        );
+
+        for (const item of items.rows) {
+          const stockActual = await pool.query(
+            "SELECT stock_actual FROM productos WHERE id = $1",
+            [item.producto_id]
+          );
+          const stockAnterior = stockActual.rows.length > 0 ? stockActual.rows[0].stock_actual : 0;
+
+          await pool.query(
+            `UPDATE productos
+             SET stock_actual = stock_actual + $1,
+                 disponible = true
+             WHERE id = $2`,
+            [item.cantidad, item.producto_id]
+          );
+
+          await pool.query(
+            `INSERT INTO movimientos_inventario (
+              producto_id, tipo, cantidad, motivo, usuario, fecha, stock_anterior, stock_nuevo
+            ) VALUES ($1, 'entrada', $2, $3, 'Sistema', CURRENT_TIMESTAMP, $4, $5)`,
+            [
+              item.producto_id,
+              item.cantidad,
+              "Corrección: devolución de inventario por anulación de factura #" + factura.id,
+              stockAnterior,
+              stockAnterior + item.cantidad,
+            ]
+          );
+        }
+
+        console.log("✅ Fix inventario: Factura #" + factura.id + " - inventario devuelto.");
+      }
+    }
+
+    // Auto-comentar este bloque para que no se ejecute de nuevo
+    const serverPath = path.join(__dirname, "server.js");
+    let content = fs.readFileSync(serverPath, "utf-8");
+    content = content.replace(
+      /\/\/ \[AUTO-FIX\] INICIO\n([\s\S]*?)\/\/ \[AUTO-FIX\] FIN/,
+      "// [AUTO-FIX] YA EJECUTADO - Este bloque fue auto-comentado tras ejecutarse exitosamente"
+    );
+    fs.writeFileSync(serverPath, content, "utf-8");
+    console.log("✅ Fix inventario: Bloque auto-comentado, no se ejecutará de nuevo.");
+  } catch (error) {
+    console.error("❌ Error en fix inventario facturas anuladas:", error);
+  }
+}
+// [AUTO-FIX] FIN
+
 // ==================== INICIAR SERVIDOR ====================
-initAuth().then(() => {
+initAuth().then(async () => {
+  await fixInventarioFacturasAnuladas();
   app.listen(PORT, () => {
     console.log("\n╔════════════════════════════════════════╗");
     console.log("║   🚀 FIFTY TECH POS - SERVIDOR      ║");
