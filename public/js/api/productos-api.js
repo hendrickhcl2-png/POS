@@ -78,6 +78,10 @@ const ProductosAPI = {
     if (params.length) url += "?" + params.join("&");
     return await APIClient.get(url);
   },
+
+  async editarVendido(detalleId, data) {
+    return await APIClient.put(`/productos/vendidos/${detalleId}`, data);
+  },
 };
 
 // Exportar

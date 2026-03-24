@@ -241,6 +241,17 @@ async function initAuth() {
       console.log(`✅ Corrección: ${syncFechas.rowCount} factura(s) con fecha sincronizada`);
     }
 
+    // Migración: columnas de método de devolución
+    await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS metodo_devolucion VARCHAR(20) DEFAULT 'reembolso'`);
+    await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS metodo_reembolso VARCHAR(20)`);
+    await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS referencia_transferencia VARCHAR(200)`);
+    await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS producto_cambio_id INTEGER`);
+    await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS producto_cambio_nombre VARCHAR(300)`);
+    await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS producto_cambio_precio NUMERIC(12,2)`);
+    await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS diferencia_cambio NUMERIC(12,2) DEFAULT 0`);
+    await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS monto_cliente_pago NUMERIC(12,2) DEFAULT 0`);
+    await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS producto_cambio_cantidad INTEGER DEFAULT 1`);
+
     console.log("✅ Auth inicializado");
   } catch (error) {
     console.error("❌ Error en initAuth:", error);
@@ -316,9 +327,46 @@ async function fixInventarioFacturasAnuladas() {
 }
 // [AUTO-FIX] FIN
 
+// ==================== FIX ONE-TIME: Corregir stock negativo ====================
+// [AUTO-FIX-NEGATIVO] INICIO
+async function fixStockNegativo() {
+  try {
+    const result = await pool.query(
+      "SELECT id, nombre, stock_actual FROM productos WHERE stock_actual < 0"
+    );
+
+    if (result.rows.length === 0) {
+      console.log("ℹ️  Fix stock negativo: No hay productos con stock negativo.");
+    } else {
+      for (const producto of result.rows) {
+        await pool.query(
+          "UPDATE productos SET stock_actual = 0, disponible = false WHERE id = $1",
+          [producto.id]
+        );
+        console.log(`✅ Fix stock negativo: ${producto.nombre} (${producto.stock_actual} → 0)`);
+      }
+      console.log(`✅ Fix stock negativo: ${result.rows.length} productos corregidos.`);
+    }
+
+    // Auto-comentar para que no se ejecute de nuevo
+    const serverPath = path.join(__dirname, "server.js");
+    let content = fs.readFileSync(serverPath, "utf-8");
+    content = content.replace(
+      /\/\/ \[AUTO-FIX-NEGATIVO\] INICIO\n([\s\S]*?)\/\/ \[AUTO-FIX-NEGATIVO\] FIN/,
+      "// [AUTO-FIX-NEGATIVO] YA EJECUTADO"
+    );
+    fs.writeFileSync(serverPath, content, "utf-8");
+    console.log("✅ Fix stock negativo: Bloque auto-comentado.");
+  } catch (error) {
+    console.error("❌ Error en fix stock negativo:", error);
+  }
+}
+// [AUTO-FIX-NEGATIVO] FIN
+
 // ==================== INICIAR SERVIDOR ====================
 initAuth().then(async () => {
   await fixInventarioFacturasAnuladas();
+  await fixStockNegativo();
   app.listen(PORT, () => {
     console.log("\n╔════════════════════════════════════════╗");
     console.log("║   🚀 FIFTY TECH POS - SERVIDOR      ║");

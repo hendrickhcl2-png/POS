@@ -368,6 +368,138 @@ router.get("/vendidos", async (req, res) => {
   }
 });
 
+// ==================== EDITAR DETALLE DE VENTA (INVENTARIO VENDIDO) ====================
+router.put("/vendidos/:detalleId", requireAdmin, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+
+    const { detalleId } = req.params;
+    const { cantidad, precio_unitario } = req.body;
+
+    // Obtener detalle actual
+    const detalleResult = await client.query(
+      "SELECT * FROM detalle_venta WHERE id = $1",
+      [detalleId]
+    );
+    if (detalleResult.rows.length === 0) {
+      throw new Error("Detalle de venta no encontrado");
+    }
+
+    const detalle = detalleResult.rows[0];
+    const cantidadAnterior = parseInt(detalle.cantidad);
+    const precioAnterior = parseFloat(detalle.precio_unitario);
+    const nuevaCantidad = parseInt(cantidad);
+    const nuevoPrecio = parseFloat(precio_unitario);
+
+    if (!nuevaCantidad || nuevaCantidad <= 0) {
+      throw new Error("La cantidad debe ser mayor a 0");
+    }
+    if (!nuevoPrecio || nuevoPrecio <= 0) {
+      throw new Error("El precio debe ser mayor a 0");
+    }
+
+    // Ajustar stock si cambió la cantidad
+    const diferenciaCantidad = cantidadAnterior - nuevaCantidad;
+    if (diferenciaCantidad !== 0) {
+      // Si diferencia > 0: se vendió menos, devolver stock
+      // Si diferencia < 0: se vendió más, descontar stock
+      const productoResult = await client.query(
+        "SELECT stock_actual FROM productos WHERE id = $1 FOR UPDATE",
+        [detalle.producto_id]
+      );
+      if (productoResult.rows.length > 0) {
+        const stockActual = productoResult.rows[0].stock_actual;
+        const nuevoStock = stockActual + diferenciaCantidad;
+
+        if (nuevoStock < 0) {
+          throw new Error(`Stock insuficiente. Disponible: ${stockActual}, necesita: ${Math.abs(diferenciaCantidad)} más`);
+        }
+
+        await client.query(
+          `UPDATE productos
+           SET stock_actual = $1,
+               disponible = CASE WHEN $1 > 0 THEN true ELSE false END
+           WHERE id = $2`,
+          [nuevoStock, detalle.producto_id]
+        );
+
+        await client.query(
+          `INSERT INTO movimientos_inventario (
+            producto_id, tipo, cantidad, motivo, usuario, fecha, stock_anterior, stock_nuevo
+          ) VALUES ($1, $2, $3, $4, 'Sistema', CURRENT_TIMESTAMP, $5, $6)`,
+          [
+            detalle.producto_id,
+            diferenciaCantidad > 0 ? "entrada" : "salida",
+            Math.abs(diferenciaCantidad),
+            "Corrección de venta - Detalle #" + detalleId,
+            stockActual,
+            nuevoStock,
+          ]
+        );
+      }
+    }
+
+    // Recalcular subtotal
+    const nuevoSubtotal = nuevaCantidad * nuevoPrecio;
+    const nuevoDescuento = detalle.descuento || 0;
+    const nuevoItbis = detalle.itbis ? (nuevoSubtotal * 0.18) : 0;
+    const nuevoTotal = nuevoSubtotal + nuevoItbis;
+
+    // Actualizar detalle_venta
+    await client.query(
+      `UPDATE detalle_venta
+       SET cantidad = $1,
+           precio_unitario = $2,
+           subtotal = $3,
+           itbis = $4,
+           total = $5
+       WHERE id = $6`,
+      [nuevaCantidad, nuevoPrecio, nuevoSubtotal, nuevoItbis, nuevoTotal, detalleId]
+    );
+
+    // Recalcular totales de la venta
+    const totalesResult = await client.query(
+      `SELECT SUM(subtotal) as subtotal, SUM(itbis) as itbis, SUM(total) as total
+       FROM detalle_venta WHERE venta_id = $1`,
+      [detalle.venta_id]
+    );
+    const totales = totalesResult.rows[0];
+
+    await client.query(
+      `UPDATE ventas SET subtotal = $1, itbis = $2, total = $3 WHERE id = $4`,
+      [totales.subtotal, totales.itbis, totales.total, detalle.venta_id]
+    );
+
+    // Actualizar factura asociada si existe
+    await client.query(
+      `UPDATE facturas SET subtotal = $1, itbis = $2, total = $3 WHERE venta_id = $4`,
+      [totales.subtotal, totales.itbis, totales.total, detalle.venta_id]
+    );
+
+    // Actualizar detalle_factura si existe
+    await client.query(
+      `UPDATE detalle_factura
+       SET cantidad = $1, precio_unitario = $2, subtotal = $3, itbis = $4, total = $5
+       WHERE factura_id IN (SELECT id FROM facturas WHERE venta_id = $6) AND producto_id = $7`,
+      [nuevaCantidad, nuevoPrecio, nuevoSubtotal, nuevoItbis, nuevoTotal, detalle.venta_id, detalle.producto_id]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      success: true,
+      message: "Detalle de venta actualizado exitosamente",
+    });
+  } catch (error) {
+    await client.query("ROLLBACK");
+    console.error("❌ Error al editar detalle de venta:", error);
+    res.status(500).json({ success: false, message: error.message });
+  } finally {
+    client.release();
+  }
+});
+
 // ==================== OBTENER PRODUCTO POR ID ====================
 router.get("/:id", async (req, res) => {
   try {

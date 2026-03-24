@@ -17,6 +17,11 @@ const DevolucionesController = {
         motivo,
         notas,
         restaurar_stock = true,
+        metodo_devolucion = "reembolso", // 'cambio', 'reembolso'
+        metodo_reembolso, // 'efectivo', 'transferencia' (solo si metodo_devolucion='reembolso')
+        referencia_transferencia, // referencia de transferencia (solo si metodo_reembolso='transferencia')
+        producto_cambio_id, // ID del producto nuevo (solo si metodo_devolucion='cambio')
+        producto_cambio_cantidad = 1, // Cantidad del producto nuevo
       } = req.body;
 
       // Validaciones
@@ -30,6 +35,41 @@ const DevolucionesController = {
 
       if (!motivo || motivo.trim() === "") {
         throw new Error("Debe especificar el motivo de la devolución");
+      }
+
+      // Validar metodo_devolucion
+      if (!["cambio", "reembolso"].includes(metodo_devolucion)) {
+        throw new Error("Método de devolución inválido");
+      }
+
+      // Validar metodo_reembolso si es reembolso
+      if (metodo_devolucion === "reembolso") {
+        if (!metodo_reembolso || !["efectivo", "transferencia"].includes(metodo_reembolso)) {
+          throw new Error("Debe especificar el método de reembolso (efectivo o transferencia)");
+        }
+        if (metodo_reembolso === "transferencia" && (!referencia_transferencia || referencia_transferencia.trim() === "")) {
+          throw new Error("Debe especificar la referencia de la transferencia");
+        }
+      }
+
+      // Validar producto de cambio si es cambio
+      let productoCambio = null;
+      if (metodo_devolucion === "cambio") {
+        if (!producto_cambio_id) {
+          throw new Error("Debe seleccionar un producto para el cambio");
+        }
+        const prodResult = await client.query(
+          "SELECT * FROM productos WHERE id = $1 AND disponible = true",
+          [producto_cambio_id],
+        );
+        if (prodResult.rows.length === 0) {
+          throw new Error("Producto de cambio no encontrado o no disponible");
+        }
+        productoCambio = prodResult.rows[0];
+
+        if (productoCambio.stock_actual < producto_cambio_cantidad) {
+          throw new Error(`Stock insuficiente del producto de cambio (disponible: ${productoCambio.stock_actual})`);
+        }
       }
 
       // Obtener factura
@@ -60,7 +100,7 @@ const DevolucionesController = {
       for (const item of items) {
         // Obtener detalle de factura
         const detalleResult = await client.query(
-          `SELECT df.*, 
+          `SELECT df.*,
                   COALESCE(df.cantidad_devuelta, 0) as cantidad_devuelta
            FROM detalle_factura df
            WHERE df.id = $1 AND df.factura_id = $2`,
@@ -89,7 +129,6 @@ const DevolucionesController = {
         }
 
         // Calcular precio efectivo por unidad (con descuento ya aplicado)
-        // subtotal en detalle_factura ya refleja el precio tras descuento
         const precioEfectivo = parseFloat(detalle.subtotal) / detalle.cantidad;
         const subtotalItem = precioEfectivo * item.cantidad_devuelta;
         const itbisItem =
@@ -116,6 +155,17 @@ const DevolucionesController = {
 
       const totalDevolucion = subtotalDevolucion + itbisDevolucion;
 
+      // Calcular diferencia de cambio si aplica
+      let diferenciaCambio = 0;
+      let montoClientePago = 0;
+      if (metodo_devolucion === "cambio" && productoCambio) {
+        const totalProductoCambio = parseFloat(productoCambio.precio_venta) * producto_cambio_cantidad;
+        diferenciaCambio = totalProductoCambio - totalDevolucion;
+        // Si diferencia > 0, el cliente paga la diferencia
+        // Si diferencia < 0, se devuelve la diferencia al cliente o queda como crédito
+        montoClientePago = diferenciaCambio > 0 ? diferenciaCambio : 0;
+      }
+
       // Determinar tipo de devolución
       const itemsFacturaResult = await client.query(
         "SELECT COUNT(*) as total FROM detalle_factura WHERE factura_id = $1",
@@ -137,8 +187,17 @@ const DevolucionesController = {
           itbis,
           total,
           motivo,
-          notas
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          notas,
+          metodo_devolucion,
+          metodo_reembolso,
+          referencia_transferencia,
+          producto_cambio_id,
+          producto_cambio_nombre,
+          producto_cambio_precio,
+          producto_cambio_cantidad,
+          diferencia_cambio,
+          monto_cliente_pago
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
         RETURNING *`,
         [
           numeroDevolucion,
@@ -150,6 +209,15 @@ const DevolucionesController = {
           totalDevolucion,
           motivo,
           notas || null,
+          metodo_devolucion,
+          metodo_reembolso || null,
+          referencia_transferencia || null,
+          producto_cambio_id || null,
+          productoCambio ? productoCambio.nombre : null,
+          productoCambio ? productoCambio.precio_venta : null,
+          metodo_devolucion === "cambio" ? producto_cambio_cantidad : null,
+          diferenciaCambio,
+          montoClientePago,
         ],
       );
 
@@ -189,14 +257,15 @@ const DevolucionesController = {
 
         // Actualizar cantidad devuelta en detalle_factura
         await client.query(
-          `UPDATE detalle_factura 
+          `UPDATE detalle_factura
            SET cantidad_devuelta = cantidad_devuelta + $1
            WHERE id = $2`,
           [item.cantidad_devuelta, item.detalle_factura_id],
         );
 
-        // Devolver stock al inventario (solo si el usuario lo confirmó)
-        if (restaurar_stock !== false) {
+        // Devolver stock al inventario (siempre para cambios, opcional para reembolsos)
+        const debeRestaurarStock = metodo_devolucion === "cambio" || restaurar_stock !== false;
+        if (debeRestaurarStock) {
           await client.query(
             `UPDATE productos
              SET stock_actual = stock_actual + $1,
@@ -205,7 +274,7 @@ const DevolucionesController = {
             [item.cantidad_devuelta, item.producto_id],
           );
 
-          // Registrar movimiento de inventario
+          // Registrar movimiento de inventario (entrada del producto devuelto)
           await client.query(
             `INSERT INTO movimientos_inventario (
               producto_id,
@@ -224,8 +293,37 @@ const DevolucionesController = {
         }
       }
 
+      // Si es cambio, descontar stock del producto nuevo y registrar movimiento
+      if (metodo_devolucion === "cambio" && productoCambio) {
+        await client.query(
+          `UPDATE productos
+           SET stock_actual = stock_actual - $1,
+               disponible = CASE WHEN stock_actual - $1 > 0 THEN true ELSE false END
+           WHERE id = $2`,
+          [producto_cambio_cantidad, producto_cambio_id],
+        );
+
+        // Registrar movimiento de salida del producto nuevo
+        await client.query(
+          `INSERT INTO movimientos_inventario (
+            producto_id,
+            tipo,
+            cantidad,
+            motivo,
+            usuario,
+            fecha
+          ) VALUES ($1, 'salida', $2, $3, 'Sistema', CURRENT_TIMESTAMP)`,
+          [
+            producto_cambio_id,
+            producto_cambio_cantidad,
+            `Cambio por devolución ${numeroDevolucion}`,
+          ],
+        );
+      }
+
       // Si la factura tiene saldo pendiente, reducirlo por el monto devuelto
-      if (parseFloat(factura.saldo_pendiente) > 0) {
+      // (solo para reembolsos, no para cambios donde se intercambia producto)
+      if (metodo_devolucion === "reembolso" && parseFloat(factura.saldo_pendiente) > 0) {
         const nuevoSaldo = Math.max(
           0,
           parseFloat(factura.saldo_pendiente) - totalDevolucion,
@@ -277,7 +375,7 @@ const DevolucionesController = {
       const { fecha_desde, fecha_hasta, factura_id } = req.query;
 
       let query = `
-        SELECT 
+        SELECT
           d.*,
           f.numero_factura,
           CONCAT(c.nombre, ' ', COALESCE(c.apellido, '')) as cliente_nombre
@@ -330,7 +428,7 @@ const DevolucionesController = {
 
     try {
       const devolucionResult = await client.query(
-        `SELECT 
+        `SELECT
           d.*,
           f.numero_factura,
           f.ncf,

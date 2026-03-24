@@ -81,6 +81,16 @@ const InventarioAPI = {
   async exportar(formato = "json") {
     return await APIClient.get(`/inventario/exportar?formato=${formato}`);
   },
+
+  // Historial de inventario (existente + vendido)
+  async getHistorial(fechaInicio, fechaFin) {
+    let url = "/inventario/historial";
+    const params = [];
+    if (fechaInicio) params.push(`fecha_inicio=${fechaInicio}`);
+    if (fechaFin) params.push(`fecha_fin=${fechaFin}`);
+    if (params.length) url += "?" + params.join("&");
+    return await APIClient.get(url);
+  },
 };
 
 // Exportar

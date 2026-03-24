@@ -26,7 +26,7 @@ const InventarioVendidoModule = {
     const hasta = document.getElementById("ivFechaHasta")?.value || "";
 
     const tbody = document.getElementById("ivTbody");
-    if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:#7f8c8d;">Cargando...</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:30px;color:#7f8c8d;">Cargando...</td></tr>`;
 
     try {
       const data = await ProductosAPI.getVendidos(desde || null, hasta || null);
@@ -34,7 +34,7 @@ const InventarioVendidoModule = {
       this._renderizarCards();
       this.renderizar(this._items);
     } catch (error) {
-      if (tbody) tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:#e74c3c;">Error al cargar: ${error.message}</td></tr>`;
+      if (tbody) tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;padding:30px;color:#e74c3c;">Error al cargar: ${error.message}</td></tr>`;
       Toast.error("Error al cargar inventario vendido: " + error.message);
     }
   },
@@ -87,10 +87,96 @@ const InventarioVendidoModule = {
             <td style="padding:10px;">${item.cliente_nombre && item.cliente_nombre.trim() ? item.cliente_nombre : "General"}</td>
             <td style="padding:10px;text-align:center;">${item.metodo_pago || "—"}</td>
             <td style="padding:10px;text-align:center;">${estadoBadge}</td>
+            <td style="padding:10px;text-align:center;">
+              <button class="btn btn-warning btn-small" onclick="InventarioVendidoModule.abrirEditar(${item.id}, '${(item.nombre_producto || '').replace(/'/g, "\\'")}', ${cantVendida}, ${parseFloat(item.precio_unitario)})">Editar</button>
+            </td>
           </tr>`;
       }),
-      `<tr><td colspan="10" style="text-align:center;padding:30px;color:#7f8c8d;">No hay registros para el período seleccionado</td></tr>`
+      `<tr><td colspan="11" style="text-align:center;padding:30px;color:#7f8c8d;">No hay registros para el período seleccionado</td></tr>`
     );
+  },
+
+  // ==================== EDITAR DETALLE VENDIDO ====================
+
+  abrirEditar(detalleId, nombreProducto, cantidad, precioUnitario) {
+    const existente = document.getElementById("modalEditarVendido");
+    if (existente) existente.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "modalEditarVendido";
+    modal.className = "js-overlay";
+    modal.innerHTML = `
+      <div class="js-modal" style="max-width:450px;">
+        <div class="js-modal-header">
+          <h3>Editar Producto Vendido</h3>
+          <button class="js-modal-close" onclick="InventarioVendidoModule.cerrarEditar()">&times;</button>
+        </div>
+        <div class="js-modal-body" style="padding:20px;">
+          <p style="margin-bottom:15px;font-weight:600;color:#2c3e50;">${nombreProducto}</p>
+          <div class="form-group" style="margin-bottom:15px;">
+            <label style="font-weight:600;margin-bottom:5px;display:block;">Cantidad:</label>
+            <input type="number" id="ivEditCantidad" value="${cantidad}" min="1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:15px;" />
+          </div>
+          <div class="form-group" style="margin-bottom:15px;">
+            <label style="font-weight:600;margin-bottom:5px;display:block;">Precio Unitario:</label>
+            <input type="number" id="ivEditPrecio" value="${precioUnitario}" min="0.01" step="0.01" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:15px;" />
+          </div>
+          <div style="background:#f0f7ff;padding:10px;border-radius:6px;margin-bottom:15px;">
+            <strong>Subtotal: </strong><span id="ivEditSubtotal">${this._fmt(cantidad * precioUnitario)}</span>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;">
+            <button class="btn btn-secondary" onclick="InventarioVendidoModule.cerrarEditar()">Cancelar</button>
+            <button class="btn btn-primary" id="ivBtnGuardarEditar" onclick="InventarioVendidoModule.guardarEditar(${detalleId})">Guardar</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Recalcular subtotal en tiempo real
+    const cantInput = document.getElementById("ivEditCantidad");
+    const precioInput = document.getElementById("ivEditPrecio");
+    const subtotalSpan = document.getElementById("ivEditSubtotal");
+    const recalcular = () => {
+      const c = parseFloat(cantInput.value) || 0;
+      const p = parseFloat(precioInput.value) || 0;
+      subtotalSpan.textContent = this._fmt(c * p);
+    };
+    cantInput.addEventListener("input", recalcular);
+    precioInput.addEventListener("input", recalcular);
+  },
+
+  cerrarEditar() {
+    const modal = document.getElementById("modalEditarVendido");
+    if (modal) modal.remove();
+  },
+
+  async guardarEditar(detalleId) {
+    const cantidad = parseInt(document.getElementById("ivEditCantidad")?.value);
+    const precio_unitario = parseFloat(document.getElementById("ivEditPrecio")?.value);
+
+    if (!cantidad || cantidad <= 0) {
+      Toast.error("La cantidad debe ser mayor a 0");
+      return;
+    }
+    if (!precio_unitario || precio_unitario <= 0) {
+      Toast.error("El precio debe ser mayor a 0");
+      return;
+    }
+
+    const btn = document.getElementById("ivBtnGuardarEditar");
+    if (btn) { btn.disabled = true; btn.textContent = "Guardando..."; }
+
+    try {
+      await ProductosAPI.editarVendido(detalleId, { cantidad, precio_unitario });
+      Toast.success("Producto vendido actualizado exitosamente");
+      this.cerrarEditar();
+      this.cargar();
+    } catch (error) {
+      Toast.error("Error al guardar: " + error.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = "Guardar"; }
+    }
   },
 
   // ==================== FILTRAR (client-side) ====================

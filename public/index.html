@@ -121,6 +121,14 @@
           <span class="nav-label">Inventario Vendido</span>
         </div>
 
+        <div
+          id="nav-historial-inventario"
+          class="nav-item"
+          onclick="showSection('historial-inventario')"
+        >
+          <span class="nav-label">Historial Inventario</span>
+        </div>
+
         <div id="nav-group-admin" class="nav-group-label">Admin</div>
 
         <div
@@ -1365,14 +1373,110 @@
                     <th style="padding: 11px 12px; text-align: center">
                       Estado
                     </th>
+                    <th style="padding: 11px 12px; text-align: center">
+                      Acciones
+                    </th>
                   </tr>
                 </thead>
                 <tbody id="ivTbody">
                   <tr>
                     <td
-                      colspan="10"
+                      colspan="11"
                       style="text-align: center; padding: 30px; color: #7f8c8d"
                     >
+                      Seleccione un período y presione Buscar
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- HISTORIAL INVENTARIO SECTION -->
+        <section id="historial-inventario" class="section">
+          <div class="header">
+            <h1>Historial de Inventario</h1>
+          </div>
+
+          <div class="card">
+            <!-- Filtros -->
+            <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px;">
+              <div>
+                <label class="filter-label">Desde</label>
+                <input type="date" id="hiFechaDesde" class="filter-input" />
+              </div>
+              <div>
+                <label class="filter-label">Hasta</label>
+                <input type="date" id="hiFechaHasta" class="filter-input" />
+              </div>
+              <button class="btn btn-primary" onclick="HistorialInventarioModule.cargar()">Buscar</button>
+              <div>
+                <label class="filter-label">Filtrar por</label>
+                <select id="hiFiltroStock" class="filter-input" onchange="HistorialInventarioModule.filtrar()">
+                  <option value="todos">Todos</option>
+                  <option value="con_ventas">Con ventas</option>
+                  <option value="sin_ventas">Sin ventas</option>
+                  <option value="con_stock">Con stock</option>
+                  <option value="sin_stock">Sin stock</option>
+                </select>
+              </div>
+              <div style="flex:1;min-width:200px;">
+                <label class="filter-label">Buscar</label>
+                <input type="text" id="hiBuscador" placeholder="Producto, código, IMEI, categoría..." oninput="HistorialInventarioModule.filtrar()" class="filter-input filter-input--full" />
+              </div>
+            </div>
+
+            <!-- Cards resumen -->
+            <div class="kpi-grid" style="margin-bottom:20px;">
+              <div class="kpi-card kpi--blue">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Productos</div>
+                <div id="hiCardProductos" class="kpi-card-value">0</div>
+              </div>
+              <div class="kpi-card kpi--cyan">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Unidades en Stock</div>
+                <div id="hiCardUnidades" class="kpi-card-value">0</div>
+              </div>
+              <div class="kpi-card kpi--amber">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Unidades Vendidas</div>
+                <div id="hiCardVendidas" class="kpi-card-value">0</div>
+              </div>
+              <div class="kpi-card kpi--green">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Valor Inventario</div>
+                <div id="hiCardValorInventario" class="kpi-card-value">RD$0.00</div>
+              </div>
+              <div class="kpi-card kpi--purple">
+                <div class="kpi-card-accent"></div>
+                <div class="kpi-card-label">Valor Vendido</div>
+                <div id="hiCardValorVendido" class="kpi-card-value">RD$0.00</div>
+              </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="tbl-scroll">
+              <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr class="thead-dark">
+                    <th style="padding:11px 12px;text-align:left;">Producto</th>
+                    <th style="padding:11px 12px;text-align:left;">Categoría</th>
+                    <th style="padding:11px 12px;text-align:center;">Stock Inicial</th>
+                    <th style="padding:11px 12px;text-align:center;">Vendido</th>
+                    <th style="padding:11px 12px;text-align:center;">Devuelto</th>
+                    <th style="padding:11px 12px;text-align:center;">Stock Actual</th>
+                    <th style="padding:11px 12px;text-align:right;">Costo Unit.</th>
+                    <th style="padding:11px 12px;text-align:right;">Precio Venta</th>
+                    <th style="padding:11px 12px;text-align:right;">Valor Vendido</th>
+                    <th style="padding:11px 12px;text-align:right;">Valor en Stock</th>
+                    <th style="padding:11px 12px;text-align:center;">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="hiTbody">
+                  <tr>
+                    <td colspan="11" style="text-align:center;padding:30px;color:#7f8c8d;">
                       Seleccione un período y presione Buscar
                     </td>
                   </tr>
@@ -3288,6 +3392,7 @@
     <script src="js/utils/paginator.js"></script>
     <script src="js/api/salidas-api.js"></script>
     <script src="js/api/categorias-gasto-api.js"></script>
+    <script src="js/api/inventario-api.js"></script>
     <!-- Modales script-->
     <script>
       Promise.all([
@@ -3318,6 +3423,7 @@
     <script src="js/modules/reportes-module.js"></script>
     <script src="js/modules/reporte-inventario-module.js"></script>
     <script src="js/modules/inventario-vendido-module.js"></script>
+    <script src="js/modules/historial-inventario-module.js"></script>
     <script src="js/api/auth-api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/modules/usuarios-module.js"></script>

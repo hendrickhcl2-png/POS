@@ -159,6 +159,58 @@ router.get(
   }),
 );
 
+// ==================== HISTORIAL DE INVENTARIO ====================
+router.get(
+  "/historial",
+  asyncHandler(async (req, res) => {
+    const { fecha_inicio, fecha_fin } = req.query;
+
+    const result = await pool.query(
+      `SELECT
+        p.id,
+        p.codigo_barras,
+        p.imei,
+        p.nombre,
+        c.nombre AS categoria,
+        p.precio_costo,
+        p.precio_venta,
+        p.stock_actual,
+        COALESCE(vendido.total_vendido, 0) AS total_vendido,
+        COALESCE(devuelto.total_devuelto, 0) AS total_devuelto,
+        COALESCE(vendido.valor_vendido, 0) AS valor_vendido,
+        p.stock_actual + COALESCE(vendido.total_vendido, 0) - COALESCE(devuelto.total_devuelto, 0) AS stock_inicial_estimado
+      FROM productos p
+      LEFT JOIN categorias c ON p.categoria_id = c.id
+      LEFT JOIN (
+        SELECT dv.producto_id,
+               SUM(dv.cantidad) AS total_vendido,
+               SUM(dv.subtotal) AS valor_vendido
+        FROM detalle_venta dv
+        JOIN ventas v ON dv.venta_id = v.id
+        WHERE v.estado != 'anulada'
+          AND ($1::date IS NULL OR v.fecha >= $1)
+          AND ($2::date IS NULL OR v.fecha <= $2)
+        GROUP BY dv.producto_id
+      ) vendido ON vendido.producto_id = p.id
+      LEFT JOIN (
+        SELECT dd.producto_id,
+               SUM(dd.cantidad_devuelta) AS total_devuelto
+        FROM detalle_devolucion dd
+        JOIN devoluciones d ON dd.devolucion_id = d.id
+        WHERE d.estado = 'procesada'
+          AND ($1::date IS NULL OR d.fecha >= $1)
+          AND ($2::date IS NULL OR d.fecha <= $2)
+        GROUP BY dd.producto_id
+      ) devuelto ON devuelto.producto_id = p.id
+      WHERE p.activo = true
+      ORDER BY COALESCE(vendido.total_vendido, 0) DESC, p.nombre ASC`,
+      [fecha_inicio || null, fecha_fin || null]
+    );
+
+    res.json(result.rows);
+  }),
+);
+
 // ==================== OBTENER PRODUCTO POR ID ====================
 // ⚠️ Esta ruta DEBE ir DESPUÉS de todas las rutas específicas
 router.get(

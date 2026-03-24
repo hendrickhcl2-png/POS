@@ -257,6 +257,11 @@ case "proveedores":
         InventarioVendidoModule.init();
       }
       break;
+    case "historial-inventario":
+      if (window.HistorialInventarioModule) {
+        HistorialInventarioModule.init();
+      }
+      break;
   }
 
   initializeModule(sectionId);
