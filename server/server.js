@@ -252,6 +252,9 @@ async function initAuth() {
     await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS monto_cliente_pago NUMERIC(12,2) DEFAULT 0`);
     await pool.query(`ALTER TABLE devoluciones ADD COLUMN IF NOT EXISTS producto_cambio_cantidad INTEGER DEFAULT 1`);
 
+    // Migración: hacer cedula opcional en clientes
+    await pool.query(`ALTER TABLE clientes ALTER COLUMN cedula DROP NOT NULL`);
+
     console.log("✅ Auth inicializado");
   } catch (error) {
     console.error("❌ Error en initAuth:", error);
