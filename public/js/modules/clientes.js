@@ -330,6 +330,9 @@ const ClientesModule = {
   ${estadisticas.saldo_pendiente > 0
   ? `<button class="btn btn-warning" onclick="ClientesModule.verEstadoCuenta(${clienteId})">
   Ver Estado de Cuenta
+  </button>
+  <button class="btn btn-info" onclick="ClientesModule.imprimirEstadoCuenta(${clienteId})">
+  Imprimir Estado de Cuenta
   </button>`
 : ""
   }
@@ -394,17 +397,242 @@ const ClientesModule = {
   // ==================== ESTADO DE CUENTA ====================
 
   async verEstadoCuenta(clienteId) {
+  await this.imprimirEstadoCuenta(clienteId);
+  },
+
+  // ==================== IMPRIMIR ESTADO DE CUENTA ====================
+
+  async imprimirEstadoCuenta(clienteId) {
   try {
-  // Llamar al módulo de facturación para mostrar estado de cuenta
-  if (window.ModalesFacturacion) {
-  await ModalesFacturacion.mostrarEstadoCuenta(clienteId);
-  } else {
-  mostrarAlerta("El módulo de facturación no está disponible", "warning");
-  }
+    const data = await ClientesAPI.getReporteCredito(clienteId);
+    const { cliente, facturas } = data;
+    const nombreCompleto = `${cliente.nombre} ${cliente.apellido || ""}`.trim();
+    const totalOriginal = facturas.reduce((s, f) => s + parseFloat(f.total || 0), 0);
+    const totalPagado = facturas.reduce((s, f) => s + parseFloat(f.monto_pagado || 0), 0);
+    const totalPendiente = facturas.reduce((s, f) => s + parseFloat(f.saldo_pendiente || 0), 0);
+
+    const cfg = window.configuracion || {};
+    const config = {
+      nombre: cfg.nombre_negocio || "FIFTY TECH SRL",
+      rnc: cfg.rnc || "",
+      direccion: cfg.direccion || "",
+      telefono: cfg.telefono || "",
+      nombre_impresora: cfg.nombre_impresora || "",
+    };
+
+    // Store for thermal printing
+    this._edoCuentaData = { cliente, facturas, config, totalOriginal, totalPagado, totalPendiente };
+
+    // Build all payment rows from all invoices
+    const allPagos = [];
+    facturas.forEach(f => {
+      (f.pagos || []).forEach(p => {
+        allPagos.push({ ...p, numero_factura: f.numero_factura });
+      });
+    });
+    allPagos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+    const formatCurrency = (n) => new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP" }).format(parseFloat(n) || 0);
+    const formatFecha = (f) => {
+      if (!f) return "—";
+      const d = new Date(f);
+      return d.toLocaleDateString("es-DO", { day: "2-digit", month: "short", year: "numeric" });
+    };
+    const hoy = new Date().toLocaleDateString("es-DO", { day: "2-digit", month: "long", year: "numeric" });
+
+    // Build invoice rows
+    const filasFacturas = facturas.map(f => {
+      const estadoColor = f.estado === 'pagada' ? '#27ae60' : f.estado === 'parcial' ? '#f39c12' : '#e74c3c';
+      const estadoLabel = f.estado === 'pagada' ? 'Pagada' : f.estado === 'parcial' ? 'Parcial' : 'Pendiente';
+      return `<tr style="border-bottom:1px solid #ecf0f1;">
+        <td style="padding:8px 10px;font-size:13px;">${f.numero_factura}</td>
+        <td style="padding:8px 10px;font-size:13px;">${formatFecha(f.fecha)}</td>
+        <td style="padding:8px 10px;text-align:right;font-size:13px;">${formatCurrency(f.total)}</td>
+        <td style="padding:8px 10px;text-align:right;font-size:13px;color:#27ae60;">${formatCurrency(f.monto_pagado)}</td>
+        <td style="padding:8px 10px;text-align:right;font-size:13px;font-weight:700;color:${estadoColor};">${formatCurrency(f.saldo_pendiente)}</td>
+        <td style="padding:8px 10px;text-align:center;"><span style="background:${estadoColor};color:white;padding:2px 10px;border-radius:10px;font-size:11px;">${estadoLabel}</span></td>
+      </tr>`;
+    }).join('');
+
+    // Build payment rows
+    const filasPagos = allPagos.length > 0
+      ? allPagos.map(p => `<tr style="border-bottom:1px solid #ecf0f1;">
+          <td style="padding:8px 10px;font-size:13px;">${formatFecha(p.fecha)}</td>
+          <td style="padding:8px 10px;font-size:12px;color:#7f8c8d;">${p.numero_pago || '—'}</td>
+          <td style="padding:8px 10px;font-size:13px;">${p.numero_factura}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:600;color:#27ae60;">${formatCurrency(p.monto)}</td>
+          <td style="padding:8px 10px;text-align:center;font-size:12px;text-transform:capitalize;">${p.metodo_pago || '—'}</td>
+          <td style="padding:8px 10px;font-size:12px;color:#7f8c8d;">${p.referencia || p.banco || '—'}</td>
+        </tr>`).join('')
+      : `<tr><td colspan="6" style="padding:20px;text-align:center;color:#7f8c8d;">Sin pagos registrados</td></tr>`;
+
+    // Remove previous modal
+    const prev = document.getElementById("modalEstadoCuentaImprimir");
+    if (prev) prev.remove();
+
+    const modal = document.createElement("div");
+    modal.id = "modalEstadoCuentaImprimir";
+    modal.className = "js-overlay";
+
+    modal.innerHTML = `
+    <div class="js-modal" style="max-width:780px;">
+      <div class="no-print factura-action-bar">
+        <span class="factura-action-bar__title">Estado de Cuenta — ${nombreCompleto}</span>
+        <div class="flex-row flex-row--gap-10">
+          <button type="button" onclick="ClientesModule._imprimirEdoCuentaTermica()" class="factura-btn factura-btn--purple">Termica</button>
+          <button type="button" onclick="ClientesModule._imprimirEdoCuentaHTML()" class="factura-btn factura-btn--green">Imprimir</button>
+          <button type="button" onclick="ClientesModule._imprimirEdoCuentaHTML()" class="factura-btn factura-btn--blue">PDF</button>
+          <button type="button" onclick="document.getElementById('modalEstadoCuentaImprimir').remove()" class="factura-btn factura-btn--red">Cerrar</button>
+        </div>
+      </div>
+
+      <div id="contenidoEstadoCuenta" class="factura-print-body">
+        <!-- Header -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:15px;border-bottom:3px solid #2c3e50;">
+          <div>
+            <img src="/images/Logotipo.png" alt="Logo" style="height:64px;width:auto;margin-bottom:6px;display:block;" />
+            <h1 style="margin:0;font-size:24px;color:#2c3e50;">${config.nombre}</h1>
+            <p style="margin:3px 0;color:#7f8c8d;font-size:13px;">${config.direccion}</p>
+            <p style="margin:3px 0;color:#7f8c8d;font-size:13px;">Tel: ${config.telefono}</p>
+            <p style="margin:3px 0;color:#7f8c8d;font-size:13px;">RNC: ${config.rnc}</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="background:#3498db;color:white;padding:5px 15px;border-radius:20px;font-size:13px;font-weight:bold;display:inline-block;">ESTADO DE CUENTA</div>
+            <p style="margin:8px 0 3px 0;color:#7f8c8d;font-size:13px;">Fecha: ${hoy}</p>
+          </div>
+        </div>
+
+        <!-- Client info -->
+        <div style="background:#f8f9fa;border-radius:8px;padding:12px 18px;margin-bottom:18px;">
+          <strong style="color:#2c3e50;font-size:14px;">Cliente:</strong>
+          <span style="color:#2c3e50;font-size:14px;margin-left:10px;">${nombreCompleto}</span>
+          ${cliente.cedula ? `<span style="color:#7f8c8d;font-size:12px;margin-left:15px;">Cedula: ${cliente.cedula}</span>` : ""}
+          ${cliente.rnc ? `<span style="color:#7f8c8d;font-size:12px;margin-left:15px;">RNC: ${cliente.rnc}</span>` : ""}
+          ${cliente.telefono ? `<br><span style="color:#7f8c8d;font-size:12px;">Tel: ${cliente.telefono}</span>` : ""}
+        </div>
+
+        <!-- Summary -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div style="background:#e3f2fd;padding:12px;border-radius:8px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#1976d2;">Monto Original</p>
+            <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#1565c0;">${formatCurrency(totalOriginal)}</p>
+          </div>
+          <div style="background:#e8f5e9;padding:12px;border-radius:8px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#388e3c;">Total Pagado</p>
+            <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:#2e7d32;">${formatCurrency(totalPagado)}</p>
+          </div>
+          <div style="background:${totalPendiente > 0 ? '#ffebee' : '#e8f5e9'};padding:12px;border-radius:8px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:${totalPendiente > 0 ? '#c62828' : '#388e3c'};">Saldo Pendiente</p>
+            <p style="margin:4px 0 0;font-size:18px;font-weight:700;color:${totalPendiente > 0 ? '#d32f2f' : '#2e7d32'};">${formatCurrency(totalPendiente)}</p>
+          </div>
+        </div>
+
+        <!-- Invoices table -->
+        <h4 style="color:#2c3e50;margin:0 0 10px;border-bottom:2px solid #3498db;padding-bottom:5px;">Facturas</h4>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+          <thead>
+            <tr style="background:#2c3e50;color:white;">
+              <th style="padding:8px 10px;text-align:left;font-size:12px;">Factura</th>
+              <th style="padding:8px 10px;text-align:left;font-size:12px;">Fecha</th>
+              <th style="padding:8px 10px;text-align:right;font-size:12px;">Original</th>
+              <th style="padding:8px 10px;text-align:right;font-size:12px;">Pagado</th>
+              <th style="padding:8px 10px;text-align:right;font-size:12px;">Pendiente</th>
+              <th style="padding:8px 10px;text-align:center;font-size:12px;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>${filasFacturas}</tbody>
+        </table>
+
+        <!-- Payments table -->
+        <h4 style="color:#2c3e50;margin:0 0 10px;border-bottom:2px solid #27ae60;padding-bottom:5px;">Historial de Pagos</h4>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
+          <thead>
+            <tr style="background:#27ae60;color:white;">
+              <th style="padding:8px 10px;text-align:left;font-size:12px;">Fecha</th>
+              <th style="padding:8px 10px;text-align:left;font-size:12px;"># Pago</th>
+              <th style="padding:8px 10px;text-align:left;font-size:12px;">Factura</th>
+              <th style="padding:8px 10px;text-align:right;font-size:12px;">Monto</th>
+              <th style="padding:8px 10px;text-align:center;font-size:12px;">Metodo</th>
+              <th style="padding:8px 10px;text-align:left;font-size:12px;">Referencia</th>
+            </tr>
+          </thead>
+          <tbody>${filasPagos}</tbody>
+          ${allPagos.length > 0 ? `<tfoot>
+            <tr style="background:#f8f9fa;border-top:2px solid #27ae60;">
+              <td colspan="3" style="padding:10px;font-weight:700;font-size:13px;">Total Pagado</td>
+              <td style="padding:10px;text-align:right;font-weight:700;color:#27ae60;font-size:15px;">${formatCurrency(totalPagado)}</td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>` : ''}
+        </table>
+
+        <!-- Footer -->
+        <div style="margin-top:20px;padding-top:15px;border-top:1px dashed #bdc3c7;text-align:center;">
+          <p style="margin:3px 0;color:#7f8c8d;font-size:12px;">Estado de cuenta generado el ${hoy}</p>
+          <p style="margin:3px 0;color:#7f8c8d;font-size:11px;">${config.nombre} — Tel: ${config.telefono}</p>
+        </div>
+      </div>
+    </div>`;
+
+    document.body.appendChild(modal);
   } catch (error) {
-  console.error(" Error al mostrar estado de cuenta:", error);
-  mostrarAlerta("Error al mostrar estado de cuenta", "danger");
+    console.error("Error al generar estado de cuenta:", error);
+    mostrarAlerta("Error al generar estado de cuenta: " + error.message, "danger");
   }
+  },
+
+  _imprimirEdoCuentaHTML() {
+  const contenido = document.getElementById("contenidoEstadoCuenta");
+  if (!contenido) return;
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Estado de Cuenta</title>
+<style>
+  @page { size: auto; margin: 12mm; }
+  body { font-family: Arial, sans-serif; margin: 0; font-size: 13px; }
+  .no-print { display: none !important; }
+  table { border-collapse: collapse; }
+</style></head>
+<body>${contenido.innerHTML}</body></html>`;
+
+  const iframe = document.createElement("iframe");
+  iframe.style.cssText = "position:fixed;top:0;left:0;width:0;height:0;border:0;visibility:hidden;";
+  document.body.appendChild(iframe);
+  iframe.contentDocument.write(html);
+  iframe.contentDocument.close();
+  iframe.contentWindow.focus();
+  setTimeout(() => {
+    iframe.contentWindow.print();
+    setTimeout(() => document.body.removeChild(iframe), 1000);
+  }, 300);
+  },
+
+  _imprimirEdoCuentaTermica() {
+  const d = this._edoCuentaData;
+  if (!d) return;
+
+  fetch("/api/imprimir/estado-cuenta", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      cliente: d.cliente,
+      facturas: d.facturas,
+      config: d.config,
+      totalOriginal: d.totalOriginal,
+      totalPagado: d.totalPagado,
+      totalPendiente: d.totalPendiente,
+      impresora: d.config.nombre_impresora || "Termica",
+    }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        window.Toast?.success("Imprimiendo estado de cuenta...");
+      } else {
+        window.Toast?.error("Error al imprimir: " + data.message);
+      }
+    })
+    .catch(() => window.Toast?.error("No se pudo conectar con la impresora"));
   },
 
   // ==================== UTILIDADES ====================

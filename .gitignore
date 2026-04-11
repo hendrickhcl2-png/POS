@@ -9,4 +9,5 @@ drive-download-20251125T001957Z-1-001/
 fifty_tech_pos_backup.sql
 *.dump
 .claude/
+errors/
 token.txt

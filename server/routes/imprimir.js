@@ -399,6 +399,95 @@ function generarTextoCuadre(c) {
   return lines.join(sep);
 }
 
+function generarTextoEstadoCuenta(data) {
+  const { cliente, facturas, config, totalOriginal, totalPagado, totalPendiente } = data;
+  const lines = [];
+  const nombreCompleto = `${cliente.nombre} ${cliente.apellido || ""}`.trim();
+
+  // Header
+  lines.push(centrar(config.nombre || "FIFTY TECH SRL"));
+  if (config.direccion) lines.push(centrar(config.direccion));
+  if (config.telefono) lines.push(centrar("Tel: " + config.telefono));
+  if (config.rnc) lines.push(centrar("RNC: " + config.rnc));
+  lines.push(linea("="));
+  lines.push(centrar("ESTADO DE CUENTA"));
+  lines.push(centrar(fmtFecha(new Date().toISOString())));
+  lines.push(linea("="));
+
+  // Client info
+  lines.push("Cliente: " + nombreCompleto);
+  if (cliente.cedula) lines.push("Cedula:  " + cliente.cedula);
+  if (cliente.rnc) lines.push("RNC:     " + cliente.rnc);
+  if (cliente.telefono) lines.push("Tel:     " + cliente.telefono);
+  lines.push("");
+
+  // Summary
+  lines.push(columnas("Monto original:", fmt(totalOriginal)));
+  lines.push(columnas("Total pagado:", fmt(totalPagado)));
+  lines.push(columnas("SALDO PENDIENTE:", fmt(totalPendiente)));
+  lines.push(linea("="));
+
+  // Invoices
+  lines.push("");
+  lines.push(centrar("== FACTURAS =="));
+  lines.push(linea("-"));
+
+  facturas.forEach(f => {
+    const estadoLabel = f.estado === 'pagada' ? 'PAG' : f.estado === 'parcial' ? 'PAR' : 'PEN';
+    lines.push(columnas(f.numero_factura + " [" + estadoLabel + "]", fmtFecha(f.fecha)));
+    lines.push(columnas("  Original: " + fmt(f.total), "Pend: " + fmt(f.saldo_pendiente)));
+
+    // Payments for this invoice
+    if (f.pagos && f.pagos.length > 0) {
+      f.pagos.forEach(p => {
+        const metodo = (p.metodo_pago || "").substring(0, 4).toUpperCase();
+        lines.push(columnas("    " + fmtFecha(p.fecha) + " " + metodo, "+" + fmt(p.monto)));
+        if (p.referencia || p.banco) {
+          lines.push("      Ref: " + (p.referencia || "") + (p.banco ? " (" + p.banco + ")" : ""));
+        }
+      });
+    }
+    lines.push(linea("-"));
+  });
+
+  // All payments summary
+  const allPagos = [];
+  facturas.forEach(f => {
+    (f.pagos || []).forEach(p => {
+      allPagos.push({ ...p, numero_factura: f.numero_factura });
+    });
+  });
+  allPagos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+  if (allPagos.length > 0) {
+    lines.push("");
+    lines.push(centrar("== HISTORIAL DE PAGOS =="));
+    lines.push(linea("-"));
+
+    allPagos.forEach(p => {
+      const metodo = (p.metodo_pago || "").substring(0, 4).toUpperCase();
+      lines.push(columnas(fmtFecha(p.fecha) + " " + (p.numero_pago || ""), fmt(p.monto)));
+      lines.push(columnas("  " + p.numero_factura + " " + metodo, p.referencia || p.banco || ""));
+    });
+
+    lines.push(linea("-"));
+    lines.push(columnas("TOTAL PAGADO:", fmt(totalPagado)));
+  }
+
+  lines.push(linea("="));
+  lines.push(columnas("SALDO PENDIENTE:", fmt(totalPendiente)));
+  lines.push(linea("="));
+  lines.push("");
+  lines.push(centrar("Estado de cuenta generado el"));
+  lines.push(centrar(fmtFecha(new Date().toISOString())));
+  lines.push("");
+  lines.push("");
+  lines.push("");
+
+  const sep = os.platform() === "win32" ? "\r\n" : "\n";
+  return lines.join(sep);
+}
+
 // GET /api/imprimir/impresoras — lista impresoras disponibles en el sistema
 router.get("/impresoras", (req, res) => {
   const isWindows = os.platform() === "win32";
@@ -457,6 +546,36 @@ router.post("/", async (req, res) => {
     } else {
       exec(`lp -d "${nombreImpresora}" -o raw "${tmpFile}"`, done);
     }
+  });
+});
+
+// POST /api/imprimir/estado-cuenta
+router.post("/estado-cuenta", async (req, res) => {
+  const { cliente, facturas, config, totalOriginal, totalPagado, totalPendiente, impresora } = req.body;
+
+  if (!cliente || !facturas) {
+    return res.status(400).json({ success: false, message: "Datos de estado de cuenta requeridos" });
+  }
+
+  const nombreImpresora = /^[\w\s\-\.()\u00C0-\u024F]+$/.test(impresora || "") ? impresora : "Termica";
+  const texto = generarTextoEstadoCuenta({ cliente, facturas, config: config || {}, totalOriginal, totalPagado, totalPendiente });
+  const tmpFile = path.join(os.tmpdir(), `edocuenta_${Date.now()}.txt`);
+  const contenido = Buffer.from(texto, "utf8");
+
+  fs.writeFile(tmpFile, contenido, (writeErr) => {
+    if (writeErr) {
+      return res.status(500).json({ success: false, message: "Error al crear archivo temporal" });
+    }
+    const isWindows = os.platform() === "win32";
+    const done = (err, stdout, stderr) => {
+      fs.unlink(tmpFile, () => {});
+      if (err) {
+        return res.status(500).json({ success: false, message: stderr || err.message || "Error al imprimir" });
+      }
+      res.json({ success: true, message: "Estado de cuenta enviado a " + nombreImpresora });
+    };
+    if (isWindows) imprimirRawWindows(tmpFile, nombreImpresora, done);
+    else exec(`lp -d "${nombreImpresora}" -o raw "${tmpFile}"`, done);
   });
 });
 
