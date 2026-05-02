@@ -44,11 +44,13 @@ const DevolucionesController = {
 
       // Validar metodo_reembolso si es reembolso
       if (metodo_devolucion === "reembolso") {
-        if (!metodo_reembolso || !["efectivo", "transferencia"].includes(metodo_reembolso)) {
-          throw new Error("Debe especificar el método de reembolso (efectivo o transferencia)");
-        }
-        if (metodo_reembolso === "transferencia" && (!referencia_transferencia || referencia_transferencia.trim() === "")) {
-          throw new Error("Debe especificar la referencia de la transferencia");
+        if (
+          !metodo_reembolso ||
+          !["efectivo", "transferencia"].includes(metodo_reembolso)
+        ) {
+          throw new Error(
+            "Debe especificar el método de reembolso (efectivo o transferencia)",
+          );
         }
       }
 
@@ -68,7 +70,9 @@ const DevolucionesController = {
         productoCambio = prodResult.rows[0];
 
         if (productoCambio.stock_actual < producto_cambio_cantidad) {
-          throw new Error(`Stock insuficiente del producto de cambio (disponible: ${productoCambio.stock_actual})`);
+          throw new Error(
+            `Stock insuficiente del producto de cambio (disponible: ${productoCambio.stock_actual})`,
+          );
         }
       }
 
@@ -159,7 +163,8 @@ const DevolucionesController = {
       let diferenciaCambio = 0;
       let montoClientePago = 0;
       if (metodo_devolucion === "cambio" && productoCambio) {
-        const totalProductoCambio = parseFloat(productoCambio.precio_venta) * producto_cambio_cantidad;
+        const totalProductoCambio =
+          parseFloat(productoCambio.precio_venta) * producto_cambio_cantidad;
         diferenciaCambio = totalProductoCambio - totalDevolucion;
         // Si diferencia > 0, el cliente paga la diferencia
         // Si diferencia < 0, se devuelve la diferencia al cliente o queda como crédito
@@ -264,7 +269,8 @@ const DevolucionesController = {
         );
 
         // Devolver stock al inventario (siempre para cambios, opcional para reembolsos)
-        const debeRestaurarStock = metodo_devolucion === "cambio" || restaurar_stock !== false;
+        const debeRestaurarStock =
+          metodo_devolucion === "cambio" || restaurar_stock !== false;
         if (debeRestaurarStock) {
           await client.query(
             `UPDATE productos
@@ -323,7 +329,10 @@ const DevolucionesController = {
 
       // Si la factura tiene saldo pendiente, reducirlo por el monto devuelto
       // (solo para reembolsos, no para cambios donde se intercambia producto)
-      if (metodo_devolucion === "reembolso" && parseFloat(factura.saldo_pendiente) > 0) {
+      if (
+        metodo_devolucion === "reembolso" &&
+        parseFloat(factura.saldo_pendiente) > 0
+      ) {
         const nuevoSaldo = Math.max(
           0,
           parseFloat(factura.saldo_pendiente) - totalDevolucion,

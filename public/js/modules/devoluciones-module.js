@@ -112,7 +112,8 @@ const DevolucionModule = {
     <tbody>
     ${this.facturaActual.items
       .map((item, index) => {
-        const cantidadDisponible = item.cantidad - (item.cantidad_devuelta || 0);
+        const cantidadDisponible =
+          item.cantidad - (item.cantidad_devuelta || 0);
         const deshabilitado = cantidadDisponible <= 0;
 
         return `
@@ -373,39 +374,51 @@ const DevolucionModule = {
     const contenedor = document.getElementById("resultadosProductoCambio");
 
     if (!query || query.length < 2) {
-      contenedor.innerHTML = '<p style="color:#7f8c8d;text-align:center;padding:20px;">Escriba al menos 2 caracteres para buscar...</p>';
+      contenedor.innerHTML =
+        '<p style="color:#7f8c8d;text-align:center;padding:20px;">Escriba al menos 2 caracteres para buscar...</p>';
       return;
     }
 
     this._buscarTimeout = setTimeout(async () => {
       try {
-        contenedor.innerHTML = '<p style="color:#7f8c8d;text-align:center;padding:20px;">Buscando...</p>';
+        contenedor.innerHTML =
+          '<p style="color:#7f8c8d;text-align:center;padding:20px;">Buscando...</p>';
         const productos = await ProductosAPI.search(query);
-        const lista = Array.isArray(productos) ? productos : (productos.data || []);
+        const lista = Array.isArray(productos)
+          ? productos
+          : productos.data || [];
 
         // Filtrar productos con stock disponible
-        const disponibles = lista.filter(p => p.stock_actual > 0 && p.disponible);
+        const disponibles = lista.filter(
+          (p) => p.stock_actual > 0 && p.disponible,
+        );
 
         if (disponibles.length === 0) {
-          contenedor.innerHTML = '<p style="color:#e74c3c;text-align:center;padding:20px;">No se encontraron productos disponibles</p>';
+          contenedor.innerHTML =
+            '<p style="color:#e74c3c;text-align:center;padding:20px;">No se encontraron productos disponibles</p>';
           return;
         }
 
-        contenedor.innerHTML = disponibles.map(p => `
-        <div onclick="DevolucionModule.seleccionarProductoCambio(${p.id}, '${(p.nombre || '').replace(/'/g, "\\'")}', ${p.precio_venta}, ${p.stock_actual})"
+        contenedor.innerHTML = disponibles
+          .map(
+            (p) => `
+        <div onclick="DevolucionModule.seleccionarProductoCambio(${p.id}, '${(p.nombre || "").replace(/'/g, "\\'")}', ${p.precio_venta}, ${p.stock_actual})"
         style="display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid #e0e0e0;border-radius:5px;margin-bottom:8px;cursor:pointer;transition:background 0.2s;"
         onmouseover="this.style.background='#eafaf1'" onmouseout="this.style.background='white'">
         <div>
         <strong>${p.nombre}</strong><br>
-        <small style="color:#7f8c8d;">${p.codigo || ''} | Stock: ${p.stock_actual}</small>
+        <small style="color:#7f8c8d;">${p.codigo || ""} | Stock: ${p.stock_actual}</small>
         </div>
         <div style="text-align:right;">
         <strong style="color:#27ae60;font-size:16px;">${this.formatCurrency(p.precio_venta)}</strong>
         </div>
         </div>
-        `).join("");
+        `,
+          )
+          .join("");
       } catch (error) {
-        contenedor.innerHTML = '<p style="color:#e74c3c;text-align:center;padding:20px;">Error al buscar productos</p>';
+        contenedor.innerHTML =
+          '<p style="color:#e74c3c;text-align:center;padding:20px;">Error al buscar productos</p>';
       }
     }, 300);
   },
@@ -474,7 +487,8 @@ const DevolucionModule = {
   quitarProductoCambio() {
     this.productoCambio = null;
     this.productoCambioCantidad = 1;
-    document.getElementById("productoCambioSeleccionado").style.display = "none";
+    document.getElementById("productoCambioSeleccionado").style.display =
+      "none";
     document.getElementById("resumenCambio").style.display = "none";
   },
 
@@ -486,9 +500,11 @@ const DevolucionModule = {
     }
 
     const montoDevolucion = this.itemsSeleccionados.reduce(
-      (sum, item) => sum + item.precio_unitario * item.cantidad_devuelta, 0
+      (sum, item) => sum + item.precio_unitario * item.cantidad_devuelta,
+      0,
     );
-    const totalProductoNuevo = this.productoCambio.precio * this.productoCambioCantidad;
+    const totalProductoNuevo =
+      this.productoCambio.precio * this.productoCambioCantidad;
     const diferencia = totalProductoNuevo - montoDevolucion;
 
     let mensajeDiferencia = "";
@@ -583,15 +599,18 @@ const DevolucionModule = {
   actualizarResumen() {
     const itemsCount = this.itemsSeleccionados.length;
     const unidadesTotal = this.itemsSeleccionados.reduce(
-      (sum, item) => sum + item.cantidad_devuelta, 0
+      (sum, item) => sum + item.cantidad_devuelta,
+      0,
     );
     const montoTotal = this.itemsSeleccionados.reduce(
-      (sum, item) => sum + item.precio_unitario * item.cantidad_devuelta, 0
+      (sum, item) => sum + item.precio_unitario * item.cantidad_devuelta,
+      0,
     );
 
     document.getElementById("itemsCount").textContent = itemsCount;
     document.getElementById("unidadesTotal").textContent = unidadesTotal;
-    document.getElementById("montoTotal").textContent = this.formatCurrency(montoTotal);
+    document.getElementById("montoTotal").textContent =
+      this.formatCurrency(montoTotal);
   },
 
   // ==================== PROCESAR DEVOLUCIÓN ====================
@@ -611,7 +630,9 @@ const DevolucionModule = {
       }
 
       if (!this.metodoDevolucion) {
-        Toast.warning("Debe seleccionar el tipo de devolución (Cambio o Reembolso)");
+        Toast.warning(
+          "Debe seleccionar el tipo de devolución (Cambio o Reembolso)",
+        );
         return;
       }
 
@@ -622,23 +643,18 @@ const DevolucionModule = {
       }
 
       if (this.metodoDevolucion === "reembolso" && !this.metodoReembolso) {
-        Toast.warning("Debe seleccionar el método de reembolso (Efectivo o Transferencia)");
+        Toast.warning(
+          "Debe seleccionar el método de reembolso (Efectivo o Transferencia)",
+        );
         return;
-      }
-
-      if (this.metodoDevolucion === "reembolso" && this.metodoReembolso === "transferencia") {
-        const referencia = document.getElementById("referenciaTransferencia").value.trim();
-        if (!referencia) {
-          Toast.warning("Debe especificar la referencia de la transferencia");
-          return;
-        }
       }
 
       const notas = document.getElementById("notasDevolucion").value.trim();
 
       // Calcular totales para confirmación
       const totalDevolucion = this.itemsSeleccionados.reduce(
-        (sum, item) => sum + item.precio_unitario * item.cantidad_devuelta, 0
+        (sum, item) => sum + item.precio_unitario * item.cantidad_devuelta,
+        0,
       );
 
       // Armar mensaje de confirmación
@@ -647,7 +663,8 @@ const DevolucionModule = {
       mensajeConfirm += `Monto devolución: ${this.formatCurrency(totalDevolucion)}\n\n`;
 
       if (this.metodoDevolucion === "cambio") {
-        const totalNuevo = this.productoCambio.precio * this.productoCambioCantidad;
+        const totalNuevo =
+          this.productoCambio.precio * this.productoCambioCantidad;
         const diferencia = totalNuevo - totalDevolucion;
         mensajeConfirm += `Tipo: CAMBIO DE PRODUCTO\n`;
         mensajeConfirm += `Producto nuevo: ${this.productoCambio.nombre} (x${this.productoCambioCantidad})\n`;
@@ -687,14 +704,18 @@ const DevolucionModule = {
       } else {
         devolucionData.metodo_reembolso = this.metodoReembolso;
         if (this.metodoReembolso === "transferencia") {
-          devolucionData.referencia_transferencia = document.getElementById("referenciaTransferencia").value.trim();
+          devolucionData.referencia_transferencia = document
+            .getElementById("referenciaTransferencia")
+            .value.trim();
         }
       }
 
       // Enviar al backend
       const devolucion = await DevolucionesAPI.crear(devolucionData);
 
-      Toast.success(`Devolución ${devolucion.numero_devolucion} procesada exitosamente`);
+      Toast.success(
+        `Devolución ${devolucion.numero_devolucion} procesada exitosamente`,
+      );
 
       this.cerrar();
 
