@@ -15,12 +15,11 @@ npm run dev
 # Production
 npm start
 
-# Initialize DB schema manually (rarely needed — server auto-migrates on startup)
-psql -U postgres -f database_schema.sql
-
 # Production process manager
 pm2 start ecosystem.config.js
 ```
+
+The server applies schema changes inline on startup (see `initAuth()` in `server/server.js`); there is no standalone migration step. The `init-db` npm script and `database_schema.sql` file referenced by it no longer exist in the repo — ignore them. A one-off helper SQL for the services table lives at `src/crear_tabla_servicios.sql`.
 
 No test suite is configured.
 

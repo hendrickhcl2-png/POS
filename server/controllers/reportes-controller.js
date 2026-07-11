@@ -138,6 +138,7 @@ const ReportesController = {
           d.tipo,
           d.total AS monto_devuelto,
           d.motivo,
+          d.notas,
           v.numero_ticket,
           f.numero_factura,
           TRIM(CONCAT(c.nombre, ' ', COALESCE(c.apellido, ''))) AS cliente_nombre,
@@ -157,7 +158,7 @@ const ReportesController = {
         WHERE d.fecha >= $1 AND d.fecha <= $2
           AND d.estado = 'procesada'
         GROUP BY d.id, d.numero_devolucion, d.fecha, d.hora, d.tipo, d.total,
-                 d.motivo, v.numero_ticket, f.numero_factura, c.nombre, c.apellido
+                 d.motivo, d.notas, v.numero_ticket, f.numero_factura, c.nombre, c.apellido
         ORDER BY d.fecha DESC, d.hora DESC`,
         [fechaInicio, fechaFin],
       );

@@ -211,7 +211,8 @@ const FacturaImpresion = {
   </div>
   <span style="color:#7f8c8d;font-size:12px;">${this.formatFecha(dev.fecha)}</span>
   </div>
-  ${dev.motivo ? `<p style="margin:0 0 8px 0;color:#7f8c8d;font-size:12px;font-style:italic;">"${dev.motivo}"</p>` : ""}
+  ${dev.motivo ? `<p style="margin:0 0 6px 0;color:#c0392b;font-size:12px;"><strong>Motivo:</strong> <span style="font-style:italic;">"${dev.motivo}"</span></p>` : ""}
+  ${dev.notas ? `<p style="margin:0 0 8px 0;color:#7f8c8d;font-size:12px;"><strong>📝 Notas:</strong> <span style="font-style:italic;">${dev.notas}</span></p>` : ""}
   <table style="width:100%;border-collapse:collapse;font-size:12px;">
   <thead>
   <tr style="background:#f8d7da;">

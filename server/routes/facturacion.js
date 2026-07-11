@@ -153,7 +153,7 @@ router.get("/:id", async (req, res) => {
 
     // Obtener devoluciones asociadas a esta factura
     const devolucionesResult = await pool.query(
-      `SELECT d.numero_devolucion, d.tipo, d.total AS monto_devuelto, d.motivo, d.fecha,
+      `SELECT d.numero_devolucion, d.tipo, d.total AS monto_devuelto, d.motivo, d.notas, d.fecha,
               json_agg(json_build_object(
                 'nombre_producto', dd.nombre_producto,
                 'cantidad_devuelta', dd.cantidad_devuelta,
@@ -163,7 +163,7 @@ router.get("/:id", async (req, res) => {
        FROM devoluciones d
        JOIN detalle_devolucion dd ON dd.devolucion_id = d.id
        WHERE d.factura_id = $1 AND d.estado = 'procesada'
-       GROUP BY d.id, d.numero_devolucion, d.tipo, d.total, d.motivo, d.fecha
+       GROUP BY d.id, d.numero_devolucion, d.tipo, d.total, d.motivo, d.notas, d.fecha
        ORDER BY d.fecha DESC`,
       [id],
     );

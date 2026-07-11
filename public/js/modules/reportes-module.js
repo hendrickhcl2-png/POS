@@ -366,8 +366,8 @@ const ReportesModule = {
     devoluciones.map((dev) => {
     const itemsHtml = (dev.items || []).map((item) => `
     <tr style="background:#fdf9f9;">
-    <td style="padding:4px 12px;color:var(--clr-muted);" colspan="2"></td>
-    <td style="padding:4px 12px;color:var(--clr-muted);font-size:12px;" colspan="2">
+    <td style="padding:4px 12px;color:var(--clr-muted);" colspan="3"></td>
+    <td style="padding:4px 12px;color:var(--clr-muted);font-size:12px;" colspan="3">
     ↳ ${item.nombre_producto} × ${item.cantidad_devuelta}
     </td>
     <td style="padding:4px 12px;font-size:12px;color:var(--clr-muted);">
@@ -385,7 +385,8 @@ const ReportesModule = {
     <td>${dev.numero_factura || "—"}</td>
     <td>${this.formatFecha(dev.fecha)}</td>
     <td>${dev.cliente_nombre || "Cliente General"}</td>
-    <td style="font-size:13px;color:var(--clr-muted);">${dev.motivo}</td>
+    <td style="font-size:13px;color:var(--clr-muted);">${dev.motivo || "—"}</td>
+    <td style="font-size:13px;color:var(--clr-muted);font-style:italic;">${dev.notas || "—"}</td>
     <td style="text-align:right;font-weight:600;color:var(--clr-danger);">
     −${this.formatCurrency(dev.monto_devuelto)}
     </td>
