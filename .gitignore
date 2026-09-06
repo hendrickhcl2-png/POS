@@ -11,3 +11,10 @@ fifty_tech_pos_backup.sql
 .claude/
 errors/
 token.txt
+
+# Documentos ofimáticos (planes de prueba, manuales, informes)
+*.pdf
+*.docx
+*.odt
+# Archivos de bloqueo de LibreOffice
+.~lock.*#
