@@ -322,32 +322,47 @@ router.post(
       [nuevoStock, id],
     );
 
-    try {
-      await pool.query(
-        `INSERT INTO movimientos_inventario
-         (producto_id, tipo_movimiento, cantidad, motivo, usuario, fecha)
-         VALUES ($1, $2, $3, $4, 'Sistema', NOW())`,
-        [id, tipo, cantidad, motivo || "Ajuste manual"],
-      );
-    } catch (error) {
-      console.log("⚠️  Tabla movimientos_inventario no existe");
-    }
+    // La tabla arrastra dos columnas para lo mismo: `tipo` (la que lee el
+    // historial en la interfaz) y `tipo_movimiento`. Se escriben las dos, y
+    // el stock anterior/nuevo para que el movimiento sea auditable.
+    await pool.query(
+      `INSERT INTO movimientos_inventario
+       (producto_id, tipo, tipo_movimiento, cantidad, motivo, usuario, fecha, stock_anterior, stock_nuevo)
+       VALUES ($1, $2, $2, $3, $4, $5, NOW(), $6, $7)`,
+      [
+        id,
+        tipo,
+        cantidad,
+        motivo || "Ajuste manual",
+        req.session?.usuario?.nombre || "Sistema",
+        producto.stock_actual,
+        nuevoStock,
+      ],
+    );
 
-    if (tipo === "entrada") {
+    // Una entrada de stock es una compra: genera el gasto automático.
+    // La categoría debe ser la misma que usa el alta de producto
+    // ("Compras de Inventario"), o el reporte por categoría separa en dos
+    // el mismo tipo de gasto. Solo se registra si hay costo conocido.
+    const costoUnitario = parseFloat(producto.precio_costo) || 0;
+    if (tipo === "entrada" && costoUnitario > 0) {
       const numResult = await pool.query(
         `SELECT COALESCE(MAX(CAST(REGEXP_REPLACE(numero_salida, '[^0-9]', '', 'g') AS INTEGER)), 0) + 1 as siguiente FROM salidas`,
       );
       const numeroSalida =
         "SAL" + String(numResult.rows[0].siguiente).padStart(8, "0");
 
+      const identificador =
+        producto.codigo_barras || producto.imei || `id ${producto.id}`;
+
       await pool.query(
         `INSERT INTO salidas (numero_salida, fecha, concepto, descripcion, monto, categoria_gasto)
-         VALUES ($1, CURRENT_DATE, $2, $3, $4, 'Compras')`,
+         VALUES ($1, CURRENT_DATE, $2, $3, $4, 'Compras de Inventario')`,
         [
           numeroSalida,
-          `${producto.nombre} (${producto.codigo_barras})`,
+          `${producto.nombre} (${identificador})`,
           motivo || "Entrada de inventario",
-          parseInt(cantidad) * parseFloat(producto.precio_costo),
+          parseInt(cantidad) * costoUnitario,
         ],
       );
     }
@@ -400,16 +415,19 @@ router.post(
       [nueva_cantidad, id],
     );
 
-    try {
-      await pool.query(
-        `INSERT INTO movimientos_inventario 
-         (producto_id, tipo_movimiento, cantidad, motivo, usuario, fecha)
-         VALUES ($1, 'ajuste', $2, $3, 'Sistema', NOW())`,
-        [id, Math.abs(nueva_cantidad - stockAnterior), motivo],
-      );
-    } catch (error) {
-      console.log("⚠️  Tabla movimientos_inventario no existe");
-    }
+    await pool.query(
+      `INSERT INTO movimientos_inventario
+       (producto_id, tipo, tipo_movimiento, cantidad, motivo, usuario, fecha, stock_anterior, stock_nuevo)
+       VALUES ($1, 'ajuste', 'ajuste', $2, $3, $4, NOW(), $5, $6)`,
+      [
+        id,
+        Math.abs(nueva_cantidad - stockAnterior),
+        motivo,
+        req.session?.usuario?.nombre || "Sistema",
+        stockAnterior,
+        nueva_cantidad,
+      ],
+    );
 
     res.json({
       message: "Inventario ajustado exitosamente",

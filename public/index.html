@@ -1919,9 +1919,11 @@
             <div class="rpt-header">
               <div class="rpt-periodo">
                 <span class="rpt-periodo-label">Periodo:</span>
-                <button id="reporteHoy"    class="btn btn-primary periodo-btn active">Hoy</button>
-                <button id="reporteSemana" class="btn btn-primary periodo-btn">Semana</button>
-                <button id="reporteMes"    class="btn btn-primary periodo-btn">Este Mes</button>
+                <button id="reporteHoy"        class="btn btn-primary periodo-btn active" data-periodo="hoy">Hoy</button>
+                <button id="reporteSemana"     class="btn btn-primary periodo-btn" data-periodo="semana">Semana</button>
+                <button id="reporteMes"        class="btn btn-primary periodo-btn" data-periodo="mes">Este Mes</button>
+                <button id="reporteMesPasado"  class="btn btn-primary periodo-btn" data-periodo="mes_pasado">Mes Pasado</button>
+                <button id="reportePersonalizado" class="btn btn-primary periodo-btn" data-periodo="personalizado">Personalizado</button>
               </div>
               <div class="rpt-actions">
                 <button id="btnDescargarExcel" class="btn btn-success" onclick="ReportesModule.descargarExcel()">Descargar Excel</button>
@@ -1929,6 +1931,20 @@
                 <button class="btn btn-danger"   onclick="ReportesModule.abrirReporteSalidas()">Reporte Salidas</button>
               </div>
             </div>
+            <!-- Rango personalizado del periodo -->
+            <div id="rptRangoPersonalizado" class="rpt-rango-custom" style="display:none;">
+              <div class="form-group form-group-inline">
+                <label class="exportar-fecha-label">Desde:</label>
+                <input type="date" id="rptFechaDesde" class="exportar-fecha-input" />
+              </div>
+              <div class="form-group form-group-inline">
+                <label class="exportar-fecha-label">Hasta:</label>
+                <input type="date" id="rptFechaHasta" class="exportar-fecha-input" />
+              </div>
+              <button id="btnAplicarRangoPeriodo" class="btn btn-primary">Aplicar</button>
+              <span id="rptRangoActivoLabel" class="rpt-rango-activo"></span>
+            </div>
+
             <div id="loaderReportes" class="loader-reportes" style="margin-top:10px;">
               <span class="loader-reportes-texto">Cargando reporte...</span>
             </div>

@@ -50,7 +50,9 @@ router.post(
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
       [
         numeroSalida,
-        fecha,
+        // Igual que en los pagos: una salida sin fecha desaparece del cuadre
+        // y de todo reporte por rango.
+        fecha || new Date().toISOString().split("T")[0],
         concepto,
         descripcion || null,
         monto,

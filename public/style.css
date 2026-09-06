@@ -2375,6 +2375,14 @@ tbody tr:hover {
 .rpt-periodo-label{ font-size:12px; font-weight:600; color:var(--clr-muted); text-transform:uppercase; letter-spacing:.5px; }
 .rpt-actions      { display:flex; gap:8px; flex-wrap:wrap; }
 
+.rpt-rango-custom {
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  margin-top:12px; padding:10px 12px;
+  background:var(--clr-bg-surface); border-radius:10px;
+}
+.rpt-rango-custom .form-group { margin-bottom:0; }
+.rpt-rango-activo { font-size:12px; font-weight:600; color:var(--clr-muted); }
+
 .rpt-tab-bar { display:flex; gap:4px; background:var(--clr-bg-surface); border-radius:12px; padding:5px; }
 .rpt-tab     { flex:1; padding:9px 14px; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; background:transparent; color:var(--clr-muted); transition:all .18s; white-space:nowrap; }
 .rpt-tab:hover  { background:color-mix(in srgb, var(--clr-primary) 10%, transparent); color:var(--clr-primary); }

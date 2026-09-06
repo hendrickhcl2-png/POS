@@ -1,53 +1,13 @@
 // ==================== CONTROLADOR DE REPORTES ====================
 
 const pool = require("../database/pool");
+const { resolverRango } = require("../utils/rango-fechas");
 
 const ReportesController = {
 
   async getReporteVentas(req, res, next) {
     try {
-      const { fecha_inicio, fecha_fin, periodo } = req.query;
-
-      let fechaInicio, fechaFin;
-
-      // Calcular fechas según periodo
-      if (periodo) {
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-
-        switch (periodo) {
-          case "hoy":
-            fechaInicio = hoy.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          case "semana":
-            const inicioSemana = new Date(hoy);
-            inicioSemana.setDate(hoy.getDate() - 7);
-            fechaInicio = inicioSemana.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          case "mes":
-            const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-            fechaInicio = inicioMes.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          case "año":
-            const inicioAño = new Date(hoy.getFullYear(), 0, 1);
-            fechaInicio = inicioAño.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          default:
-            fechaInicio = hoy.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-        }
-      } else {
-        fechaInicio = fecha_inicio;
-        fechaFin = fecha_fin;
-      }
+      const { fechaInicio, fechaFin } = resolverRango(req.query);
 
       // Todas las ventas del periodo (contado y crédito)
       const ventasResult = await pool.query(
@@ -101,6 +61,7 @@ const ReportesController = {
         LEFT JOIN clientes c ON f.cliente_id = c.id
         WHERE pf.fecha >= $1 AND pf.fecha <= $2
           AND f.estado != 'anulada'
+          AND COALESCE(pf.anulado, false) = false
         ORDER BY pf.fecha DESC, pf.hora DESC`,
         [fechaInicio, fechaFin],
       );
@@ -243,42 +204,7 @@ const ReportesController = {
 
   async getReporteProductosVendidos(req, res, next) {
     try {
-      const { fecha_inicio, fecha_fin, periodo } = req.query;
-
-      let fechaInicio, fechaFin;
-
-      // Calcular fechas según periodo
-      if (periodo) {
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-
-        switch (periodo) {
-          case "hoy":
-            fechaInicio = hoy.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          case "semana":
-            const inicioSemana = new Date(hoy);
-            inicioSemana.setDate(hoy.getDate() - 7);
-            fechaInicio = inicioSemana.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          case "mes":
-            const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-            fechaInicio = inicioMes.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          default:
-            fechaInicio = hoy.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-        }
-      } else {
-        fechaInicio = fecha_inicio;
-        fechaFin = fecha_fin;
-      }
+      const { fechaInicio, fechaFin } = resolverRango(req.query);
 
       // Productos vendidos con detalles (por fecha)
       const productosResult = await pool.query(
@@ -410,23 +336,33 @@ const ReportesController = {
     try {
       const { periodo = "hoy" } = req.query;
 
-      // Reusar las funciones existentes
-      const ventasReq = { query: { periodo } };
-      const productosReq = { query: { periodo } };
-
-      let ventasData, productosData;
-
-      // Simular response object
-      const mockRes = {
-        json: (data) => data,
+      // Los subreportes entregan su resultado llamando a res.json(), no
+      // devolviéndolo. Para reutilizarlos hay que capturar lo que escriben.
+      // Cada uno se ejecuta aislado: si uno falla, el dashboard responde
+      // igual con los bloques que sí se pudieron generar.
+      const ejecutar = async (fn) => {
+        let capturado = null;
+        const resFalso = {
+          json: (data) => {
+            capturado = data;
+            return data;
+          },
+          status: () => resFalso,
+        };
+        try {
+          await fn.call(this, { query: { periodo } }, resFalso, (e) => {
+            throw e;
+          });
+        } catch (error) {
+          console.error("⚠️  Subreporte del dashboard falló:", error.message);
+          return null;
+        }
+        return capturado;
       };
 
-      // Ejecutar reportes en paralelo
       const [reporteVentas, reporteProductos] = await Promise.all([
-        this.getReporteVentas(ventasReq, mockRes, next).catch(() => null),
-        this.getReporteProductosVendidos(productosReq, mockRes, next).catch(
-          () => null,
-        ),
+        ejecutar(this.getReporteVentas),
+        ejecutar(this.getReporteProductosVendidos),
       ]);
 
       res.json({
@@ -445,41 +381,7 @@ const ReportesController = {
 
   async getReporteGanancias(req, res, next) {
     try {
-      const { fecha_inicio, fecha_fin, periodo } = req.query;
-
-      let fechaInicio, fechaFin;
-
-      if (periodo) {
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-
-        switch (periodo) {
-          case "hoy":
-            fechaInicio = hoy.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          case "semana":
-            const inicioSemana = new Date(hoy);
-            inicioSemana.setDate(hoy.getDate() - 7);
-            fechaInicio = inicioSemana.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          case "mes":
-            const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-            fechaInicio = inicioMes.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-
-          default:
-            fechaInicio = hoy.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-        }
-      } else {
-        fechaInicio = fecha_inicio;
-        fechaFin = fecha_fin;
-      }
+      const { fechaInicio, fechaFin } = resolverRango(req.query);
 
       // Ganancias por día (ventas + servicios - costo productos)
       const gananciasPorDiaResult = await pool.query(
@@ -580,6 +482,7 @@ const ReportesController = {
         JOIN facturas f ON pf.factura_id = f.id
         LEFT JOIN clientes c ON f.cliente_id = c.id
         WHERE pf.fecha = $1 AND f.estado != 'anulada'
+          AND COALESCE(pf.anulado, false) = false
         ORDER BY pf.id ASC`,
         [fechaDia],
       );

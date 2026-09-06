@@ -4,6 +4,26 @@ const router = express.Router();
 const pool = require("../database/pool");
 const { requireAdmin } = require("../middleware/auth-middleware");
 
+// Normaliza código de barras / IMEI: recorta espacios y trata la cadena vacía
+// como null, para que " 123 " y "123" sean el mismo código y la restricción
+// UNIQUE detecte el duplicado en lugar de crear un segundo producto.
+function normalizarIdentificador(valor) {
+  if (valor === undefined || valor === null) return null;
+  const limpio = String(valor).trim();
+  return limpio === "" ? null : limpio;
+}
+
+// Valida que un valor entero sea >= 0. Devuelve null si es válido, o el
+// mensaje de error correspondiente.
+function validarEnteroNoNegativo(valor, etiqueta) {
+  if (valor === undefined || valor === null || valor === "") return null;
+  const n = Number(valor);
+  if (!Number.isFinite(n)) return `${etiqueta} debe ser un número`;
+  if (!Number.isInteger(n)) return `${etiqueta} debe ser un número entero`;
+  if (n < 0) return `${etiqueta} no puede ser negativo`;
+  return null;
+}
+
 // ==================== OBTENER TODOS LOS PRODUCTOS ====================
 router.get("/", async (req, res) => {
   try {
@@ -214,7 +234,7 @@ router.post("/lote", requireAdmin, async (req, res) => {
               $8, $9, $10
             ) RETURNING *`,
             [
-              codigo_barras || null,
+              normalizarIdentificador(codigo_barras),
               nombre.trim(),
               categoria_id || null,
               proveedor_id || null,
@@ -529,11 +549,13 @@ router.get("/:id", async (req, res) => {
 
 // ==================== CREAR PRODUCTO ====================
 router.post("/", requireAdmin, async (req, res) => {
+  // Identificadores normalizados y fuera del try: el catch de clave duplicada
+  // los necesita para armar el mensaje, y ahí ya no alcanza el destructuring.
+  const codigo_barras = normalizarIdentificador(req.body.codigo_barras);
+  const imei = normalizarIdentificador(req.body.imei);
+
   try {
     const {
-      // Identificadores
-      codigo_barras,
-      imei,
       // Información básica
       nombre,
       descripcion,
@@ -580,6 +602,16 @@ router.post("/", requireAdmin, async (req, res) => {
       if (isNaN(dp) || dp < 0 || dp > 100) {
         return res.status(400).json({ error: "El descuento debe estar entre 0 y 100%" });
       }
+    }
+
+    // El stock no puede nacer negativo ni fraccionado
+    for (const [valor, etiqueta] of [
+      [stock_actual, "El stock"],
+      [stock_minimo, "El stock mínimo"],
+      [stock_maximo, "El stock máximo"],
+    ]) {
+      const error = validarEnteroNoNegativo(valor, etiqueta);
+      if (error) return res.status(400).json({ error });
     }
 
     const creadoPor = req.session?.usuario?.nombre || req.session?.usuario?.username || null;
@@ -717,11 +749,13 @@ router.post("/", requireAdmin, async (req, res) => {
 
 // ==================== ACTUALIZAR PRODUCTO ====================
 router.put("/:id", requireAdmin, async (req, res) => {
+  // Igual que en el alta: normalizados y fuera del try para el catch de duplicado
+  const { id } = req.params;
+  const codigo_barras = normalizarIdentificador(req.body.codigo_barras);
+  const imei = normalizarIdentificador(req.body.imei);
+
   try {
-    const { id } = req.params;
     const {
-      codigo_barras,
-      imei,
       nombre,
       descripcion,
       categoria_id,
@@ -756,6 +790,15 @@ router.put("/:id", requireAdmin, async (req, res) => {
       if (isNaN(dp) || dp < 0 || dp > 100) {
         return res.status(400).json({ error: "El descuento debe estar entre 0 y 100%" });
       }
+    }
+
+    for (const [valor, etiqueta] of [
+      [stock_actual, "El stock"],
+      [stock_minimo, "El stock mínimo"],
+      [stock_maximo, "El stock máximo"],
+    ]) {
+      const error = validarEnteroNoNegativo(valor, etiqueta);
+      if (error) return res.status(400).json({ error });
     }
 
     const result = await pool.query(

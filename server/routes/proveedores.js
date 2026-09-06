@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../database/pool");
 const { requireAdmin } = require("../middleware/auth-middleware");
+const { validarContacto } = require("../utils/validaciones-do");
 
 // Obtener todos los proveedores
 router.get("/", async (req, res) => {
@@ -132,6 +133,11 @@ router.post("/", requireAdmin, async (req, res) => {
       return res.status(400).json({ error: "El nombre es obligatorio" });
     }
 
+    const errorContacto = validarContacto(req.body);
+    if (errorContacto) {
+      return res.status(400).json({ error: errorContacto });
+    }
+
     // Generar código único
     const codigoResult = await pool.query(
       `SELECT COALESCE(MAX(CAST(SUBSTRING(codigo FROM 5) AS INTEGER)), 0) + 1 as next_num
@@ -164,6 +170,11 @@ router.put("/:id", requireAdmin, async (req, res) => {
 
     if (!nombre || nombre.trim() === "") {
       return res.status(400).json({ error: "El nombre es obligatorio" });
+    }
+
+    const errorContacto = validarContacto(req.body);
+    if (errorContacto) {
+      return res.status(400).json({ error: errorContacto });
     }
 
     const result = await pool.query(
