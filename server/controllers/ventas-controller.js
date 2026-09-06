@@ -2,6 +2,10 @@
 
 const pool = require("../database/pool");
 
+// Identificador del lock que serializa la numeración de ticket / factura / NCF.
+// Es arbitrario, solo tiene que ser el mismo en todo el proceso.
+const LOCK_NUMERACION_VENTAS = 815501;
+
 const VentasController = {
   //Crear venta
   async crearVenta(req, res, next) {
@@ -72,9 +76,22 @@ const VentasController = {
         throw new Error("Debe ingresar el número de referencia para pagos por transferencia");
       }
 
-      // Generar número de ticket
+      // Crédito: exige un cliente al que cobrarle. Sin esto nace una cuenta
+      // por cobrar sin dueño.
+      if ((metodo_pago === "credito" || req.body.es_credito === true) && !cliente_id) {
+        throw new Error("Debe seleccionar un cliente para las ventas a crédito");
+      }
+
+      // Numeración de ticket, factura y NCF.
+      // Se toma un lock de transacción sobre la tabla de ventas para que dos
+      // ventas simultáneas no calculen el mismo MAX()+1 y choquen contra la
+      // restricción UNIQUE de numero_ticket. El lock se libera al COMMIT.
+      await client.query("SELECT pg_advisory_xact_lock($1)", [
+        LOCK_NUMERACION_VENTAS,
+      ]);
+
       const resultTicket = await client.query(
-        `SELECT COALESCE(MAX(REGEXP_REPLACE(numero_ticket, '[^0-9]', '', 'g')::integer), 0) + 1 as siguiente_ticket 
+        `SELECT COALESCE(MAX(REGEXP_REPLACE(numero_ticket, '[^0-9]', '', 'g')::integer), 0) + 1 as siguiente_ticket
          FROM ventas`,
       );
       const numeroTicket =

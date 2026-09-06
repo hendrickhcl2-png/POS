@@ -217,12 +217,15 @@ const PagosModule = {
   ${this.facturaActual.pagos
 .map(
   (pago) => `
-  <tr style="border-bottom:1px solid #ecf0f1;">
+  <tr style="border-bottom:1px solid #ecf0f1;${pago.anulado ? "opacity:.6;" : ""}">
   <td style="padding:10px;">${this.formatFecha(pago.fecha)}</td>
-  <td style="padding:10px;font-weight:600;color:#3498db;">${pago.numero_pago}</td>
+  <td style="padding:10px;font-weight:600;color:#3498db;">
+  ${pago.numero_pago}
+  ${pago.anulado ? '<span style="margin-left:6px;padding:1px 6px;border-radius:3px;background:#f8d7da;color:#a32b26;font-size:11px;font-weight:700;">ANULADO</span>' : ""}
+  </td>
   <td style="padding:10px;">${this.formatMetodoPago(pago.metodo_pago)}</td>
-  <td style="padding:10px;text-align:right;font-weight:600;color:#27ae60;">${this.formatCurrency(pago.monto)}</td>
-  <td style="padding:10px;color:#7f8c8d;font-size:13px;">${pago.notas || "-"}</td>
+  <td style="padding:10px;text-align:right;font-weight:600;color:${pago.anulado ? "#a32b26" : "#27ae60"};${pago.anulado ? "text-decoration:line-through;" : ""}">${this.formatCurrency(pago.monto)}</td>
+  <td style="padding:10px;color:#7f8c8d;font-size:13px;">${pago.anulado ? `Anulado: ${pago.motivo_anulacion || "sin motivo"}${pago.anulado_por ? ` (${pago.anulado_por})` : ""}` : pago.notas || "-"}</td>
   </tr>
   `,
   )

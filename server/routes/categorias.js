@@ -58,9 +58,12 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "El nombre es obligatorio" });
     }
 
-    // Verificar si ya existe
+    // La comprobación previa da un mensaje claro en el caso normal, pero no
+    // basta: dos altas simultáneas la pasan las dos. El índice único sobre
+    // LOWER(TRIM(nombre)) es el que realmente impide el duplicado, y su
+    // error se traduce abajo.
     const existe = await pool.query(
-      "SELECT id FROM categorias WHERE LOWER(nombre) = LOWER($1)",
+      "SELECT id FROM categorias WHERE LOWER(TRIM(nombre)) = LOWER(TRIM($1))",
       [nombre],
     );
 
@@ -74,11 +77,16 @@ router.post("/", async (req, res) => {
       `INSERT INTO categorias (nombre, descripcion)
        VALUES ($1, $2)
        RETURNING *`,
-      [nombre, descripcion || null],
+      [nombre.trim(), descripcion || null],
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    if (error.code === "23505") {
+      return res
+        .status(400)
+        .json({ error: "Ya existe una categoría con ese nombre" });
+    }
     console.error("❌ Error al crear categoría:", error);
     res.status(500).json({ error: error.message });
   }

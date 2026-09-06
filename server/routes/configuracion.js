@@ -35,28 +35,52 @@ router.get("/", async (req, res) => {
 // Actualizar configuración
 router.put("/", requireAdmin, async (req, res) => {
   try {
-    const { nombre_negocio, rnc, telefono, email, direccion, nombre_impresora } = req.body;
+    const {
+      nombre_negocio, rnc, telefono, email, direccion, nombre_impresora,
+      porcentaje_itbis,
+    } = req.body;
 
     // Obtener configuración actual
     const current = await pool.query(
-      "SELECT id FROM configuracion ORDER BY id DESC LIMIT 1",
+      "SELECT id, porcentaje_itbis FROM configuracion ORDER BY id DESC LIMIT 1",
     );
+
+    // El nombre de impresora termina en el comando `lp -d NOMBRE`.
+    // imprimir.js ya lo filtra con este mismo regex antes de usarlo, pero se
+    // rechaza también al guardar para no dejar metacaracteres almacenados.
+    if (nombre_impresora && !/^[\w\s\-.()À-ɏ]+$/.test(nombre_impresora)) {
+      return res.status(400).json({
+        error: "El nombre de la impresora solo admite letras, números, espacios, guiones, puntos y paréntesis",
+      });
+    }
+
+    // El ITBIS es un porcentaje entre 0 y 100. Si no viene en la petición se
+    // conserva el valor actual en vez de pisarlo.
+    let itbis = current.rows[0]?.porcentaje_itbis ?? 18;
+    if (porcentaje_itbis !== undefined && porcentaje_itbis !== null && porcentaje_itbis !== "") {
+      const pi = parseFloat(porcentaje_itbis);
+      if (isNaN(pi) || pi < 0 || pi > 100) {
+        return res.status(400).json({ error: "El ITBIS debe estar entre 0 y 100%" });
+      }
+      itbis = pi;
+    }
 
     let result;
     if (current.rows.length === 0) {
       result = await pool.query(
-        `INSERT INTO configuracion (nombre_negocio, rnc, telefono, email, direccion, nombre_impresora)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO configuracion (nombre_negocio, rnc, telefono, email, direccion, nombre_impresora, porcentaje_itbis)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING *`,
-        [nombre_negocio || "", rnc || "", telefono || "", email || "", direccion || "", nombre_impresora || ""],
+        [nombre_negocio || "", rnc || "", telefono || "", email || "", direccion || "", nombre_impresora || "", itbis],
       );
     } else {
       result = await pool.query(
         `UPDATE configuracion
-         SET nombre_negocio = $1, rnc = $2, telefono = $3, email = $4, direccion = $5, nombre_impresora = $6
-         WHERE id = $7
+         SET nombre_negocio = $1, rnc = $2, telefono = $3, email = $4, direccion = $5,
+             nombre_impresora = $6, porcentaje_itbis = $7
+         WHERE id = $8
          RETURNING *`,
-        [nombre_negocio || "", rnc || "", telefono || "", email || "", direccion || "", nombre_impresora || "", current.rows[0].id],
+        [nombre_negocio || "", rnc || "", telefono || "", email || "", direccion || "", nombre_impresora || "", itbis, current.rows[0].id],
       );
     }
 
@@ -96,8 +120,30 @@ router.put("/ncf/:id", requireAdmin, async (req, res) => {
       fecha_vencimiento,
     } = req.body;
 
+    // El rango tiene que ser coherente, o la secuencia queda inservible
+    const ini = parseInt(secuencia_inicial, 10);
+    const fin = parseInt(secuencia_final, 10);
+    const act = parseInt(secuencia_actual, 10);
+
+    if ([ini, fin, act].some((n) => isNaN(n))) {
+      return res.status(400).json({ error: "Las secuencias deben ser números enteros" });
+    }
+    if (ini < 0 || fin < 0 || act < 0) {
+      return res.status(400).json({ error: "Las secuencias no pueden ser negativas" });
+    }
+    if (fin < ini) {
+      return res.status(400).json({
+        error: "La secuencia final no puede ser menor que la inicial",
+      });
+    }
+    if (act < ini || act > fin) {
+      return res.status(400).json({
+        error: `La secuencia actual debe estar entre ${ini} y ${fin}`,
+      });
+    }
+
     const result = await pool.query(
-      `UPDATE secuencias_ncf 
+      `UPDATE secuencias_ncf
        SET serie = $1, secuencia_inicial = $2, secuencia_final = $3,
            secuencia_actual = $4, fecha_vencimiento = $5
        WHERE id = $6

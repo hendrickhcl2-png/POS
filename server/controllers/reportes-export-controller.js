@@ -1,47 +1,20 @@
 const pool = require("../database/pool");
 const ExcelJS = require("exceljs");
+const { resolverRango } = require("../utils/rango-fechas");
 
 const ReportesExportController = {
   async exportarExcel(req, res, next) {
     try {
       const { fecha_inicio, fecha_fin, periodo } = req.query;
 
-      let fechaInicio, fechaFin;
-
-      if (periodo) {
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-
-        switch (periodo) {
-          case "hoy":
-            fechaInicio = hoy.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-          case "semana":
-            const s = new Date(hoy);
-            s.setDate(hoy.getDate() - 7);
-            fechaInicio = s.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-          case "mes":
-            const m = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-            fechaInicio = m.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-            break;
-          default:
-            fechaInicio = hoy.toISOString().split("T")[0];
-            fechaFin = hoy.toISOString().split("T")[0];
-        }
-      } else {
-        if (!fecha_inicio || !fecha_fin) {
-          return res.status(400).json({
-            success: false,
-            message: "Debe especificar periodo o fecha_inicio y fecha_fin",
-          });
-        }
-        fechaInicio = fecha_inicio;
-        fechaFin = fecha_fin;
+      if (!periodo && (!fecha_inicio || !fecha_fin)) {
+        return res.status(400).json({
+          success: false,
+          message: "Debe especificar periodo o fecha_inicio y fecha_fin",
+        });
       }
+
+      const { fechaInicio, fechaFin } = resolverRango(req.query);
 
       // Query productos
       const resultadoProductos = await pool.query(

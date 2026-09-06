@@ -52,6 +52,17 @@ const DevolucionesController = {
             "Debe especificar el método de reembolso (efectivo o transferencia)",
           );
         }
+
+        // Igual que en la venta por transferencia: sin referencia no hay
+        // forma de rastrear el reembolso.
+        if (
+          metodo_reembolso === "transferencia" &&
+          (!referencia_transferencia || !referencia_transferencia.trim())
+        ) {
+          throw new Error(
+            "Debe ingresar el número de referencia para reembolsos por transferencia",
+          );
+        }
       }
 
       // Validar producto de cambio si es cambio
@@ -171,15 +182,29 @@ const DevolucionesController = {
         montoClientePago = diferenciaCambio > 0 ? diferenciaCambio : 0;
       }
 
-      // Determinar tipo de devolución
-      const itemsFacturaResult = await client.query(
-        "SELECT COUNT(*) as total FROM detalle_factura WHERE factura_id = $1",
+      // Determinar tipo de devolución.
+      // Es "total" solo cuando, contando lo ya devuelto antes más lo que se
+      // devuelve ahora, no queda ninguna unidad pendiente en toda la factura.
+      // Comparar la cantidad de LÍNEAS marcaba como total una devolución de 1
+      // de 5 unidades en una factura de una sola línea (hallazgo H4).
+      const unidadesResult = await client.query(
+        `SELECT COALESCE(SUM(cantidad), 0) AS vendidas,
+                COALESCE(SUM(COALESCE(cantidad_devuelta, 0)), 0) AS ya_devueltas
+         FROM detalle_factura WHERE factura_id = $1`,
         [factura_id],
       );
 
-      const totalItemsFactura = parseInt(itemsFacturaResult.rows[0].total);
+      const unidadesVendidas = parseInt(unidadesResult.rows[0].vendidas);
+      const unidadesYaDevueltas = parseInt(unidadesResult.rows[0].ya_devueltas);
+      const unidadesEnEstaDevolucion = itemsValidados.reduce(
+        (suma, i) => suma + parseInt(i.cantidad_devuelta),
+        0,
+      );
+
       const tipoDevolucion =
-        items.length === totalItemsFactura ? "total" : "parcial";
+        unidadesYaDevueltas + unidadesEnEstaDevolucion >= unidadesVendidas
+          ? "total"
+          : "parcial";
 
       // Insertar devolución
       const devolucionResult = await client.query(

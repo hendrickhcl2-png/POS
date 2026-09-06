@@ -2,6 +2,7 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../database/pool");
+const { requireAdmin } = require("../middleware/auth-middleware");
 
 // ==================== OBTENER TODAS LAS FACTURAS ====================
 router.get("/", async (req, res) => {
@@ -339,7 +340,8 @@ router.post("/desde-venta", async (req, res) => {
 });
 
 // ==================== ANULAR FACTURA ====================
-router.post("/:id/anular", async (req, res) => {
+// Solo admin: anular una factura revierte stock y saldos
+router.post("/:id/anular", requireAdmin, async (req, res) => {
   const client = await pool.connect();
 
   try {
@@ -355,7 +357,7 @@ router.post("/:id/anular", async (req, res) => {
 
     // Verificar que la factura existe y no está ya anulada
     const facturaActual = await client.query(
-      "SELECT id, estado, venta_id FROM facturas WHERE id = $1", [id]
+      "SELECT id, estado, venta_id, cliente_id, tipo_factura, saldo_pendiente FROM facturas WHERE id = $1", [id]
     );
     if (facturaActual.rows.length === 0) {
       await client.query("ROLLBACK");
@@ -422,9 +424,25 @@ router.post("/:id/anular", async (req, res) => {
       );
     }
 
+    // Una factura anulada deja de ser una cuenta por cobrar: hay que quitarle
+    // al cliente el saldo que todavía debía por ella, o queda arrastrando una
+    // deuda de una factura que ya no existe.
+    if (factura.tipo_factura === "credito" && factura.cliente_id) {
+      const saldoPorAnular = parseFloat(factura.saldo_pendiente) || 0;
+      if (saldoPorAnular > 0) {
+        await client.query(
+          `UPDATE clientes
+           SET saldo_pendiente = GREATEST(0, saldo_pendiente - $1)
+           WHERE id = $2`,
+          [saldoPorAnular, factura.cliente_id],
+        );
+      }
+    }
+
     const result = await client.query(
       `UPDATE facturas
        SET estado = 'anulada',
+           saldo_pendiente = 0,
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $1
        RETURNING *`,

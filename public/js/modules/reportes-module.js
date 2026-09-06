@@ -2,6 +2,7 @@
 
 const ReportesModule = {
   periodoActual: "hoy",
+  rangoPersonalizado: null,
   reporteActual: null,
   _pgVentas: null,
   _pgDevoluciones: null,
@@ -28,34 +29,94 @@ const ReportesModule = {
   },
 
   setupEventListeners() {
-  // Botones de periodo
-  const btnHoy = document.getElementById("reporteHoy");
-  const btnSemana = document.getElementById("reporteSemana");
-  const btnMes = document.getElementById("reporteMes");
+  // Botones de periodo (incluye "mes_pasado" y "personalizado")
+  document.querySelectorAll("#reportes .periodo-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+  const periodo = btn.dataset.periodo;
+  if (periodo === "personalizado") this.mostrarRangoPersonalizado();
+  else this.cambiarPeriodo(periodo);
+  });
+  });
 
-  if (btnHoy)
-  btnHoy.addEventListener("click", () => this.cambiarPeriodo("hoy"));
-  if (btnSemana)
-  btnSemana.addEventListener("click", () => this.cambiarPeriodo("semana"));
-  if (btnMes)
-  btnMes.addEventListener("click", () => this.cambiarPeriodo("mes"));
+  const btnAplicar = document.getElementById("btnAplicarRangoPeriodo");
+  if (btnAplicar)
+  btnAplicar.addEventListener("click", () => this.aplicarRangoPersonalizado());
+  },
 
+  // Marca como activo el botón del periodo indicado
+  _marcarPeriodoActivo(periodo) {
+  document.querySelectorAll("#reportes .periodo-btn").forEach((btn) => {
+  btn.classList.toggle("active", btn.dataset.periodo === periodo);
+  });
   },
 
   async cambiarPeriodo(periodo) {
   this.periodoActual = periodo;
+  this.rangoPersonalizado = null;
 
-  // Actualizar botones activos
-  document.querySelectorAll(".periodo-btn").forEach((btn) => {
-  btn.classList.remove("active");
-  });
-  document
-.getElementById(
-  `reporte${periodo.charAt(0).toUpperCase() + periodo.slice(1)}`,
-  )
-.classList.add("active");
+  this._marcarPeriodoActivo(periodo);
+
+  const panelRango = document.getElementById("rptRangoPersonalizado");
+  if (panelRango) panelRango.style.display = "none";
+  const label = document.getElementById("rptRangoActivoLabel");
+  if (label) label.textContent = "";
 
   await this.cargarReporte(periodo);
+  },
+
+  // Abre el selector de fechas del periodo personalizado
+  mostrarRangoPersonalizado() {
+  const panel = document.getElementById("rptRangoPersonalizado");
+  if (!panel) return;
+
+  this._marcarPeriodoActivo("personalizado");
+  panel.style.display = "flex";
+
+  // Prellenar con el mes actual si están vacíos
+  const desde = document.getElementById("rptFechaDesde");
+  const hasta = document.getElementById("rptFechaHasta");
+  const hoy = new Date();
+  const fmt = (d) => {
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${dd}`;
+  };
+  if (desde && !desde.value)
+  desde.value = fmt(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+  if (hasta && !hasta.value) hasta.value = fmt(hoy);
+  },
+
+  // Refleja el rango activo en el panel del periodo personalizado
+  _sincronizarRangoUI(desde, hasta) {
+  const panel = document.getElementById("rptRangoPersonalizado");
+  if (panel) panel.style.display = "flex";
+
+  const inputDesde = document.getElementById("rptFechaDesde");
+  const inputHasta = document.getElementById("rptFechaHasta");
+  if (inputDesde) inputDesde.value = desde;
+  if (inputHasta) inputHasta.value = hasta;
+
+  const label = document.getElementById("rptRangoActivoLabel");
+  if (label)
+  label.textContent = `Mostrando: ${this._fmtFechaISO(desde)} — ${this._fmtFechaISO(hasta)}`;
+  },
+
+  // Carga el reporte usando el rango de fechas seleccionado a mano
+  async aplicarRangoPersonalizado() {
+  const desde = document.getElementById("rptFechaDesde")?.value;
+  const hasta = document.getElementById("rptFechaHasta")?.value;
+
+  if (!desde || !hasta) {
+  Toast.warning("Selecciona ambas fechas para el periodo personalizado.");
+  return;
+  }
+  if (desde > hasta) {
+  Toast.warning("La fecha 'Desde' no puede ser mayor que la fecha 'Hasta'.");
+  return;
+  }
+
+  // buscarPorRango actualiza el estado, los botones y la etiqueta del rango
+  await this.buscarPorRango(desde, hasta);
   },
 
   async cargarReporte(periodo) {
@@ -518,6 +579,13 @@ const ReportesModule = {
   }).format(amount);
   },
 
+  // Formatea "YYYY-MM-DD" sin pasar por Date (evita el corrimiento por zona horaria)
+  _fmtFechaISO(iso) {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+  },
+
   formatFecha(fecha) {
   if (!fecha) return "N/A";
   const d = new Date(fecha);
@@ -547,7 +615,8 @@ const ReportesModule = {
   },
   async descargarExcel() {
   try {
-  const periodo = this.periodoActual || "hoy";
+  const rango = this.rangoPersonalizado;
+  const periodo = rango ? null : this.periodoActual || "hoy";
   const btnExcel = document.getElementById("btnDescargarExcel");
 
   if (btnExcel) {
@@ -556,7 +625,13 @@ const ReportesModule = {
   }
 
   const baseURL = window.API_URL || "http://localhost:3000/api";
-  const url = `${baseURL}/reportes/exportar-excel?periodo=${periodo}`;
+  const query = rango
+  ? `fecha_inicio=${rango.inicio}&fecha_fin=${rango.fin}`
+  : `periodo=${periodo}`;
+  const url = `${baseURL}/reportes/exportar-excel?${query}`;
+  const nombreArchivo = rango
+  ? `reporte_productos_${rango.inicio}_${rango.fin}.xlsx`
+  : `reporte_productos_${periodo}.xlsx`;
 
   const response = await fetch(url);
 
@@ -569,7 +644,7 @@ const ReportesModule = {
   const urlBlob = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = urlBlob;
-  link.download = `reporte_productos_${periodo}.xlsx`;
+  link.download = nombreArchivo;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -642,6 +717,13 @@ const ReportesModule = {
   ReportesAPI.getReportePersonalizado("productos", fechaDesde, fechaHasta),
   ]);
   this.reporteActual = { ventas: reporteVentas, productos: reporteProductos };
+
+  // El reporte mostrado pasa a ser el rango personalizado
+  this.periodoActual = null;
+  this.rangoPersonalizado = { inicio: fechaDesde, fin: fechaHasta };
+  this._marcarPeriodoActivo("personalizado");
+  this._sincronizarRangoUI(fechaDesde, fechaHasta);
+
   this.renderizarReporte();
   } catch (error) {
   console.error(" Error al buscar reporte por rango:", error);

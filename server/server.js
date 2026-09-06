@@ -2,7 +2,6 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const fs = require("fs");
 const session = require("express-session");
 const bcrypt = require("bcrypt");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
@@ -162,6 +161,35 @@ async function initAuth() {
     await pool.query(`
       ALTER TABLE detalle_venta ADD COLUMN IF NOT EXISTS imei VARCHAR(50)
     `);
+    // Migración: anulación de pagos por marca, no borrando la fila.
+    // Un abono anulado tiene que seguir visible en el historial del cliente;
+    // lo que no debe hacer es sumar a lo pagado.
+    await pool.query(`
+      ALTER TABLE pagos_factura ADD COLUMN IF NOT EXISTS anulado BOOLEAN DEFAULT false
+    `);
+    await pool.query(`
+      ALTER TABLE pagos_factura ADD COLUMN IF NOT EXISTS motivo_anulacion TEXT
+    `);
+    await pool.query(`
+      ALTER TABLE pagos_factura ADD COLUMN IF NOT EXISTS fecha_anulacion TIMESTAMP
+    `);
+    await pool.query(`
+      ALTER TABLE pagos_factura ADD COLUMN IF NOT EXISTS anulado_por VARCHAR(100)
+    `);
+    await pool.query(`
+      UPDATE pagos_factura SET anulado = false WHERE anulado IS NULL
+    `);
+    // Migración: nombre de categoría único sin distinguir mayúsculas ni
+    // espacios. La comprobación previa en la ruta no frena dos altas
+    // simultáneas; el índice sí.
+    await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_categorias_nombre_unico
+        ON categorias (LOWER(TRIM(nombre)))
+    `);
+    await pool.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_categorias_gasto_nombre_unico
+        ON categorias_gasto (LOWER(TRIM(nombre)))
+    `);
     // Migración: columnas ncf y numero_referencia en salidas
     await pool.query(`
       ALTER TABLE salidas ADD COLUMN IF NOT EXISTS ncf VARCHAR(20)
@@ -261,115 +289,8 @@ async function initAuth() {
   }
 }
 
-// ==================== FIX ONE-TIME: Devolver inventario de facturas anuladas hoy ====================
-// [AUTO-FIX] INICIO
-async function fixInventarioFacturasAnuladas() {
-  try {
-    const result = await pool.query(`
-      SELECT f.id, f.venta_id, f.updated_at
-      FROM facturas f
-      WHERE f.estado = 'anulada'
-        AND f.venta_id IS NOT NULL
-        AND f.updated_at::date = '2026-03-23'
-    `);
-
-    if (result.rows.length === 0) {
-      console.log("ℹ️  Fix inventario: No hay facturas anuladas el 2026-03-23 para corregir.");
-    } else {
-      for (const factura of result.rows) {
-        const items = await pool.query(
-          "SELECT * FROM detalle_venta WHERE venta_id = $1",
-          [factura.venta_id]
-        );
-
-        for (const item of items.rows) {
-          const stockActual = await pool.query(
-            "SELECT stock_actual FROM productos WHERE id = $1",
-            [item.producto_id]
-          );
-          const stockAnterior = stockActual.rows.length > 0 ? stockActual.rows[0].stock_actual : 0;
-
-          await pool.query(
-            `UPDATE productos
-             SET stock_actual = stock_actual + $1,
-                 disponible = true
-             WHERE id = $2`,
-            [item.cantidad, item.producto_id]
-          );
-
-          await pool.query(
-            `INSERT INTO movimientos_inventario (
-              producto_id, tipo, cantidad, motivo, usuario, fecha, stock_anterior, stock_nuevo
-            ) VALUES ($1, 'entrada', $2, $3, 'Sistema', CURRENT_TIMESTAMP, $4, $5)`,
-            [
-              item.producto_id,
-              item.cantidad,
-              "Corrección: devolución de inventario por anulación de factura #" + factura.id,
-              stockAnterior,
-              stockAnterior + item.cantidad,
-            ]
-          );
-        }
-
-        console.log("✅ Fix inventario: Factura #" + factura.id + " - inventario devuelto.");
-      }
-    }
-
-    // Auto-comentar este bloque para que no se ejecute de nuevo
-    const serverPath = path.join(__dirname, "server.js");
-    let content = fs.readFileSync(serverPath, "utf-8");
-    content = content.replace(
-      /\/\/ \[AUTO-FIX\] INICIO\n([\s\S]*?)\/\/ \[AUTO-FIX\] FIN/,
-      "// [AUTO-FIX] YA EJECUTADO - Este bloque fue auto-comentado tras ejecutarse exitosamente"
-    );
-    fs.writeFileSync(serverPath, content, "utf-8");
-    console.log("✅ Fix inventario: Bloque auto-comentado, no se ejecutará de nuevo.");
-  } catch (error) {
-    console.error("❌ Error en fix inventario facturas anuladas:", error);
-  }
-}
-// [AUTO-FIX] FIN
-
-// ==================== FIX ONE-TIME: Corregir stock negativo ====================
-// [AUTO-FIX-NEGATIVO] INICIO
-async function fixStockNegativo() {
-  try {
-    const result = await pool.query(
-      "SELECT id, nombre, stock_actual FROM productos WHERE stock_actual < 0"
-    );
-
-    if (result.rows.length === 0) {
-      console.log("ℹ️  Fix stock negativo: No hay productos con stock negativo.");
-    } else {
-      for (const producto of result.rows) {
-        await pool.query(
-          "UPDATE productos SET stock_actual = 0, disponible = false WHERE id = $1",
-          [producto.id]
-        );
-        console.log(`✅ Fix stock negativo: ${producto.nombre} (${producto.stock_actual} → 0)`);
-      }
-      console.log(`✅ Fix stock negativo: ${result.rows.length} productos corregidos.`);
-    }
-
-    // Auto-comentar para que no se ejecute de nuevo
-    const serverPath = path.join(__dirname, "server.js");
-    let content = fs.readFileSync(serverPath, "utf-8");
-    content = content.replace(
-      /\/\/ \[AUTO-FIX-NEGATIVO\] INICIO\n([\s\S]*?)\/\/ \[AUTO-FIX-NEGATIVO\] FIN/,
-      "// [AUTO-FIX-NEGATIVO] YA EJECUTADO"
-    );
-    fs.writeFileSync(serverPath, content, "utf-8");
-    console.log("✅ Fix stock negativo: Bloque auto-comentado.");
-  } catch (error) {
-    console.error("❌ Error en fix stock negativo:", error);
-  }
-}
-// [AUTO-FIX-NEGATIVO] FIN
-
 // ==================== INICIAR SERVIDOR ====================
-initAuth().then(async () => {
-  await fixInventarioFacturasAnuladas();
-  await fixStockNegativo();
+initAuth().then(() => {
   app.listen(PORT, () => {
     console.log("\n╔════════════════════════════════════════╗");
     console.log("║   🚀 FIFTY TECH POS - SERVIDOR      ║");

@@ -112,7 +112,10 @@ const PagosController = {
           referencia || null,
           numero_cheque || null,
           notas || null,
-          fecha || null,
+          // Sin fecha explícita se usa el día de hoy. No puede ir NULL: el
+          // cuadre filtra por `pf.fecha = $1` y un pago sin fecha nunca
+          // aparecería en el efectivo en caja.
+          fecha || new Date().toISOString().split("T")[0],
         ],
       );
 
@@ -265,6 +268,14 @@ const PagosController = {
 
       const pago = pagoResult.rows[0];
 
+      if (pago.anulado) {
+        throw new Error("Este pago ya está anulado");
+      }
+
+      if (!motivo || !motivo.trim()) {
+        throw new Error("Debe indicar el motivo de la anulación");
+      }
+
       // Obtener factura
       const facturaResult = await client.query(
         "SELECT * FROM facturas WHERE id = $1",
@@ -273,8 +284,18 @@ const PagosController = {
 
       const factura = facturaResult.rows[0];
 
-      // Eliminar pago
-      await client.query("DELETE FROM pagos_factura WHERE id = $1", [id]);
+      // Marcar el pago como anulado en vez de borrarlo: el abono debe seguir
+      // en el historial del cliente, con su motivo y quién lo anuló, aunque
+      // deje de contar para el saldo.
+      await client.query(
+        `UPDATE pagos_factura
+         SET anulado = true,
+             motivo_anulacion = $1,
+             fecha_anulacion = CURRENT_TIMESTAMP,
+             anulado_por = $2
+         WHERE id = $3`,
+        [motivo.trim(), req.session?.usuario?.nombre || "Sistema", id],
+      );
 
       // Recalcular totales de la factura (saldo sube por el monto anulado)
       const nuevoPagado = Math.max(

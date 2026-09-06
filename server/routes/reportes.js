@@ -19,7 +19,8 @@ router.get(
 router.get("/ganancias", ReportesController.getReporteGanancias);
 
 // Dashboard combinado
-router.get("/dashboard", ReportesController.getReporteDashboard);
+// .bind es necesario: getReporteDashboard llama a this.getReporteVentas
+router.get("/dashboard", ReportesController.getReporteDashboard.bind(ReportesController));
 router.get("/exportar-excel", ReportesExportController.exportarExcel);
 
 // Cuadre de turno

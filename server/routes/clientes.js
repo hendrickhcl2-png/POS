@@ -206,6 +206,10 @@ router.get(
            pf.fecha,
            pf.hora,
            pf.notas,
+           COALESCE(pf.anulado, false) AS anulado,
+           pf.motivo_anulacion,
+           pf.fecha_anulacion,
+           pf.anulado_por,
            f.numero_factura,
            f.total AS factura_total,
            f.saldo_pendiente AS factura_saldo
@@ -311,7 +315,8 @@ router.get(
         c.apellido,
         c.cedula,
         c.telefono,
-        (SELECT MAX(pf.fecha) FROM pagos_factura pf WHERE pf.factura_id = f.id) AS ultimo_pago
+        (SELECT MAX(pf.fecha) FROM pagos_factura pf
+          WHERE pf.factura_id = f.id AND COALESCE(pf.anulado, false) = false) AS ultimo_pago
       FROM facturas f
       JOIN clientes c ON f.cliente_id = c.id
       WHERE f.tipo_factura = 'credito'
@@ -374,7 +379,8 @@ router.get(
     // Cargar pagos de cada factura
     for (const f of facturas) {
       const pagosResult = await pool.query(
-        `SELECT numero_pago, fecha, hora, monto, metodo_pago, referencia, banco, notas
+        `SELECT numero_pago, fecha, hora, monto, metodo_pago, referencia, banco, notas,
+                COALESCE(anulado, false) AS anulado, motivo_anulacion, anulado_por
          FROM pagos_factura
          WHERE factura_id = $1
          ORDER BY fecha ASC, hora ASC`,
