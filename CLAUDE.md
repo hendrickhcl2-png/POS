@@ -57,8 +57,16 @@ Single-page application — no build step, no framework, no bundler. Everything 
 - **`public/index.js`** — Main orchestrator: initializes modules, handles login/logout, section switching, and global keyboard shortcuts.
 - **`public/js/api/`** — API layer. `api-client.js` exports `window.APIClient` (fetch wrapper). Each domain (ventas, productos, clientes, etc.) has its own `*-api.js` that uses `APIClient`. Responses with `{ success, data }` shape are automatically unwrapped to return `data`.
 - **`public/js/modules/`** — UI modules, one per feature section (e.g. `ventas.js`, `inventario.js`, `facturacion.js`). Each exports a module object with `init()` called when its section becomes active.
-- **`public/js/utils/`** — Shared utilities: `formatters.js`, `validators.js`, `toast.js`, `dom-utils.js`, `barcode-scanner.js`.
+- **`public/js/utils/`** — Shared utilities: `formatters.js`, `validators.js`, `toast.js`, `logger.js`, `dom-utils.js`, `barcode-scanner.js`.
 - **`public/modales/`** — Modal HTML fragments (`modales.html`, `modales-clientes.html`, `modales-inventario.html`) and `modales.js` for modal lifecycle management.
+
+### Event Logging
+
+Every message the user sees on screen, plus server errors, is appended to `logs/app-YYYY-MM-DD.log` (gitignored, 90-day retention) as one pipe-delimited line: `fecha y hora | nivel | origen | usuario | módulo | proceso | mensaje | detalle`.
+
+- **`public/js/utils/logger.js`** — Loads right after `toast.js` and wraps `Toast.show/success/error/warning/info`, `console.error/warn`, `window.onerror`, `unhandledrejection` and the `#loginError` element. Module and process come from the call stack. Batches events and POSTs them to `/api/logs` (errors and login events go immediately).
+- **`server/utils/logger.js`** — Writes the file through a queue, intercepts server-side `console.error/warn`, and deletes logs older than 90 days on startup.
+- **`server/routes/logs.js`** — `POST /api/logs` accepts browser events (allowed without a session so login failures are recorded, rate-limited to 60/min for anonymous clients; the user is always taken from the session, never from the payload). `GET /api/logs` and `GET /api/logs/:fecha?lineas=&nivel=` are admin-only.
 
 ### Key Domain Concepts
 

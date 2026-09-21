@@ -43,6 +43,8 @@ const pagosRoutes = require("./routes/pagos-routes");
 const salidasRoutes = require("./routes/salidas");
 const categoriasGastoRoutes = require("./routes/categorias-gasto");
 const imprimirRoutes = require("./routes/imprimir");
+const logsRoutes = require("./routes/logs");
+const logger = require("./utils/logger");
 
 const { requireAuth } = require("./middleware/auth-middleware");
 
@@ -63,6 +65,9 @@ app.use("/api/pagos", requireAuth, pagosRoutes);
 app.use("/api/salidas", requireAuth, salidasRoutes);
 app.use("/api/categorias-gasto", requireAuth, categoriasGastoRoutes);
 app.use("/api/imprimir", requireAuth, imprimirRoutes);
+// Sin requireAuth: los fallos de la pantalla de login también deben quedar
+// registrados. Las rutas de lectura del propio router sí exigen admin.
+app.use("/api/logs", logsRoutes);
 
 // ==================== RUTA RAÍZ ====================
 app.get("/", (req, res) => {
@@ -81,7 +86,8 @@ app.get("/api/health", (req, res) => {
 
 // ==================== MANEJADOR DE ERRORES ====================
 app.use((err, req, res, next) => {
-  console.error("❌ Error:", err);
+  // registrarErrorServidor ya imprime en la terminal y escribe el archivo.
+  logger.registrarErrorServidor(err, req, "manejador de errores");
 
   res.status(err.status || 500).json({
     error: err.message || "Error interno del servidor",
@@ -91,6 +97,17 @@ app.use((err, req, res, next) => {
 
 // ==================== 404 HANDLER ====================
 app.use((req, res) => {
+  if (req.path.startsWith("/api/")) {
+    logger.registrar({
+      nivel: "warning",
+      origen: "servidor",
+      usuario: logger.usuarioDe(req),
+      modulo: `${req.method} ${req.originalUrl}`,
+      proceso: "ruta no encontrada",
+      mensaje: "Ruta de API no encontrada",
+    });
+  }
+
   res.status(404).json({
     error: "Ruta no encontrada",
     path: req.path,
@@ -289,8 +306,27 @@ async function initAuth() {
   }
 }
 
+// ==================== FALLOS NO CONTROLADOS ====================
+// Lo que se escapa de los try/catch también queda en el archivo; si no, el
+// proceso se cae en el mostrador sin dejar rastro de por qué.
+process.on("uncaughtException", (error) => {
+  logger.registrarErrorServidor(error, null, "uncaughtException");
+});
+
+process.on("unhandledRejection", (motivo) => {
+  logger.registrarErrorServidor(
+    motivo instanceof Error ? motivo : new Error(String(motivo)),
+    null,
+    "unhandledRejection",
+  );
+});
+
 // ==================== INICIAR SERVIDOR ====================
 initAuth().then(() => {
+  // A partir de aquí todo console.error / console.warn va también al archivo.
+  logger.capturarConsola();
+  const borrados = logger.limpiarAntiguos();
+
   app.listen(PORT, () => {
     console.log("\n╔════════════════════════════════════════╗");
     console.log("║   🚀 FIFTY TECH POS - SERVIDOR      ║");
@@ -309,7 +345,17 @@ initAuth().then(() => {
     console.log("   - /api/proveedores");
     console.log("   - /api/configuracion");
     console.log("   - /api/reportes");
+    console.log("   - /api/logs");
+    console.log(`\n📝 Registro de eventos: ${logger.archivoDelDia()}`);
+    if (borrados > 0) console.log(`   (${borrados} archivo(s) de log antiguos eliminados)`);
     console.log("\n⏰ Presiona Ctrl+C para detener el servidor\n");
+
+    logger.registrar({
+      nivel: "info",
+      modulo: "servidor",
+      proceso: "arranque",
+      mensaje: `Servidor iniciado en el puerto ${PORT}`,
+    });
   });
 });
 
