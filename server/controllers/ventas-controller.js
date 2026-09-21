@@ -6,6 +6,15 @@ const pool = require("../database/pool");
 // Es arbitrario, solo tiene que ser el mismo en todo el proceso.
 const LOCK_NUMERACION_VENTAS = 815501;
 
+// Los errores de validación llevan su propio status: el manejador global de
+// errores usa err.status, así que estos llegan al frontend como 400 (o 404 /
+// 409) en vez de confundirse con un fallo interno del servidor.
+function errorCliente(mensaje, status = 400) {
+  const error = new Error(mensaje);
+  error.status = status;
+  return error;
+}
+
 const VentasController = {
   //Crear venta
   async crearVenta(req, res, next) {
@@ -42,23 +51,38 @@ const VentasController = {
       if (fecha_venta) {
         const hoy = new Date().toISOString().split("T")[0];
         if (fecha_venta > hoy) {
-          throw new Error("No se puede registrar una venta con fecha futura");
+          throw errorCliente("No se puede registrar una venta con fecha futura");
         }
         fechaVentaFinal = fecha_venta;
       }
 
       // Validaciones
       if ((!items || items.length === 0) && (!servicios || servicios.length === 0)) {
-        throw new Error("La venta debe tener al menos un producto o servicio");
+        throw errorCliente("La venta debe tener al menos un producto o servicio");
       }
 
       if (!metodo_pago) {
-        throw new Error("Debe especificar el método de pago");
+        throw errorCliente("Debe especificar el método de pago");
+      }
+
+      // Cada línea tiene que traer una cantidad entera positiva: en 0 ensucia
+      // el detalle con líneas vacías y en negativo el trigger de stock sumaría
+      // unidades en lugar de restarlas.
+      for (const item of items || []) {
+        const cantidad = Number(item.cantidad);
+        if (!Number.isInteger(cantidad) || cantidad <= 0) {
+          throw errorCliente(
+            "La cantidad de cada producto debe ser un número entero mayor a 0",
+          );
+        }
+        if (parseFloat(item.precio_unitario) < 0) {
+          throw errorCliente("El precio de un producto no puede ser negativo");
+        }
       }
 
       // Descuento no puede superar el subtotal
       if (parseFloat(descuento) < 0 || parseFloat(descuento) > parseFloat(subtotal)) {
-        throw new Error("El descuento no puede ser mayor al subtotal");
+        throw errorCliente("El descuento no puede ser mayor al subtotal");
       }
 
       // Pago mixto: los montos parciales deben sumar el total (tolerancia 1 centavo)
@@ -67,19 +91,19 @@ const VentasController = {
                         + (parseFloat(monto_tarjeta) || 0)
                         + (parseFloat(monto_transferencia) || 0);
         if (Math.abs(sumaMixto - parseFloat(total)) > 0.01) {
-          throw new Error("Los montos del pago mixto no suman el total de la venta");
+          throw errorCliente("Los montos del pago mixto no suman el total de la venta");
         }
       }
 
       // Transferencia: referencia obligatoria
       if (metodo_pago === "transferencia" && (!referencia || !referencia.trim())) {
-        throw new Error("Debe ingresar el número de referencia para pagos por transferencia");
+        throw errorCliente("Debe ingresar el número de referencia para pagos por transferencia");
       }
 
       // Crédito: exige un cliente al que cobrarle. Sin esto nace una cuenta
       // por cobrar sin dueño.
       if ((metodo_pago === "credito" || req.body.es_credito === true) && !cliente_id) {
-        throw new Error("Debe seleccionar un cliente para las ventas a crédito");
+        throw errorCliente("Debe seleccionar un cliente para las ventas a crédito");
       }
 
       // Numeración de ticket, factura y NCF.
@@ -159,20 +183,32 @@ const VentasController = {
       const venta = ventaResult.rows[0];
 
       // Insertar items de la venta
-      for (const item of items) {
+      for (const item of items || []) {
         const productoResult = await client.query(
           "SELECT * FROM productos WHERE id = $1 FOR UPDATE",
           [item.producto_id],
         );
 
         if (productoResult.rows.length === 0) {
-          throw new Error(`Producto con ID ${item.producto_id} no encontrado`);
+          throw errorCliente(`Producto con ID ${item.producto_id} no encontrado`);
         }
 
         const producto = productoResult.rows[0];
 
+        if (producto.activo === false) {
+          throw errorCliente(
+            `El producto ${producto.nombre} fue eliminado y no puede venderse`,
+          );
+        }
+
+        if (producto.disponible === false) {
+          throw errorCliente(
+            `El producto ${producto.nombre} no está disponible para la venta`,
+          );
+        }
+
         if (producto.stock_actual < item.cantidad) {
-          throw new Error(
+          throw errorCliente(
             `Stock insuficiente para ${producto.nombre}. Disponible: ${producto.stock_actual}`,
           );
         }
@@ -358,7 +394,7 @@ const VentasController = {
       }
 
       // Copiar items a detalle_factura
-      for (const item of items) {
+      for (const item of items || []) {
         const productoResult = await client.query(
           "SELECT * FROM productos WHERE id = $1",
           [item.producto_id],
@@ -568,7 +604,7 @@ const VentasController = {
       );
 
       if (ventaResult.rows.length === 0) {
-        throw new Error("Venta no encontrada");
+        throw errorCliente("Venta no encontrada", 404);
       }
 
       const venta = ventaResult.rows[0];
@@ -703,28 +739,47 @@ const VentasController = {
       );
 
       if (ventaResult.rows.length === 0) {
-        throw new Error("Venta no encontrada");
+        throw errorCliente("Venta no encontrada", 404);
       }
 
       const venta = ventaResult.rows[0];
 
       if (venta.estado === "anulada") {
-        throw new Error("La venta ya está anulada");
+        throw errorCliente("La venta ya está anulada", 409);
       }
 
+      // Solo vuelven al inventario las unidades que siguen en manos del
+      // cliente: lo que ya entró por una devolución no se puede reponer otra
+      // vez, o la anulación duplicaría ese stock.
       const itemsResult = await client.query(
-        "SELECT * FROM detalle_venta WHERE venta_id = $1",
+        `SELECT dv.producto_id,
+                SUM(dv.cantidad)::int AS cantidad,
+                COALESCE((
+                  SELECT SUM(COALESCE(df.cantidad_devuelta, 0))
+                  FROM detalle_factura df
+                  JOIN facturas f ON f.id = df.factura_id
+                  WHERE f.venta_id = $1 AND df.producto_id = dv.producto_id
+                ), 0)::int AS ya_devueltas
+         FROM detalle_venta dv
+         WHERE dv.venta_id = $1
+         GROUP BY dv.producto_id`,
         [id],
       );
 
       for (const item of itemsResult.rows) {
-        await client.query(
+        const aRestaurar = Math.max(0, item.cantidad - item.ya_devueltas);
+        if (aRestaurar === 0) continue;
+
+        const stockResult = await client.query(
           `UPDATE productos 
            SET stock_actual = stock_actual + $1,
                disponible = true
-           WHERE id = $2`,
-          [item.cantidad, item.producto_id],
+           WHERE id = $2
+           RETURNING stock_actual`,
+          [aRestaurar, item.producto_id],
         );
+
+        const stockNuevo = stockResult.rows[0]?.stock_actual ?? null;
 
         await client.query(
           `INSERT INTO movimientos_inventario (
@@ -739,10 +794,10 @@ const VentasController = {
           ) VALUES ($1, 'entrada', $2, $3, 'Sistema', CURRENT_TIMESTAMP, $4, $5)`,
           [
             item.producto_id,
-            item.cantidad,
+            aRestaurar,
             "Anulación de venta #" + id + ": " + (motivo || "Sin motivo"),
-            0,
-            item.cantidad,
+            stockNuevo === null ? null : stockNuevo - aRestaurar,
+            stockNuevo,
           ],
         );
       }
