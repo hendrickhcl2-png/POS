@@ -30,10 +30,13 @@ const VentasModule = {
   const buscarInput = document.getElementById("buscarProductoVenta");
   if (buscarInput) {
   buscarInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
+  if (e.key !== "Enter") return;
   e.preventDefault();
+  // Tras agregar un producto el campo queda vacío y el cursor sigue aquí:
+  // ese Enter no es una búsqueda, así que se ignora en silencio en vez de
+  // sacar la advertencia de "ingrese un código".
+  if (!buscarInput.value.trim()) return;
   this.buscarProducto();
-  }
   });
   }
 
@@ -338,6 +341,10 @@ const VentasModule = {
   cerrarListaResultados() {
   const lista = document.getElementById("listaResultadosBusqueda");
   if (lista) lista.remove();
+
+  // Devolver el foco al buscador para poder escanear el siguiente producto
+  const buscarInput = document.getElementById("buscarProductoVenta");
+  if (buscarInput) buscarInput.focus();
   },
 
   // ==================== AGREGAR ARTÍCULO MANUAL ====================
@@ -462,10 +469,10 @@ const VentasModule = {
   </div>
   <div>
   <small style="color: #7f8c8d; display: block; font-size: 11px; text-transform: uppercase;">Stock</small>
-  <strong style="color: ${p.stock_actual <= p.stock_minimo ? "#e74c3c": "#2c3e50"}; font-size: 14px;">
+  <strong style="color: ${p.stock_actual <= 0 ? "#e74c3c": "#2c3e50"}; font-size: 14px;">
   ${p.stock_actual} unidades
   </strong>
-  ${p.stock_actual <= p.stock_minimo ? '<br><small style="color: #e74c3c;"> Stock bajo</small>': ""}
+  ${p.stock_actual <= 0 ? '<br><small style="color: #e74c3c;"> Sin stock</small>': ""}
   </div>
   ${
   p.categoria_nombre

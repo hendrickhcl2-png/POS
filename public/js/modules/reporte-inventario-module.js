@@ -121,8 +121,8 @@ const ReporteInventarioModule = {
           parseFloat(p.descuento_porcentaje) > 0 || parseFloat(p.descuento_monto) > 0;
         const disponible = p.disponible;
         const stock = parseInt(p.stock_actual) || 0;
-        const bajStock = p.stock_minimo && stock <= parseInt(p.stock_minimo) && stock > 0;
-        const sinStock = stock === 0;
+        // Con al menos 1 unidad el producto se considera disponible
+        const sinStock = stock <= 0;
 
         return `<tr>
           <td>
@@ -139,7 +139,7 @@ const ReporteInventarioModule = {
             <span class="inv-disponible inv-disponible--${disponible ? "si" : "no"}">${disponible ? "Sí" : "No"}</span>
           </td>
           <td>
-            <span class="inv-stock${sinStock ? " inv-stock--cero" : bajStock ? " inv-stock--bajo" : ""}">${stock}</span>
+            <span class="inv-stock${sinStock ? " inv-stock--cero" : ""}">${stock}</span>
           </td>
           <td style="color:var(--text-muted);font-size:0.85rem">${p.creado_por || "—"}</td>
           <td style="white-space:nowrap">

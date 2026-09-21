@@ -127,8 +127,7 @@ router.get(
       SELECT 
         p.*,
         CASE 
-          WHEN p.stock_actual = 0 THEN 'sin_stock'
-          WHEN p.stock_actual <= p.stock_minimo THEN 'bajo_stock'
+          WHEN p.stock_actual <= 0 THEN 'sin_stock'
           ELSE 'disponible'
         END as estado_stock
       FROM productos p

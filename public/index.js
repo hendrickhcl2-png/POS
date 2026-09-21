@@ -103,7 +103,8 @@ function setupEventListeners() {
   addSubmitListener("formConfiguracion", guardarConfiguracion);
 
   addInputListener("montoRecibido", calcularCambio);
-  addKeyPressListener("buscarProductoVenta", buscarProductoVenta);
+  // El buscador de ventas ya tiene su propio Enter en VentasModule; registrarlo
+  // aquí otra vez disparaba dos búsquedas por cada escaneo.
   addKeyPressListener("verificadorBuscar", verificarPrecio);
 
   addInputListener("productoPrecio", calcularPrecioConDescuento);
@@ -532,23 +533,6 @@ window.selectPaymentMethod = function (metodo) {
   document.getElementById("pagoMixto").style.display =
     metodo === "mixto" ? "block" : "none";
 };
-
-async function buscarProductoVenta() {
-  const query = getValue("buscarProductoVenta");
-  if (!query || query.length < 2) return;
-
-  try {
-    const resultados = await window.API.Productos.search(query);
-    if (resultados.length > 0) {
-      const producto = resultados[0];
-      mostrarAlerta(`Encontrado: ${producto.nombre}`, "info");
-    } else {
-      mostrarAlerta("No se encontraron productos", "warning");
-    }
-  } catch (error) {
-    mostrarAlerta("Error en búsqueda", "danger");
-  }
-}
 
 async function actualizarHistorialVentas() {
   const tbody = document.querySelector("#historialVentas tbody");

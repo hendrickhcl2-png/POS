@@ -132,7 +132,6 @@ const InventarioModule = {
   tbody.innerHTML = this.inventario
 .map((producto) => {
   const stock = parseInt(producto.stock) || 0;
-  const stockMin = parseInt(producto.stock_minimo) || 0;
   const costo = parseFloat(producto.costo) || 0;
   const valorTotal = stock * costo;
 
@@ -140,19 +139,17 @@ const InventarioModule = {
   let estadoStock = "";
   let colorStock = "";
 
-  if (stock === 0) {
+  // Con al menos 1 unidad el producto se considera disponible
+  if (stock <= 0) {
   estadoStock = " Sin Stock";
   colorStock = "#e74c3c";
-  } else if (stock <= stockMin) {
-  estadoStock = " Bajo Stock";
-  colorStock = "#f39c12";
   } else {
   estadoStock = " Disponible";
   colorStock = "#27ae60";
   }
 
   return `
-  <tr style="${stock <= stockMin ? "background: #fff3cd;": ""}">
+  <tr style="${stock <= 0 ? "background: #fff3cd;": ""}">
   <td>
   <strong>${producto.codigo || "-"}</strong>
   ${producto.imei ? `<br><small style="color: #7f8c8d;">IMEI: ${producto.imei}</small>`: ""}
@@ -164,7 +161,7 @@ const InventarioModule = {
   <td>${producto.categoria || "-"}</td>
   <td style="text-align: center; font-size: 20px; font-weight: bold; color: ${colorStock};">
   ${stock}
-  ${stock <= stockMin ? '<br><small style="color: #e74c3c;"> Reponer</small>': ""}
+  ${stock <= 0 ? '<br><small style="color: #e74c3c;"> Reponer</small>': ""}
   </td>
   <td style="text-align: right;">${Formatters.formatCurrency(costo)}</td>
   <td style="text-align: right; font-weight: bold;">${Formatters.formatCurrency(valorTotal)}</td>

@@ -2,6 +2,14 @@
 
 const pool = require("../database/pool");
 
+// Igual que en ventas: los errores de validación llevan su status para que el
+// manejador global responda 400/404 y no un 500 de "error interno".
+function errorCliente(mensaje, status = 400) {
+  const error = new Error(mensaje);
+  error.status = status;
+  return error;
+}
+
 const DevolucionesController = {
   // ==================== CREAR DEVOLUCIÓN ====================
 
@@ -26,20 +34,20 @@ const DevolucionesController = {
 
       // Validaciones
       if (!factura_id) {
-        throw new Error("Debe especificar la factura");
+        throw errorCliente("Debe especificar la factura");
       }
 
       if (!items || items.length === 0) {
-        throw new Error("Debe especificar al menos un item a devolver");
+        throw errorCliente("Debe especificar al menos un item a devolver");
       }
 
       if (!motivo || motivo.trim() === "") {
-        throw new Error("Debe especificar el motivo de la devolución");
+        throw errorCliente("Debe especificar el motivo de la devolución");
       }
 
       // Validar metodo_devolucion
       if (!["cambio", "reembolso"].includes(metodo_devolucion)) {
-        throw new Error("Método de devolución inválido");
+        throw errorCliente("Método de devolución inválido");
       }
 
       // Validar metodo_reembolso si es reembolso
@@ -48,7 +56,7 @@ const DevolucionesController = {
           !metodo_reembolso ||
           !["efectivo", "transferencia"].includes(metodo_reembolso)
         ) {
-          throw new Error(
+          throw errorCliente(
             "Debe especificar el método de reembolso (efectivo o transferencia)",
           );
         }
@@ -59,7 +67,7 @@ const DevolucionesController = {
           metodo_reembolso === "transferencia" &&
           (!referencia_transferencia || !referencia_transferencia.trim())
         ) {
-          throw new Error(
+          throw errorCliente(
             "Debe ingresar el número de referencia para reembolsos por transferencia",
           );
         }
@@ -69,19 +77,28 @@ const DevolucionesController = {
       let productoCambio = null;
       if (metodo_devolucion === "cambio") {
         if (!producto_cambio_id) {
-          throw new Error("Debe seleccionar un producto para el cambio");
+          throw errorCliente("Debe seleccionar un producto para el cambio");
         }
         const prodResult = await client.query(
           "SELECT * FROM productos WHERE id = $1 AND disponible = true",
           [producto_cambio_id],
         );
         if (prodResult.rows.length === 0) {
-          throw new Error("Producto de cambio no encontrado o no disponible");
+          throw errorCliente("Producto de cambio no encontrado o no disponible");
         }
         productoCambio = prodResult.rows[0];
 
+        // Sin este chequeo una cantidad negativa pasaba la comparación de
+        // stock de abajo y el descuento terminaba sumando unidades.
+        const cantidadCambio = Number(producto_cambio_cantidad);
+        if (!Number.isInteger(cantidadCambio) || cantidadCambio <= 0) {
+          throw errorCliente(
+            "La cantidad del producto de cambio debe ser un número entero mayor a 0",
+          );
+        }
+
         if (productoCambio.stock_actual < producto_cambio_cantidad) {
-          throw new Error(
+          throw errorCliente(
             `Stock insuficiente del producto de cambio (disponible: ${productoCambio.stock_actual})`,
           );
         }
@@ -94,10 +111,26 @@ const DevolucionesController = {
       );
 
       if (facturaResult.rows.length === 0) {
-        throw new Error("Factura no encontrada");
+        throw errorCliente("Factura no encontrada", 404);
       }
 
       const factura = facturaResult.rows[0];
+
+      // Una venta anulada ya repuso su stock: aceptar además una devolución
+      // duplicaría esas unidades en el inventario.
+      if (factura.venta_id) {
+        const ventaResult = await client.query(
+          "SELECT estado FROM ventas WHERE id = $1",
+          [factura.venta_id],
+        );
+
+        if (ventaResult.rows[0]?.estado === "anulada") {
+          throw errorCliente(
+            "La venta de esta factura está anulada: su stock ya fue devuelto al inventario",
+            409,
+          );
+        }
+      }
 
       // Generar número de devolución
       const devNumResult = await client.query(
@@ -111,6 +144,10 @@ const DevolucionesController = {
       let subtotalDevolucion = 0;
       let itbisDevolucion = 0;
       const itemsValidados = [];
+      // La cantidad disponible se lee de la BD, así que una misma línea
+      // repetida en el payload pasaba el chequeo dos veces y devolvía más
+      // unidades de las vendidas. Acumulamos lo pedido en esta petición.
+      const solicitadoPorLinea = new Map();
 
       for (const item of items) {
         // Obtener detalle de factura
@@ -123,32 +160,39 @@ const DevolucionesController = {
         );
 
         if (detalleResult.rows.length === 0) {
-          throw new Error(
+          throw errorCliente(
             `Item ${item.detalle_factura_id} no encontrado en la factura`,
           );
         }
 
         const detalle = detalleResult.rows[0];
 
-        // Validar cantidad disponible para devolver
-        const cantidadDisponible = detalle.cantidad - detalle.cantidad_devuelta;
+        const cantidadDevuelta = Number(item.cantidad_devuelta);
 
-        if (item.cantidad_devuelta > cantidadDisponible) {
-          throw new Error(
+        if (!Number.isInteger(cantidadDevuelta) || cantidadDevuelta <= 0) {
+          throw errorCliente(
+            "La cantidad a devolver debe ser un número entero mayor a 0",
+          );
+        }
+
+        // Validar cantidad disponible para devolver, contando lo que ya pidió
+        // esta misma devolución para esa línea.
+        const cantidadDisponible = detalle.cantidad - detalle.cantidad_devuelta;
+        const yaSolicitado = solicitadoPorLinea.get(detalle.id) || 0;
+
+        if (yaSolicitado + cantidadDevuelta > cantidadDisponible) {
+          throw errorCliente(
             `Cantidad a devolver de ${detalle.nombre_producto} excede la cantidad disponible (${cantidadDisponible})`,
           );
         }
 
-        if (item.cantidad_devuelta <= 0) {
-          throw new Error("La cantidad a devolver debe ser mayor a 0");
-        }
+        solicitadoPorLinea.set(detalle.id, yaSolicitado + cantidadDevuelta);
 
         // Calcular precio efectivo por unidad (con descuento ya aplicado)
         const precioEfectivo = parseFloat(detalle.subtotal) / detalle.cantidad;
-        const subtotalItem = precioEfectivo * item.cantidad_devuelta;
+        const subtotalItem = precioEfectivo * cantidadDevuelta;
         const itbisItem =
-          parseFloat(detalle.itbis) *
-          (item.cantidad_devuelta / detalle.cantidad);
+          parseFloat(detalle.itbis) * (cantidadDevuelta / detalle.cantidad);
         const totalItem = subtotalItem + itbisItem;
 
         subtotalDevolucion += subtotalItem;
@@ -159,7 +203,7 @@ const DevolucionesController = {
           producto_id: detalle.producto_id,
           codigo_producto: detalle.codigo_producto,
           nombre_producto: detalle.nombre_producto,
-          cantidad_devuelta: item.cantidad_devuelta,
+          cantidad_devuelta: cantidadDevuelta,
           cantidad_original: detalle.cantidad,
           precio_unitario: precioEfectivo,
           subtotal: subtotalItem,
@@ -477,7 +521,7 @@ const DevolucionesController = {
       );
 
       if (devolucionResult.rows.length === 0) {
-        throw new Error("Devolución no encontrada");
+        throw errorCliente("Devolución no encontrada", 404);
       }
 
       const devolucion = devolucionResult.rows[0];
