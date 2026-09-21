@@ -66,6 +66,7 @@ Every message the user sees on screen, plus server errors, is appended to `logs/
 
 - **`public/js/utils/logger.js`** — Loads right after `toast.js` and wraps `Toast.show/success/error/warning/info`, `console.error/warn`, `window.onerror`, `unhandledrejection` and the `#loginError` element. Module and process come from the call stack. Batches events and POSTs them to `/api/logs` (errors and login events go immediately).
 - **`server/utils/logger.js`** — Writes the file through a queue, intercepts server-side `console.error/warn`, and deletes logs older than 90 days on startup.
+- **`public/js/modules/logs-module.js`** + **`public/js/api/logs-api.js`** — Admin-only "Registro de Eventos" section (`#logs`, nav item `nav-logs`): filters by day, level, origin and text, expandable detail, copy/download, optional 15s auto-refresh (cleared by `showSection` when leaving).
 - **`server/routes/logs.js`** — `POST /api/logs` accepts browser events (allowed without a session so login failures are recorded, rate-limited to 60/min for anonymous clients; the user is always taken from the session, never from the payload). `GET /api/logs` and `GET /api/logs/:fecha?lineas=&nivel=` are admin-only.
 
 ### Key Domain Concepts

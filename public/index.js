@@ -263,6 +263,20 @@ case "proveedores":
         HistorialInventarioModule.init();
       }
       break;
+    case "logs":
+      if (window.LogsModule) {
+        LogsModule.init();
+      }
+      break;
+  }
+
+  // El registro se refresca solo cada 15s si el admin lo dejó activado: al
+  // salir de la sección se corta para no seguir pidiendo el archivo.
+  if (sectionId !== "logs" && window.LogsModule?.autoRefresco) {
+    clearInterval(LogsModule.autoRefresco);
+    LogsModule.autoRefresco = null;
+    const check = document.getElementById("logsAuto");
+    if (check) check.checked = false;
   }
 
   initializeModule(sectionId);

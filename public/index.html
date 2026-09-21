@@ -150,6 +150,10 @@
         >
           <span class="nav-label">Configuración</span>
         </div>
+
+        <div id="nav-logs" class="nav-item" onclick="showSection('logs')">
+          <span class="nav-label">Registro de Eventos</span>
+        </div>
       </nav>
 
       <!-- Main Content -->
@@ -2651,6 +2655,131 @@
           </div>
         </section>
 
+        <!-- REGISTRO DE EVENTOS (solo admin) -->
+        <section id="logs" class="section">
+          <div class="header">
+            <h1>Registro de Eventos</h1>
+            <div style="display: flex; gap: 8px">
+              <button class="btn btn-primary" onclick="LogsModule.refrescar()">
+                Actualizar
+              </button>
+              <button class="btn btn-secondary" onclick="LogsModule.copiar()">
+                Copiar
+              </button>
+              <button class="btn btn-success" onclick="LogsModule.descargar()">
+                Descargar
+              </button>
+            </div>
+          </div>
+
+          <div class="logs-resumen">
+            <div class="card logs-stat">
+              <span class="logs-stat-label">Eventos mostrados</span>
+              <span id="logsTotalEventos" class="logs-stat-valor">0</span>
+            </div>
+            <div class="card logs-stat">
+              <span class="logs-stat-label">Errores</span>
+              <span
+                id="logsTotalErrores"
+                class="logs-stat-valor"
+                style="color: var(--clr-danger)"
+                >0</span
+              >
+            </div>
+            <div class="card logs-stat">
+              <span class="logs-stat-label">Avisos</span>
+              <span
+                id="logsTotalAvisos"
+                class="logs-stat-valor"
+                style="color: var(--clr-warning-dark)"
+                >0</span
+              >
+            </div>
+            <div class="card logs-stat">
+              <span class="logs-stat-label">Último evento</span>
+              <span id="logsUltimoEvento" class="logs-stat-valor logs-stat-valor--fecha">—</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="logs-filtros">
+              <label>
+                Día
+                <select id="logsFecha"></select>
+              </label>
+
+              <label>
+                Nivel
+                <select id="logsNivel">
+                  <option value="">Todos</option>
+                  <option value="ERROR">Errores</option>
+                  <option value="WARNING">Avisos</option>
+                  <option value="INFO">Información</option>
+                  <option value="SUCCESS">Confirmaciones</option>
+                </select>
+              </label>
+
+              <label>
+                Origen
+                <select id="logsOrigen">
+                  <option value="">Todos</option>
+                  <option value="cliente">Pantalla</option>
+                  <option value="servidor">Servidor</option>
+                </select>
+              </label>
+
+              <label>
+                Mostrar
+                <select id="logsLineas">
+                  <option value="200">Últimos 200</option>
+                  <option value="1000" selected>Últimos 1000</option>
+                  <option value="5000">Últimos 5000</option>
+                </select>
+              </label>
+
+              <label class="logs-filtro-buscar">
+                Buscar
+                <input
+                  type="text"
+                  id="logsBuscar"
+                  placeholder="usuario, módulo, mensaje..."
+                />
+              </label>
+
+              <label class="logs-filtro-auto">
+                <input type="checkbox" id="logsAuto" />
+                Actualizar cada 15s
+              </label>
+            </div>
+
+            <div class="logs-tabla-scroll">
+              <table class="tabla-simple logs-tabla">
+                <thead>
+                  <tr>
+                    <th>Hora</th>
+                    <th>Nivel</th>
+                    <th>Origen</th>
+                    <th>Usuario</th>
+                    <th>Módulo</th>
+                    <th>Proceso</th>
+                    <th>Mensaje</th>
+                  </tr>
+                </thead>
+                <tbody id="logsTabla">
+                  <tr>
+                    <td
+                      colspan="7"
+                      style="text-align: center; padding: 30px; color: var(--clr-muted)"
+                    >
+                      Cargando…
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <!-- Modal Detalle de Producto -->
         <div class="modal" id="modalDetalleProducto">
           <div class="modal-content">
@@ -3412,6 +3541,7 @@
     <script src="js/api/salidas-api.js"></script>
     <script src="js/api/categorias-gasto-api.js"></script>
     <script src="js/api/inventario-api.js"></script>
+    <script src="js/api/logs-api.js"></script>
     <!-- Modales script-->
     <script>
       Promise.all([
@@ -3443,6 +3573,7 @@
     <script src="js/modules/reporte-inventario-module.js"></script>
     <script src="js/modules/inventario-vendido-module.js"></script>
     <script src="js/modules/historial-inventario-module.js"></script>
+    <script src="js/modules/logs-module.js"></script>
     <script src="js/api/auth-api.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/modules/usuarios-module.js"></script>

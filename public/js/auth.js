@@ -75,6 +75,7 @@ window.Auth = {
       "nav-inventario-vendido",
       "nav-facturacion",
       "nav-configuracion",
+      "nav-logs",
       "nav-group-inventario",
       "nav-group-admin",
     ];

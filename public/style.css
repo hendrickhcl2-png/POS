@@ -2601,3 +2601,189 @@ tbody tr:hover {
   font-weight:bold;
   font-size:32px;
 }
+
+/* ==================== REGISTRO DE EVENTOS (ADMIN) ==================== */
+
+.logs-resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.logs-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+}
+
+.logs-stat-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--clr-muted);
+}
+
+.logs-stat-valor {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--clr-dark);
+}
+
+.logs-stat-valor--fecha {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--clr-muted);
+}
+
+.logs-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.logs-filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--clr-muted);
+}
+
+.logs-filtros select,
+.logs-filtros input[type="text"] {
+  padding: 8px 10px;
+  border: 1px solid var(--clr-border);
+  border-radius: 5px;
+  font-size: 14px;
+  color: var(--clr-dark);
+  background: var(--clr-bg-white);
+}
+
+.logs-filtro-buscar {
+  flex: 1;
+  min-width: 220px;
+}
+
+.logs-filtro-auto {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 7px !important;
+  text-transform: none !important;
+  padding-bottom: 9px;
+}
+
+/* El log puede traer miles de líneas: se desplaza dentro de su propia caja */
+.logs-tabla-scroll {
+  max-height: 60vh;
+  overflow: auto;
+  border: 1px solid var(--clr-border);
+  border-radius: 6px;
+}
+
+.logs-tabla {
+  font-size: 13px;
+}
+
+.logs-tabla thead th {
+  position: sticky;
+  top: 0;
+  background: var(--clr-bg-surface);
+  z-index: 1;
+}
+
+.logs-tabla td {
+  vertical-align: top;
+}
+
+.log-hora,
+.log-origen,
+.log-proceso {
+  white-space: nowrap;
+  color: var(--clr-muted);
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 12px;
+}
+
+.log-mensaje {
+  word-break: break-word;
+  min-width: 320px;
+}
+
+/* La ruta del servidor ("POST /api/ventas") se parte fatal si se deja envolver */
+.log-modulo {
+  white-space: nowrap;
+}
+
+.log-nivel {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: var(--clr-bg-surface);
+  color: var(--clr-muted);
+}
+
+.log-nivel--error {
+  background: var(--clr-danger-tint);
+  color: var(--clr-danger-text);
+}
+
+.log-nivel--warning {
+  background: var(--clr-warning-tint);
+  color: var(--clr-warning-text);
+}
+
+.log-nivel--info {
+  background: var(--clr-info-tint);
+  color: var(--clr-info-text);
+}
+
+.log-nivel--success {
+  background: var(--clr-success-tint);
+  color: var(--clr-success-text);
+}
+
+.log-fila--error {
+  background: var(--clr-danger-tint);
+}
+
+.log-fila--warning {
+  background: var(--clr-warning-tint);
+}
+
+.log-detalle-btn {
+  margin-left: 8px;
+  padding: 1px 7px;
+  border: 1px solid var(--clr-border);
+  border-radius: 4px;
+  background: var(--clr-bg-white);
+  color: var(--clr-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.log-detalle-btn:hover {
+  background: var(--clr-bg-surface);
+  color: var(--clr-dark);
+}
+
+.log-detalle pre {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--clr-bg-surface);
+  border-radius: 5px;
+  font-family: "Consolas", "Monaco", monospace;
+  font-size: 12px;
+  color: var(--clr-dark);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
