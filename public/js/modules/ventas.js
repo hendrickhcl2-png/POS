@@ -30,10 +30,13 @@ const VentasModule = {
   const buscarInput = document.getElementById("buscarProductoVenta");
   if (buscarInput) {
   buscarInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
+  if (e.key !== "Enter") return;
   e.preventDefault();
+  // Tras agregar un producto el campo queda vacío y el cursor sigue aquí:
+  // ese Enter no es una búsqueda, así que se ignora en silencio en vez de
+  // sacar la advertencia de "ingrese un código".
+  if (!buscarInput.value.trim()) return;
   this.buscarProducto();
-  }
   });
   }
 
@@ -338,6 +341,10 @@ const VentasModule = {
   cerrarListaResultados() {
   const lista = document.getElementById("listaResultadosBusqueda");
   if (lista) lista.remove();
+
+  // Devolver el foco al buscador para poder escanear el siguiente producto
+  const buscarInput = document.getElementById("buscarProductoVenta");
+  if (buscarInput) buscarInput.focus();
   },
 
   // ==================== AGREGAR ARTÍCULO MANUAL ====================
