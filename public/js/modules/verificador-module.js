@@ -102,17 +102,14 @@ const VerificadorModule = {
 
     const tieneDescuento = descPct > 0 || descMonto > 0;
 
+    // Con al menos 1 unidad el producto se considera disponible
     const stockColor = p.stock_actual <= 0
       ? "var(--clr-danger)"
-      : p.stock_actual <= (p.stock_minimo || 3)
-        ? "var(--clr-warning)"
-        : "var(--clr-success)";
+      : "var(--clr-success)";
 
     const stockLabel = p.stock_actual <= 0
       ? "Sin stock"
-      : p.stock_actual <= (p.stock_minimo || 3)
-        ? `Stock bajo (${p.stock_actual})`
-        : `En stock (${p.stock_actual})`;
+      : `Disponible (${p.stock_actual})`;
 
     return `
       <div class="card" style="border-left:5px solid ${tieneDescuento ? "var(--clr-warning)" : "var(--clr-success)"};padding:24px;">

@@ -462,10 +462,10 @@ const VentasModule = {
   </div>
   <div>
   <small style="color: #7f8c8d; display: block; font-size: 11px; text-transform: uppercase;">Stock</small>
-  <strong style="color: ${p.stock_actual <= p.stock_minimo ? "#e74c3c": "#2c3e50"}; font-size: 14px;">
+  <strong style="color: ${p.stock_actual <= 0 ? "#e74c3c": "#2c3e50"}; font-size: 14px;">
   ${p.stock_actual} unidades
   </strong>
-  ${p.stock_actual <= p.stock_minimo ? '<br><small style="color: #e74c3c;"> Stock bajo</small>': ""}
+  ${p.stock_actual <= 0 ? '<br><small style="color: #e74c3c;"> Sin stock</small>': ""}
   </div>
   ${
   p.categoria_nombre
