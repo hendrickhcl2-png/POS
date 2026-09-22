@@ -3,6 +3,8 @@
 const VentasModule = {
   carritoItems: [],
   serviciosEnVenta: [],
+  resultadosBusqueda: [], // última lista mostrada; los botones la referencian por posición
+  ultimaBusqueda: "", // para repetir la búsqueda tras reponer stock
   clienteSeleccionado: null,
   metodoPagoActual: "efectivo",
   incluirITBIS: false,
@@ -220,6 +222,7 @@ const VentasModule = {
   async buscarProducto() {
   const input = document.getElementById("buscarProductoVenta");
   const query = input.value.trim();
+  this.ultimaBusqueda = query;
 
   if (!query) {
   this.mostrarAlerta(
@@ -251,8 +254,14 @@ const VentasModule = {
   }
   },
 
-  async agregarStockRapido(id, nombre) {
-  const cantidad = prompt(`¿Cuántas unidades agregar a "${nombre}"?`);
+  async agregarStockRapido(indice) {
+  const producto = this.resultadosBusqueda?.[indice];
+  if (!producto) {
+    this.mostrarAlerta("Vuelve a buscar el producto", "warning");
+    return;
+  }
+
+  const cantidad = prompt(`¿Cuántas unidades agregar a "${producto.nombre}"?`);
   if (cantidad === null) return;
   const n = parseInt(cantidad);
   if (isNaN(n) || n <= 0) {
@@ -260,18 +269,39 @@ const VentasModule = {
     return;
   }
   try {
-    await API.Productos.agregarStock(id, n);
+    await API.Productos.agregarStock(producto.id, n);
     this.cerrarListaResultados();
-    this.mostrarAlerta(`Stock actualizado. Ahora puedes buscar "${nombre}" nuevamente.`, "success");
+    this.mostrarAlerta(`${n} unidad(es) agregadas a "${producto.nombre}"`, "success");
+    // Se repite la búsqueda sola: antes había que volver a escribir el código
+    // a mano para poder venderlo.
+    if (this.ultimaBusqueda) {
+      const input = document.getElementById("buscarProductoVenta");
+      if (input) input.value = this.ultimaBusqueda;
+      await this.buscarProducto();
+    }
   } catch (e) {
     this.mostrarAlerta(e?.message || "Error al actualizar stock", "danger");
   }
+  },
+
+  // Escapa el texto que se inserta en el HTML de la lista. Un nombre con
+  // comillas, "<" o "&" no debe poder romper el marcado.
+  escaparHTML(texto) {
+  const div = document.createElement("div");
+  div.textContent = texto ?? "";
+  return div.innerHTML;
   },
 
   mostrarListaProductos(productos, soloAgotados = false) {
   // Crear modal o dropdown con los productos
   const container = document.getElementById("ventaItems");
   if (!container) return;
+
+  // Los resultados se guardan aquí y los botones solo mandan su posición. Antes
+  // el onclick llevaba el producto escrito como objeto JS dentro del atributo:
+  // un nombre con comillas dobles (un monitor de 24") cortaba el atributo y el
+  // botón dejaba de hacer absolutamente nada al pulsarlo.
+  this.resultadosBusqueda = productos;
 
   const titulo = soloAgotados
     ? `<h4 style="margin: 0 0 10px 0; color: #e67e22;"> Sin stock — ¿Deseas agregar unidades? (${productos.length})</h4>`
@@ -282,39 +312,27 @@ const VentasModule = {
   ${titulo}
   <div style="max-height: 300px; overflow-y: auto;">
   ${productos
-.map(
-  (p) => `
+.map((p, indice) => {
+  const noDisponible = !soloAgotados && p.disponible === false;
+  return `
   <div style="padding: 10px; border-bottom: 1px solid #ecf0f1; display: flex; justify-content: space-between; align-items: center;">
   <div>
-  <strong>${p.nombre}</strong><br>
+  <strong>${this.escaparHTML(p.nombre)}</strong>
+  ${noDisponible ? '<span style="margin-left: 8px; background: #fdedec; color: #6b1a14; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">No disponible para venta</span>' : ""}
+  <br>
   <small style="color: #7f8c8d;">
-  Código: ${p.codigo_barras || p.imei || "N/A"} |
+  Código: ${this.escaparHTML(p.codigo_barras || p.imei || "N/A")} |
   Stock: ${p.stock_actual} |
   Precio: ${this.formatCurrency(p.precio_venta)}
   </small>
   </div>
   ${soloAgotados
-    ? `<button type="button" class="btn btn-warning btn-small" onclick="VentasModule.agregarStockRapido(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')">+ Agregar Stock</button>`
-    : `<button
-  type="button"
-  class="btn btn-primary btn-small"
-  onclick="VentasModule.agregarProductoAlCarrito({
-  id: ${p.id},
-  codigo_barras: '${p.codigo_barras || ""}',
-  nombre: '${p.nombre.replace(/'/g, "\\'")}',
-  precio_venta: ${p.precio_venta},
-  stock_actual: ${p.stock_actual},
-  disponible: ${p.disponible},
-  descuento_porcentaje: ${p.descuento_porcentaje || 0}
-  }); VentasModule.cerrarListaResultados();"
-  ${!p.disponible || p.stock_actual <= 0 ? "disabled": ""}
-  >
-  Agregar
-  </button>`
+    ? `<button type="button" class="btn btn-warning btn-small" onclick="VentasModule.agregarStockRapido(${indice})">+ Agregar Stock</button>`
+    : `<button type="button" class="btn btn-primary btn-small" onclick="VentasModule.agregarResultadoAlCarrito(${indice})">Agregar</button>`
   }
   </div>
-  `,
-  )
+  `;
+})
 .join("")}
   </div>
   <button
@@ -336,6 +354,28 @@ const VentasModule = {
 
   // Limpiar búsqueda
   document.getElementById("buscarProductoVenta").value = "";
+  },
+
+  // Agrega al carrito el producto que ocupa esa posición en la última búsqueda.
+  agregarResultadoAlCarrito(indice) {
+  const p = this.resultadosBusqueda?.[indice];
+  if (!p) {
+  this.mostrarAlerta("Vuelve a buscar el producto", "warning");
+  return;
+  }
+
+  this.agregarProductoAlCarrito({
+  id: p.id,
+  codigo_barras: p.codigo_barras || "",
+  imei: p.imei || "",
+  nombre: p.nombre,
+  precio_venta: p.precio_venta,
+  stock_actual: p.stock_actual,
+  disponible: p.disponible,
+  descuento_porcentaje: p.descuento_porcentaje || 0,
+  });
+
+  this.cerrarListaResultados();
   },
 
   cerrarListaResultados() {
@@ -557,13 +597,18 @@ const VentasModule = {
   // ==================== CARRITO ====================
 
   agregarProductoAlCarrito(producto) {
-  if (!producto.disponible) {
-  this.mostrarAlerta("Producto no disponible", "warning");
+  // Los avisos dicen el motivo y el producto: un botón que no responde deja al
+  // cajero sin saber qué pasa.
+  if (producto.disponible === false) {
+  this.mostrarAlerta(
+  `"${producto.nombre}" está marcado como no disponible para la venta. Actívalo en Productos.`,
+  "warning",
+  );
   return;
   }
 
   if (producto.stock_actual <= 0) {
-  this.mostrarAlerta("Producto sin stock", "warning");
+  this.mostrarAlerta(`"${producto.nombre}" no tiene unidades en inventario`, "warning");
   return;
   }
 
