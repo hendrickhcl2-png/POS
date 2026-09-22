@@ -300,6 +300,21 @@ async function initAuth() {
     // Migración: hacer cedula opcional en clientes
     await pool.query(`ALTER TABLE clientes ALTER COLUMN cedula DROP NOT NULL`);
 
+    // La disponibilidad sigue al stock. Los productos que quedaron marcados
+    // como vendidos teniendo existencias (o al revés) se corrigen al arrancar:
+    // así quedaba mercancía con stock que el sistema no dejaba vender.
+    const corregidos = await pool.query(
+      `UPDATE productos
+       SET disponible = (stock_actual > 0)
+       WHERE activo = true AND disponible IS DISTINCT FROM (stock_actual > 0)
+       RETURNING id`,
+    );
+    if (corregidos.rowCount > 0) {
+      console.log(
+        `✅ Disponibilidad corregida en ${corregidos.rowCount} producto(s) según su stock`,
+      );
+    }
+
     console.log("✅ Auth inicializado");
   } catch (error) {
     console.error("❌ Error en initAuth:", error);

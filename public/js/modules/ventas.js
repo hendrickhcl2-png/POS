@@ -313,12 +313,10 @@ const VentasModule = {
   <div style="max-height: 300px; overflow-y: auto;">
   ${productos
 .map((p, indice) => {
-  const noDisponible = !soloAgotados && p.disponible === false;
   return `
   <div style="padding: 10px; border-bottom: 1px solid #ecf0f1; display: flex; justify-content: space-between; align-items: center;">
   <div>
   <strong>${this.escaparHTML(p.nombre)}</strong>
-  ${noDisponible ? '<span style="margin-left: 8px; background: #fdedec; color: #6b1a14; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;">No disponible para venta</span>' : ""}
   <br>
   <small style="color: #7f8c8d;">
   Código: ${this.escaparHTML(p.codigo_barras || p.imei || "N/A")} |
@@ -597,16 +595,10 @@ const VentasModule = {
   // ==================== CARRITO ====================
 
   agregarProductoAlCarrito(producto) {
+  // Con al menos 1 unidad en stock el producto se vende: la bandera
+  // `disponible` ya no bloquea nada, solo refleja el stock.
   // Los avisos dicen el motivo y el producto: un botón que no responde deja al
   // cajero sin saber qué pasa.
-  if (producto.disponible === false) {
-  this.mostrarAlerta(
-  `"${producto.nombre}" está marcado como no disponible para la venta. Actívalo en Productos.`,
-  "warning",
-  );
-  return;
-  }
-
   if (producto.stock_actual <= 0) {
   this.mostrarAlerta(`"${producto.nombre}" no tiene unidades en inventario`, "warning");
   return;

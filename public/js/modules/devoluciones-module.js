@@ -388,10 +388,8 @@ const DevolucionModule = {
           ? productos
           : productos.data || [];
 
-        // Filtrar productos con stock disponible
-        const disponibles = lista.filter(
-          (p) => p.stock_actual > 0 && p.disponible,
-        );
+        // Filtrar productos con stock disponible (el stock es lo que manda)
+        const disponibles = lista.filter((p) => p.stock_actual > 0);
 
         if (disponibles.length === 0) {
           contenedor.innerHTML =

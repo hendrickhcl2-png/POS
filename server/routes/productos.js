@@ -113,7 +113,7 @@ router.patch("/:id/precio", requireAdmin, async (req, res) => {
     const result = await pool.query(
       `UPDATE productos
        SET precio_venta = $1,
-           disponible = CASE WHEN stock_actual > 0 THEN true ELSE disponible END
+           disponible = (stock_actual > 0)
        WHERE id = $2
        RETURNING *`,
       [parseFloat(precio_venta), id],
@@ -199,7 +199,7 @@ router.post("/lote", requireAdmin, async (req, res) => {
             `UPDATE productos
              SET stock_actual = COALESCE(stock_actual, 0) + $1,
                  precio_costo = $2,
-                 disponible = true,
+                 disponible = (COALESCE(stock_actual, 0) + $1 > 0),
                  proveedor_id = COALESCE($3, proveedor_id),
                  factura_proveedor_numero = COALESCE($4, factura_proveedor_numero),
                  factura_proveedor_fecha = COALESCE($5, factura_proveedor_fecha),
@@ -439,7 +439,7 @@ router.put("/vendidos/:detalleId", requireAdmin, async (req, res) => {
         await client.query(
           `UPDATE productos
            SET stock_actual = $1,
-               disponible = CASE WHEN $1 > 0 THEN true ELSE false END
+               disponible = ($1 > 0)
            WHERE id = $2`,
           [nuevoStock, detalle.producto_id]
         );
@@ -663,7 +663,9 @@ router.post("/", requireAdmin, async (req, res) => {
         stock_maximo || 0,
         descuento_porcentaje || 0,
         descuento_monto || 0,
-        disponible !== false,
+        // La disponibilidad la manda el stock: un producto con existencias no
+        // puede quedar marcado como vendido (y al revés).
+        parseInt(stock_actual) > 0,
         aplica_itbis !== false,
         activo !== false,
         costos ? JSON.stringify(costos) : null,
@@ -842,7 +844,9 @@ router.put("/:id", requireAdmin, async (req, res) => {
         stock_maximo,
         descuento_porcentaje,
         descuento_monto,
-        disponible,
+        // La disponibilidad la manda el stock: editar un producto con
+        // existencias ya no puede dejarlo marcado como vendido.
+        parseInt(stock_actual) > 0,
         costos ? JSON.stringify(costos) : null,
         caracteristicas ? JSON.stringify(caracteristicas) : null,
         factura_proveedor_numero || null,

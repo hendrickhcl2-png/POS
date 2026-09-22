@@ -249,11 +249,6 @@ window.editarProducto = async function (productoId) {
     setValueIfExists("descuentoPorcentaje", producto.descuento_porcentaje || 0);
     setValueIfExists("descuentoMonto", producto.descuento_monto || 0);
 
-    const checkDisponible = document.getElementById("productoDisponible");
-    if (checkDisponible) {
-      checkDisponible.checked = producto.disponible !== false;
-    }
-
     limpiarCostos();
     if (producto.costos && producto.costos.length > 0) {
       producto.costos.forEach((costo) => {
@@ -409,8 +404,7 @@ async function guardarProducto(e) {
     stock_maximo: parseInt(getValue("productoStockMax")) || 0,
     descuento_porcentaje: parseFloat(getValue("descuentoPorcentaje")) || 0,
     descuento_monto: parseFloat(getValue("descuentoMonto")) || 0,
-    disponible:
-      document.getElementById("productoDisponible")?.checked !== false,
+    // `disponible` lo calcula el servidor a partir del stock
     aplica_itbis: true,
     activo: true,
     costos: costos,
@@ -518,7 +512,8 @@ function actualizarTablaProductos(lista) {
   _pgProductos.render(
     data.map((p) => {
       const codigoPrincipal = p.codigo_barras || p.imei || `ID-${p.id}`;
-      const disponible = p.disponible !== false;
+      // El estado sale del stock: con al menos 1 unidad está disponible.
+      const disponible = (parseInt(p.stock_actual) || 0) > 0;
       const tieneDescuento = p.descuento_porcentaje > 0 || p.descuento_monto > 0;
       return `
         <tr style="${!disponible ? "opacity: 0.6;" : ""}">
@@ -699,8 +694,8 @@ window.verDetalleProducto = async function (productoId) {
 
           <div class="prod-field">
             <strong>Estado:</strong>
-            <p style="font-size: 20px; color: ${producto.disponible !== false ? "#27ae60" : "#e74c3c"}; font-weight: bold;">
-              ${producto.disponible !== false ? "Disponible" : "Vendido"}
+            <p style="font-size: 20px; color: ${(parseInt(producto.stock_actual) || 0) > 0 ? "#27ae60" : "#e74c3c"}; font-weight: bold;">
+              ${(parseInt(producto.stock_actual) || 0) > 0 ? "Disponible" : "Vendido"}
             </p>
           </div>
 

@@ -201,12 +201,10 @@ const VentasController = {
           );
         }
 
-        if (producto.disponible === false) {
-          throw errorCliente(
-            `El producto ${producto.nombre} no está disponible para la venta`,
-          );
-        }
-
+        // `disponible` no decide la venta: con al menos 1 unidad en stock el
+        // producto se vende. La bandera se recalcula abajo a partir del stock,
+        // porque se quedaba en false y dejaba productos con existencias
+        // imposibles de vender.
         if (producto.stock_actual < item.cantidad) {
           throw errorCliente(
             `Stock insuficiente para ${producto.nombre}. Disponible: ${producto.stock_actual}`,
@@ -249,10 +247,10 @@ const VentasController = {
           ],
         );
 
-        // Actualizar disponible después del trigger
+        // Actualizar disponible después del trigger: la bandera sigue al stock
         await client.query(
           `UPDATE productos
-           SET disponible = CASE WHEN stock_actual <= 0 THEN false ELSE disponible END
+           SET disponible = (stock_actual > 0)
            WHERE id = $1`,
           [item.producto_id],
         );

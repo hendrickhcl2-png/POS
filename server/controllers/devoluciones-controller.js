@@ -79,12 +79,13 @@ const DevolucionesController = {
         if (!producto_cambio_id) {
           throw errorCliente("Debe seleccionar un producto para el cambio");
         }
+        // Igual que en la venta: lo que decide es el stock, no la bandera.
         const prodResult = await client.query(
-          "SELECT * FROM productos WHERE id = $1 AND disponible = true",
+          "SELECT * FROM productos WHERE id = $1 AND activo = true",
           [producto_cambio_id],
         );
         if (prodResult.rows.length === 0) {
-          throw errorCliente("Producto de cambio no encontrado o no disponible");
+          throw errorCliente("Producto de cambio no encontrado o eliminado");
         }
         productoCambio = prodResult.rows[0];
 
@@ -373,7 +374,7 @@ const DevolucionesController = {
         await client.query(
           `UPDATE productos
            SET stock_actual = stock_actual - $1,
-               disponible = CASE WHEN stock_actual - $1 > 0 THEN true ELSE false END
+               disponible = (stock_actual - $1 > 0)
            WHERE id = $2`,
           [producto_cambio_cantidad, producto_cambio_id],
         );
