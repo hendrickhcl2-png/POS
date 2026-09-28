@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Fifty Tech SRL</title>
     <link rel="stylesheet" href="style.css" />
+    <!-- Antes de pintar: aplica el tema claro/oscuro guardado -->
+    <script src="js/utils/theme.js"></script>
   </head>
   <body>
     <!-- LOGIN OVERLAY -->
@@ -60,13 +62,21 @@
             ></span>
             <span class="usuario-sidebar-rol" id="usuarioRolSidebar"></span>
           </div>
-          <button
-            class="btn-logout"
-            onclick="Auth.logout()"
-            title="Cerrar sesión"
-          >
-            &#x2715;
-          </button>
+          <div class="usuario-sidebar-acciones">
+            <button
+              id="btnTema"
+              class="btn-tema"
+              onclick="Tema.alternar()"
+              title="Cambiar tema"
+            ></button>
+            <button
+              class="btn-logout"
+              onclick="Auth.logout()"
+              title="Cerrar sesión"
+            >
+              &#x2715;
+            </button>
+          </div>
         </div>
 
         <div class="nav-group-label">Ventas</div>
