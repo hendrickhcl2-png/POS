@@ -58,6 +58,7 @@ if %errorlevel% == 0 (
     echo  Iniciando servidor...
     call pm2 start ecosystem.config.js
 )
+timeout /t 2 /nobreak >nul
 goto :abrir
 
 :sinpm2
@@ -66,8 +67,20 @@ start /b node server/server.js
 timeout /t 2 /nobreak >nul
 
 :abrir
+:: Abrir en una ventana propia de Edge (modo app); si no hay Edge, en el navegador
+set "EDGE=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
+if not exist "%EDGE%" set "EDGE=%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"
+if not exist "%EDGE%" goto :navegador
+
+echo  Abriendo Fifty Tech POS...
+start "" "%EDGE%" --app=http://localhost:3000 --start-maximized
+goto :fin
+
+:navegador
 echo  Abriendo navegador...
 start http://localhost:3000
+
+:fin
 
 echo.
 echo  Sistema corriendo en http://localhost:3000
