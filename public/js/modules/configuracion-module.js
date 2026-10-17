@@ -67,6 +67,11 @@ window.detectarImpresoras = async function () {
       input.value = select.value;
       select.replaceWith(input);
     };
+    // El select arranca con la primera opción elegida y onchange no se dispara si el
+    // usuario se queda con esa: reflejarla en el input y darle al select el mismo id
+    // para que Guardar lea su valor mientras está en pantalla
+    input.value = select.value;
+    select.id = input.id;
     input.replaceWith(select);
     select.focus();
   } catch (e) {

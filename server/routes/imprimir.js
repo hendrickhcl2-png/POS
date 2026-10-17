@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { exec } = require("child_process");
+const { exec, execFile } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
@@ -255,8 +255,11 @@ public class RawPrint {
   const psFile = path.join(os.tmpdir(), `rawprint_${Date.now()}.ps1`);
   fs.writeFile(psFile, psContent, "utf8", (writeErr) => {
     if (writeErr) return callback(writeErr);
-    exec(
-      `powershell -NoProfile -ExecutionPolicy Bypass -File "${psFile}"`,
+    // windowsHide: bajo PM2 el servidor no tiene consola y sin esto Windows abre una ventana visible
+    execFile(
+      "powershell.exe",
+      ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", psFile],
+      { windowsHide: true },
       (err, stdout, stderr) => {
         fs.unlink(psFile, () => { });
         callback(err, stdout, stderr);
@@ -490,21 +493,33 @@ function generarTextoEstadoCuenta(data) {
 
 // GET /api/imprimir/impresoras — lista impresoras disponibles en el sistema
 router.get("/impresoras", (req, res) => {
-  const isWindows = os.platform() === "win32";
-  const cmd = isWindows
-    ? `powershell -NoProfile -Command "Get-Printer | Select-Object -ExpandProperty Name"`
-    : `lpstat -a | awk '{print $1}'`;
-
-  exec(cmd, (err, stdout) => {
+  const responder = (err, stdout, stderr) => {
     if (err) {
+      console.error("Error al detectar impresoras:", stderr || err.message);
       return res.json({ success: true, impresoras: [] });
     }
     const impresoras = stdout
-      .split("\n")
+      .split(/\r?\n/)
       .map((s) => s.trim())
       .filter(Boolean);
     res.json({ success: true, impresoras });
-  });
+  };
+
+  if (os.platform() !== "win32") {
+    return exec(`lpstat -a | awk '{print $1}'`, responder);
+  }
+
+  // Get-Printer no existe en todas las versiones de Windows; Win32_Printer sí.
+  // windowsHide evita que se abra una ventana de consola (el servidor corre sin consola bajo PM2).
+  const script =
+    "try { Get-Printer -ErrorAction Stop | Select-Object -ExpandProperty Name } " +
+    "catch { Get-CimInstance Win32_Printer | Select-Object -ExpandProperty Name }";
+  execFile(
+    "powershell.exe",
+    ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script],
+    { windowsHide: true, timeout: 15000 },
+    responder
+  );
 });
 
 // POST /api/imprimir
