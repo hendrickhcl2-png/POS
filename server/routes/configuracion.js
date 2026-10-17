@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../database/pool");
 const { requireAdmin } = require("../middleware/auth-middleware");
+const { nombreImpresoraValido } = require("./imprimir");
 
 // Obtener configuración del sistema
 router.get("/", async (req, res) => {
@@ -45,12 +46,10 @@ router.put("/", requireAdmin, async (req, res) => {
       "SELECT id, porcentaje_itbis FROM configuracion ORDER BY id DESC LIMIT 1",
     );
 
-    // El nombre de impresora termina en el comando `lp -d NOMBRE`.
-    // imprimir.js ya lo filtra con este mismo regex antes de usarlo, pero se
-    // rechaza también al guardar para no dejar metacaracteres almacenados.
-    if (nombre_impresora && !/^[\w\s\-.()À-ɏ]+$/.test(nombre_impresora)) {
+    // Misma regla que usa imprimir.js antes de mandar a imprimir
+    if (nombre_impresora && !nombreImpresoraValido(nombre_impresora)) {
       return res.status(400).json({
-        error: "El nombre de la impresora solo admite letras, números, espacios, guiones, puntos y paréntesis",
+        error: "El nombre de la impresora no es válido (máximo 255 caracteres, sin caracteres de control)",
       });
     }
 

@@ -20,7 +20,7 @@ async function guardarConfiguracion(e) {
     Object.assign(configuracion, configData);
     mostrarAlerta("Información del negocio guardada", "success");
   } catch (error) {
-    mostrarAlerta("Error al guardar configuración", "danger");
+    mostrarAlerta("Error al guardar configuración: " + error.message, "danger");
   }
 }
 

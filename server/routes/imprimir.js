@@ -207,12 +207,24 @@ function generarTextoRecibo(data) {
   return lines.join(sep);
 }
 
+// Nombre de impresora usable: viaja como argumento (nunca dentro del texto de un
+// comando), así que se admiten los nombres reales de Windows (\\PC\Termica, #, &...)
+// y solo se rechazan caracteres de control y longitudes absurdas.
+function nombreImpresoraValido(nombre) {
+  return typeof nombre === "string" && nombre.trim().length > 0 && nombre.length <= 255 && !/[\x00-\x1f\x7f]/.test(nombre);
+}
+
+// Envía el archivo a la impresora: spooler de Windows o `lp` en Linux/macOS
+function enviarAImpresora(archivo, impresora, callback) {
+  if (os.platform() === "win32") return imprimirRawWindows(archivo, impresora, callback);
+  execFile("lp", ["-d", impresora, "-o", "raw", archivo], callback);
+}
+
 // Impresión raw en Windows vía Windows Spooler API (bypasa GDI, fuente fija de la impresora)
 function imprimirRawWindows(txtFile, printerName, callback) {
-  const safePrinter = printerName.replace(/'/g, "''");
-  const safeFile = txtFile.replace(/'/g, "''");
-
-  const psContent = `Add-Type -TypeDefinition @'
+  // Impresora y archivo llegan como parámetros del script, no interpolados en él
+  const psContent = `param([string]$printer, [string]$file)
+Add-Type -TypeDefinition @'
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -249,7 +261,10 @@ public class RawPrint {
     }
 }
 '@ -Language CSharp
-[RawPrint]::Print('${safePrinter}', '${safeFile}')
+if (-not [RawPrint]::Print($printer, $file)) {
+  [Console]::Error.WriteLine("No se pudo abrir la impresora '$printer'")
+  exit 1
+}
 `;
 
   const psFile = path.join(os.tmpdir(), `rawprint_${Date.now()}.ps1`);
@@ -258,7 +273,7 @@ public class RawPrint {
     // windowsHide: bajo PM2 el servidor no tiene consola y sin esto Windows abre una ventana visible
     execFile(
       "powershell.exe",
-      ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", psFile],
+      ["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", psFile, printerName, txtFile],
       { windowsHide: true },
       (err, stdout, stderr) => {
         fs.unlink(psFile, () => { });
@@ -530,7 +545,7 @@ router.post("/", async (req, res) => {
     return res.status(400).json({ success: false, message: "Datos de factura requeridos" });
   }
 
-  const nombreImpresora = /^[\w\s\-\.()\u00C0-\u024F]+$/.test(impresora || "") ? impresora : "Termica";
+  const nombreImpresora = nombreImpresoraValido(impresora) ? impresora : "Termica";
   const texto = generarTextoRecibo({ factura, config: config || {} });
   const tmpFile = path.join(os.tmpdir(), `recibo_${Date.now()}.txt`);
 
@@ -543,8 +558,6 @@ router.post("/", async (req, res) => {
       return res.status(500).json({ success: false, message: "Error al crear archivo temporal" });
     }
 
-    const isWindows = os.platform() === "win32";
-
     const done = (err, stdout, stderr) => {
       fs.unlink(tmpFile, () => { });
       if (err) {
@@ -556,11 +569,7 @@ router.post("/", async (req, res) => {
       res.json({ success: true, message: "Impresion enviada a " + nombreImpresora });
     };
 
-    if (isWindows) {
-      imprimirRawWindows(tmpFile, nombreImpresora, done);
-    } else {
-      exec(`lp -d "${nombreImpresora}" -o raw "${tmpFile}"`, done);
-    }
+    enviarAImpresora(tmpFile, nombreImpresora, done);
   });
 });
 
@@ -572,7 +581,7 @@ router.post("/estado-cuenta", async (req, res) => {
     return res.status(400).json({ success: false, message: "Datos de estado de cuenta requeridos" });
   }
 
-  const nombreImpresora = /^[\w\s\-\.()\u00C0-\u024F]+$/.test(impresora || "") ? impresora : "Termica";
+  const nombreImpresora = nombreImpresoraValido(impresora) ? impresora : "Termica";
   const texto = generarTextoEstadoCuenta({ cliente, facturas, config: config || {}, totalOriginal, totalPagado, totalPendiente });
   const tmpFile = path.join(os.tmpdir(), `edocuenta_${Date.now()}.txt`);
   const contenido = Buffer.from(texto, "utf8");
@@ -581,7 +590,6 @@ router.post("/estado-cuenta", async (req, res) => {
     if (writeErr) {
       return res.status(500).json({ success: false, message: "Error al crear archivo temporal" });
     }
-    const isWindows = os.platform() === "win32";
     const done = (err, stdout, stderr) => {
       fs.unlink(tmpFile, () => {});
       if (err) {
@@ -589,8 +597,7 @@ router.post("/estado-cuenta", async (req, res) => {
       }
       res.json({ success: true, message: "Estado de cuenta enviado a " + nombreImpresora });
     };
-    if (isWindows) imprimirRawWindows(tmpFile, nombreImpresora, done);
-    else exec(`lp -d "${nombreImpresora}" -o raw "${tmpFile}"`, done);
+    enviarAImpresora(tmpFile, nombreImpresora, done);
   });
 });
 
@@ -601,7 +608,7 @@ router.post("/cuadre", async (req, res) => {
     return res.status(400).json({ success: false, message: "Datos de cuadre requeridos" });
   }
 
-  const nombreImpresora = /^[\w\s\-\.()\u00C0-\u024F]+$/.test(impresora || "") ? impresora : "Termica";
+  const nombreImpresora = nombreImpresoraValido(impresora) ? impresora : "Termica";
   const texto = generarTextoCuadre(cuadre);
   const tmpFile = path.join(os.tmpdir(), `cuadre_${Date.now()}.txt`);
   const contenido = Buffer.from(texto, "utf8");
@@ -610,7 +617,6 @@ router.post("/cuadre", async (req, res) => {
     if (writeErr) {
       return res.status(500).json({ success: false, message: "Error al crear archivo temporal" });
     }
-    const isWindows = os.platform() === "win32";
     const done = (err, stdout, stderr) => {
       fs.unlink(tmpFile, () => {});
       if (err) {
@@ -618,9 +624,9 @@ router.post("/cuadre", async (req, res) => {
       }
       res.json({ success: true, message: "Cuadre enviado a " + nombreImpresora });
     };
-    if (isWindows) imprimirRawWindows(tmpFile, nombreImpresora, done);
-    else exec(`lp -d "${nombreImpresora}" -o raw "${tmpFile}"`, done);
+    enviarAImpresora(tmpFile, nombreImpresora, done);
   });
 });
 
 module.exports = router;
+module.exports.nombreImpresoraValido = nombreImpresoraValido;
